@@ -13,113 +13,151 @@ bool WebApp::OnInit()
     return true;
 }
 
+wxString procUrl(wxString url)
+{//Fix any errors in URL before returning to webView
+	if(url.Find("://") == wxNOT_FOUND)
+	{
+		wxString rr = "http://" + url;
+		return rr;
+	}
+	return url;
+}
+
 webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 {
-	this->SetSizeHints( wxSize( 320,180 ), wxDefaultSize );
-	
-	m_menu = new wxMenuBar( 0 );
+	{//ints not needed after size has been set
+		int x, y;
+		wxDisplaySize(&x,&y);
+		if(x > 320 && y > 180)
+			this->SetSize(x/2,y/2);
+	}
+	this->SetSizeHints(wxSize(320,180), wxDefaultSize);
+
+	m_menu = new wxMenuBar(0);
 	file = new wxMenu();
 	wxMenuItem* fnew;
-	fnew = new wxMenuItem( file, ID_NEW, wxString( wxT("&New") ) , wxEmptyString, wxITEM_NORMAL );
-	file->Append( fnew );
-	
+	fnew = new wxMenuItem( file, wxID_NEW, wxString(wxT("&New")), wxEmptyString, wxITEM_NORMAL);
+	file->Append(fnew);
+
 	file->AppendSeparator();
-	
+
 	wxMenuItem* exit;
-	exit = new wxMenuItem( file, ID_EXIT, wxString( wxT("&Exit") ) , wxEmptyString, wxITEM_NORMAL );
-	file->Append( exit );
-	
-	m_menu->Append( file, wxT("&File") ); 
-	
+	exit = new wxMenuItem( file, wxID_EXIT, wxString(wxT("&Exit")), wxEmptyString, wxITEM_NORMAL);
+	file->Append(exit);
+
+	m_menu->Append(file, wxT("&File"));
+
 	edit = new wxMenu();
-	wxMenuItem* cut;
-	cut = new wxMenuItem( edit, ID_CUT, wxString( wxT("&Cut") ) , wxEmptyString, wxITEM_NORMAL );
-	edit->Append( cut );
-	
-	wxMenuItem* copy;
-	copy = new wxMenuItem( edit, ID_COPY, wxString( wxT("C&opy") ) , wxEmptyString, wxITEM_NORMAL );
-	edit->Append( copy );
-	
-	wxMenuItem* paste;
-	paste = new wxMenuItem( edit, ID_PASTE, wxString( wxT("&Paste") ) , wxEmptyString, wxITEM_NORMAL );
-	edit->Append( paste );
-	
+
+	wxMenuItem* undo;
+	undo = new wxMenuItem(edit, wxID_UNDO, wxString(wxT("&Undo")), wxEmptyString, wxITEM_NORMAL);
+	edit->Append(undo);
+
+	wxMenuItem* redo;
+	redo = new wxMenuItem(edit, wxID_REDO, wxString(wxT("&Redo")), wxEmptyString, wxITEM_NORMAL);
+	edit->Append(redo);
+
 	edit->AppendSeparator();
-	
+
+	wxMenuItem* cut;
+	cut = new wxMenuItem(edit, wxID_CUT, wxString(wxT("&Cut")), wxEmptyString, wxITEM_NORMAL);
+	edit->Append(cut);
+
+	wxMenuItem* copy;
+	copy = new wxMenuItem(edit, wxID_COPY, wxString(wxT("C&opy")), wxEmptyString, wxITEM_NORMAL);
+	edit->Append(copy);
+
+	wxMenuItem* paste;
+	paste = new wxMenuItem(edit, wxID_PASTE, wxString(wxT("&Paste")), wxEmptyString, wxITEM_NORMAL);
+	edit->Append(paste);
+
+	edit->AppendSeparator();
+
 	wxMenuItem* preferences;
-	preferences = new wxMenuItem( edit, ID_PREFERENCES, wxString( wxT("Pr&eferences") ) , wxEmptyString, wxITEM_NORMAL );
-	edit->Append( preferences );
-	
-	m_menu->Append( edit, wxT("&Edit") ); 
-	
+	preferences = new wxMenuItem(edit, ID_PREFERENCES, wxString(wxT("Pr&eferences")), wxEmptyString, wxITEM_NORMAL);
+	edit->Append(preferences);
+
+	m_menu->Append(edit, wxT("&Edit"));
+
 	view = new wxMenu();
 	wxMenuItem* zoom;
-	zoom = new wxMenuItem( view, ID_ZOOM, wxString( wxT("&Zoom") ) , wxEmptyString, wxITEM_NORMAL );
-	view->Append( zoom );
-	
-	m_menu->Append( view, wxT("&View") ); 
-	
+	zoom = new wxMenuItem(view, ID_ZOOM, wxString(wxT("&Zoom")) , wxEmptyString, wxITEM_NORMAL);
+	view->Append(zoom);
+
+	m_menu->Append(view, wxT("&View"));
+
 	help = new wxMenu();
 	wxMenuItem* about;
-	about = new wxMenuItem( help, ID_ABOUT, wxString( wxT("&About") ) , wxEmptyString, wxITEM_NORMAL );
-	help->Append( about );
-	
-	m_menu->Append( help, wxT("&Help") ); 
-	
-	this->SetMenuBar( m_menu );
-	
+	about = new wxMenuItem(help, wxID_ABOUT, wxString(wxT("&About")), wxEmptyString, wxITEM_NORMAL);
+	help->Append(about);
+
+	m_menu->Append(help, wxT("&Help"));
+
+	this->SetMenuBar(m_menu);
+
 	wxBoxSizer* frameSizer;
-	frameSizer = new wxBoxSizer( wxVERTICAL );
-	
-	m_toolbarPanel = new wxPanel( this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
+	frameSizer = new wxBoxSizer(wxVERTICAL);
+
+	m_toolbarPanel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
 	wxBoxSizer* toolbarSizer;
-	toolbarSizer = new wxBoxSizer( wxHORIZONTAL );
-	
-	m_back = new wxBitmapButton( m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap( wxART_GO_BACK, wxART_TOOLBAR ), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxNO_BORDER );
+	toolbarSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	//m_back = new wxButton(m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_TOOLBAR), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
+	m_back = new wxButton(m_toolbarPanel, wxID_ANY, wxT("Back"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
+	m_back->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_BUTTON));
 	m_back->Enable(false);
-	toolbarSizer->Add( m_back, 0, wxALIGN_CENTER, 0 );
-	
-	m_forward = new wxBitmapButton( m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap( wxART_GO_FORWARD, wxART_TOOLBAR ), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxNO_BORDER );
+	toolbarSizer->Add(m_back, 0, wxALIGN_CENTER, 0);
+
+	//m_forward = new wxButton(m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxNO_BORDER);
+	m_forward = new wxButton(m_toolbarPanel, wxID_ANY, wxT("Forward"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
+	m_forward->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
 	m_forward->Enable(false);
-	toolbarSizer->Add( m_forward, 0, wxALIGN_CENTER, 0 );
-	
-	m_url = new wxComboBox( m_toolbarPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0|wxNO_BORDER|wxTE_PROCESS_ENTER ); 
-	toolbarSizer->Add( m_url, 1, wxALIGN_CENTER|wxEXPAND, 0 );
-	
-	m_go = new wxBitmapButton( m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap( wxT("gtk-refresh"), wxART_TOOLBAR ), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxNO_BORDER );
-	toolbarSizer->Add( m_go, 0, wxALIGN_CENTER, 0 );
-	
-	
-	m_toolbarPanel->SetSizer( toolbarSizer );
+	toolbarSizer->Add(m_forward, 0, wxALIGN_CENTER, 0);
+
+	m_url = new wxComboBox(m_toolbarPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0|wxNO_BORDER|wxTE_PROCESS_ENTER);
+	toolbarSizer->Add(m_url, 1, wxALIGN_CENTER|wxEXPAND, 0);
+
+	//m_go = new wxButton(m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap(wxT("gtk-refresh"), wxART_TOOLBAR), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxNO_BORDER);
+	m_go = new wxButton(m_toolbarPanel, wxID_ANY, wxT("Reload"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
+	m_go->SetBitmap(wxArtProvider::GetBitmap(wxT("gtk-refresh"), wxART_BUTTON));
+	toolbarSizer->Add(m_go, 0, wxALIGN_CENTER, 0);
+
+
+	m_toolbarPanel->SetSizer(toolbarSizer);
 	m_toolbarPanel->Layout();
-	toolbarSizer->Fit( m_toolbarPanel );
-	frameSizer->Add( m_toolbarPanel, 0, wxEXPAND, 5 );
-	
+	toolbarSizer->Fit(m_toolbarPanel);
+	frameSizer->Add(m_toolbarPanel, 0, wxEXPAND,0);
+
 	m_webView = wxWebView::New(this, wxID_ANY, url);
-	frameSizer->Add( m_webView, 1, wxALIGN_CENTER|wxEXPAND, 5 );
-	
-	
-	this->SetSizer( frameSizer );
+	frameSizer->Add(m_webView, 1, wxALIGN_CENTER|wxEXPAND,0);
+
+
+	this->SetSizer(frameSizer);
 	this->Layout();
-	
-	this->Centre( wxBOTH );
-	
+
+	this->Centre(wxBOTH);
+	m_url->SetValue(m_webView->GetCurrentURL());
+	UpdateState();
+
 	//Button Events
-	m_back		->Connect(wxEVT_COMMAND_BUTTON_CLICKED, 	wxCommandEventHandler(webFrame::OnBack), 	NULL, this );
-	m_forward	->Connect(wxEVT_COMMAND_BUTTON_CLICKED, 	wxCommandEventHandler(webFrame::OnForward), NULL, this );
-	m_url		->Connect(wxEVT_COMMAND_TEXT_ENTER, 		wxCommandEventHandler(webFrame::OnUrl),		NULL, this );
-	m_go		->Connect(wxEVT_COMMAND_BUTTON_CLICKED, 	wxCommandEventHandler(webFrame::onGo), 		NULL, this );
+	m_back		->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(webFrame::OnBack), 	NULL,this);
+	m_forward	->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(webFrame::OnForward), NULL,this);
+	m_url		->Connect(wxEVT_COMMAND_TEXT_ENTER, 	wxCommandEventHandler(webFrame::OnUrl),		NULL,this);
+	m_url		->Connect(wxEVT_TEXT, 					wxCommandEventHandler(webFrame::OnUrlMod),	NULL,this);
+	m_go		->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(webFrame::OnGo), 		NULL,this);
 	//Webview Events
-	Connect(m_webView->GetId(), wxEVT_WEBVIEW_LOADED,		wxWebViewEventHandler(webFrame::OnDocumentLoaded), NULL, this);
+	Connect(m_webView->GetId(),wxEVT_WEBVIEW_LOADED,	wxWebViewEventHandler(webFrame::OnDocumentLoaded), 		NULL, this);
+    Connect(m_webView->GetId(),wxEVT_WEBVIEW_NAVIGATED,	wxWebViewEventHandler(webFrame::OnNavigationComplete), 	NULL, this);
+    Connect(m_webView->GetId(),wxEVT_WEBVIEW_LOADED,	wxWebViewEventHandler(webFrame::OnDocumentLoaded), 		NULL, this);
 }
 
 webFrame::~webFrame()
 {
 	// Disconnect Events
-	m_back		->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler	(webFrame::OnBack), 	NULL, this );
-	m_forward	->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler	(webFrame::OnForward), 	NULL, this );
-	m_url		->Disconnect( wxEVT_COMMAND_TEXT_ENTER, wxCommandEventHandler		(webFrame::onGo), 		NULL, this );
-	m_go		->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler	(webFrame::onGo), 		NULL, this );
+	m_back		->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, 	wxCommandEventHandler	(webFrame::OnBack), 	NULL,this);
+	m_forward	->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, 	wxCommandEventHandler	(webFrame::OnForward),	NULL,this);
+	m_url		->Disconnect(wxEVT_COMMAND_TEXT_ENTER,		wxCommandEventHandler	(webFrame::OnUrl),		NULL,this);
+	m_go		->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, 	wxCommandEventHandler	(webFrame::OnGo),		NULL,this);
 }
 
 /**
@@ -131,31 +169,24 @@ void webFrame::UpdateState()
     m_back		->Enable(m_webView->CanGoBack());
     m_forward	->Enable(m_webView->CanGoForward());
 
-    /*if (m_webView->IsBusy())
+    if (m_webView->IsBusy())
     {
-        m_go->EnableTool( m_toolbar_stop->GetId(), true );
+        m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-stop", wxART_BUTTON));
+        m_go->SetLabel(wxT("Stop"));
     }
     else
     {
-        m_toolbar->EnableTool( m_toolbar_stop->GetId(), false );
-    }*/
-
-    SetTitle( m_webView->GetCurrentTitle() );
-    m_url->SetValue(m_webView->GetCurrentURL());
-}
-
-void webFrame::OnIdle(wxIdleEvent& WXUNUSED(evt))
-{
-    if(m_webView->IsBusy())
-    {
-        wxSetCursor(wxCURSOR_ARROWWAIT);
-        //m_toolbar->EnableTool(m_toolbar_stop->GetId(), true);
+        m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_BUTTON));
+        m_go->SetLabel(wxT("Reload"));
     }
-    else
+    if(m_webView->GetCurrentTitle() != wxEmptyString)
     {
-        wxSetCursor(wxNullCursor);
-        //m_toolbar->EnableTool(m_toolbar_stop->GetId(), false);
-    }
+		SetTitle(m_webView->GetCurrentTitle() + " - wxWebDemo");
+	}
+	else
+	{
+		SetTitle(m_webView->GetCurrentURL() + " - wxWebDemo");
+	}
 }
 
 /**
@@ -163,7 +194,7 @@ void webFrame::OnIdle(wxIdleEvent& WXUNUSED(evt))
   */
 void webFrame::OnUrl(wxCommandEvent& WXUNUSED(evt))
 {
-    m_webView->LoadURL(m_url->GetValue());
+    m_webView->LoadURL(procUrl(m_url->GetValue()));
     m_webView->SetFocus();
     UpdateState();
 }
@@ -187,12 +218,44 @@ void webFrame::OnForward(wxCommandEvent& WXUNUSED(evt))
 }
 
 /**
-  * Callback invoked when user pressed the "stop" button
+  * Callback invoked when user pressed the "reload/stop" button
   */
-/*void webFrame::OnStop(wxCommandEvent& WXUNUSED(evt))
+void webFrame::OnGo(wxCommandEvent& WXUNUSED(evt))
 {
-    m_webView->Stop();
+    if (m_webView->IsBusy())
+    {
+		m_webView->Stop();
+	}
+	else
+	{
+		if(m_webView->GetCurrentURL().IsSameAs(m_url->GetValue(),true))
+		{
+			m_webView->Reload();
+		}
+		else
+		{
+			m_webView->LoadURL(m_url->GetValue());
+		}
+		m_webView->SetFocus();
+	}
     UpdateState();
+}
+
+void webFrame::OnUrlMod(wxCommandEvent& WXUNUSED(evt))
+{
+	if(!m_webView->IsBusy())
+	{
+		if(m_webView->GetCurrentURL().IsSameAs(m_url->GetValue(),true))
+		{
+			m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_BUTTON));
+			m_go->SetLabel(wxT("Reload"));
+		}
+		else
+		{
+			m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_BUTTON));
+			m_go->SetLabel(wxT("Go"));
+		}
+	}
 }
 
 /**
@@ -217,20 +280,6 @@ void webFrame::OnEnableHistory(wxCommandEvent& WXUNUSED(evt))
     UpdateState();
 }
 */
-void webFrame::OnCut(wxCommandEvent& WXUNUSED(evt))
-{
-    m_webView->Cut();
-}
-
-void webFrame::OnCopy(wxCommandEvent& WXUNUSED(evt))
-{
-    m_webView->Copy();
-}
-
-void webFrame::OnPaste(wxCommandEvent& WXUNUSED(evt))
-{
-    m_webView->Paste();
-}
 
 void webFrame::OnUndo(wxCommandEvent& WXUNUSED(evt))
 {
@@ -240,6 +289,18 @@ void webFrame::OnUndo(wxCommandEvent& WXUNUSED(evt))
 void webFrame::OnRedo(wxCommandEvent& WXUNUSED(evt))
 {
     m_webView->Redo();
+}
+void webFrame::OnCut(wxCommandEvent& WXUNUSED(evt))
+{
+    m_webView->Cut();
+}
+void webFrame::OnCopy(wxCommandEvent& WXUNUSED(evt))
+{
+    m_webView->Copy();
+}
+void webFrame::OnPaste(wxCommandEvent& WXUNUSED(evt))
+{
+    m_webView->Paste();
 }
 /*
 void webFrame::OnMode(wxCommandEvent& WXUNUSED(evt))
@@ -328,7 +389,7 @@ void webFrame::OnFindText(wxCommandEvent& evt)
   * Callback invoked when there is a request to load a new page (for instance
   * when the user clicks a link)
   */
-/*  
+/*
 void webFrame::OnNavigationRequest(wxWebViewEvent& evt)
 {
     if(m_info->IsShown())
@@ -359,7 +420,8 @@ void webFrame::OnNavigationRequest(wxWebViewEvent& evt)
   */
 void webFrame::OnNavigationComplete(wxWebViewEvent& evt)
 {
-    wxLogMessage("%s", "Navigation complete; url='" + evt.GetURL() + "'");
+    //wxLogMessage("%s", "Navigation complete; url='" + evt.GetURL() + "'");
+    m_url->SetValue(m_webView->GetCurrentURL());
     UpdateState();
 }
 
@@ -369,10 +431,11 @@ void webFrame::OnNavigationComplete(wxWebViewEvent& evt)
 void webFrame::OnDocumentLoaded(wxWebViewEvent& evt)
 {
     //Only notify if the document is the main frame, not a subframe
-    if(evt.GetURL() == m_webView->GetCurrentURL())
+    /*if(evt.GetURL() == m_webView->GetCurrentURL())
     {
         //wxLogMessage("%s", "Document loaded; url='" + evt.GetURL() + "'");
-    }
+    }*/
+    m_url->SetValue(m_webView->GetCurrentURL());
     UpdateState();
 }
 /**
