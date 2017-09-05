@@ -17,7 +17,7 @@ wxString procUrl(wxString url)
 {//Fix any errors in URL before returning to webView
 	if(url.Find("://") == wxNOT_FOUND)
 	{
-		wxString rr = "http://" + url;
+		wxString rr = "https://" + url;
 		return rr;
 	}
 	return url;
@@ -25,7 +25,7 @@ wxString procUrl(wxString url)
 
 webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 {
-	{//ints not needed after size has been set
+	{//Set window size to half the screen resolution, ints not needed after size has been set
 		int x, y;
 		wxDisplaySize(&x,&y);
 		if(x/2 > 320 && y/2 > 180)
@@ -115,7 +115,7 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	m_forward->Enable(false);
 	toolbarSizer->Add(m_forward, 0, wxALIGN_CENTER, 0);
 
-	m_url = new wxComboBox(m_toolbarPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0|wxNO_BORDER|wxTE_PROCESS_ENTER);
+	m_url = new wxComboBox(m_toolbarPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxNO_BORDER|wxTE_PROCESS_ENTER);
 	toolbarSizer->Add(m_url, 1, wxALIGN_CENTER|wxEXPAND, 0);
 
 	m_go = new wxButton(m_toolbarPanel, wxID_ANY, wxT("Reload"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
@@ -129,8 +129,12 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	frameSizer->Add(m_toolbarPanel, 0, wxEXPAND,0);
 //WebView and Tabs
 	wxSplitterWindow * m_split = new wxSplitterWindow(this);
-	m_webView = wxWebView::New(m_split, wxID_ANY, url);
-	m_split->Initialize(m_webView);
+	wxTreeCtrl * m_tabs = new wxTreeCtrl(m_split,wxID_ANY,wxDefaultPosition,wxDefaultSize,wxTR_DEFAULT_STYLE|wxTR_TWIST_BUTTONS|wxTR_FULL_ROW_HIGHLIGHT);
+	m_tabs->AddRoot(wxT("Root1"));
+	m_tabs->AppendItem(m_tabs->GetRootItem(),wxT("Page1"));
+	m_tabs->AppendItem(m_tabs->GetRootItem(),wxT("Page2"));
+	m_webView = wxWebView::New(m_split, wxID_ANY);
+	m_split->SplitVertically(m_tabs,m_webView,0);
 	frameSizer->Add(m_split, 1, wxALIGN_CENTER|wxEXPAND,0);
 //Footer toolbar	
 	/*
@@ -149,9 +153,12 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	this->SetSizer(frameSizer);
 	this->Layout();
 	this->Centre(wxBOTH);
-	
-	m_url->SetValue(m_webView->GetCurrentURL());
-	UpdateState();
+	if(url != wxEmptyString)
+	{
+		m_url->SetValue(m_webView->GetCurrentURL());
+		m_webView->LoadURL(procUrl(url));
+		UpdateState();
+	}
 
 	//Button Events
 	m_back		->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(webFrame::OnBack), 	NULL,this);
@@ -162,7 +169,7 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	//Webview Events
 	Connect(m_webView->GetId(),wxEVT_WEBVIEW_LOADED,	wxWebViewEventHandler(webFrame::OnDocumentLoaded), 		NULL, this);
     Connect(m_webView->GetId(),wxEVT_WEBVIEW_NAVIGATED,	wxWebViewEventHandler(webFrame::OnNavigationComplete), 	NULL, this);
-    Connect(m_webView->GetId(),wxEVT_WEBVIEW_LOADED,	wxWebViewEventHandler(webFrame::OnDocumentLoaded), 		NULL, this);
+    //Connect(m_webView->GetId(),wxEVT_WEBVIEW_LOADED,	wxWebViewEventHandler(webFrame::OnDocumentLoaded), 		NULL, this);
 }
 
 webFrame::~webFrame()
