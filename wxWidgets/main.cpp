@@ -4,7 +4,7 @@ IMPLEMENT_APP(WebApp)
 
 bool WebApp::OnInit()
 {
-    if(!wxApp::OnInit())
+    if (!wxApp::OnInit())
         return false;
 
     webFrame *frame = new webFrame(m_url);
@@ -28,21 +28,21 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	{//ints not needed after size has been set
 		int x, y;
 		wxDisplaySize(&x,&y);
-		if(x > 320 && y > 180)
+		if(x/2 > 320 && y/2 > 180)
 			this->SetSize(x/2,y/2);
 	}
 	this->SetSizeHints(wxSize(320,180), wxDefaultSize);
-
+//Menu
 	m_menu = new wxMenuBar(0);
 	file = new wxMenu();
 	wxMenuItem* fnew;
-	fnew = new wxMenuItem( file, wxID_NEW, wxString(wxT("&New")), wxEmptyString, wxITEM_NORMAL);
+	fnew = new wxMenuItem(file, wxID_NEW, wxString(wxT("&New")), wxEmptyString, wxITEM_NORMAL);
 	file->Append(fnew);
 
 	file->AppendSeparator();
 
 	wxMenuItem* exit;
-	exit = new wxMenuItem( file, wxID_EXIT, wxString(wxT("&Exit")), wxEmptyString, wxITEM_NORMAL);
+	exit = new wxMenuItem(file, wxID_EXIT, wxString(wxT("&Exit")), wxEmptyString, wxITEM_NORMAL);
 	file->Append(exit);
 
 	m_menu->Append(file, wxT("&File"));
@@ -94,32 +94,32 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	m_menu->Append(help, wxT("&Help"));
 
 	this->SetMenuBar(m_menu);
-
+//Toolbar
 	wxBoxSizer* frameSizer;
 	frameSizer = new wxBoxSizer(wxVERTICAL);
 
 	m_toolbarPanel = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
 	wxBoxSizer* toolbarSizer;
 	toolbarSizer = new wxBoxSizer(wxHORIZONTAL);
+	
+	/*m_side = new wxBitmapToggleButton(m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap(wxART_HELP_SIDE_PANEL, wxART_FRAME_ICON), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
+	toolbarSizer->Add(m_side, 0, wxALIGN_CENTER, 0);*/
 
-	//m_back = new wxButton(m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_TOOLBAR), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
 	m_back = new wxButton(m_toolbarPanel, wxID_ANY, wxT("Back"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
-	m_back->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_BUTTON));
+	m_back->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_BACK, wxART_FRAME_ICON));
 	m_back->Enable(false);
 	toolbarSizer->Add(m_back, 0, wxALIGN_CENTER, 0);
 
-	//m_forward = new wxButton(m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_TOOLBAR), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxNO_BORDER);
 	m_forward = new wxButton(m_toolbarPanel, wxID_ANY, wxT("Forward"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
-	m_forward->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_BUTTON));
+	m_forward->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_FORWARD, wxART_FRAME_ICON));
 	m_forward->Enable(false);
 	toolbarSizer->Add(m_forward, 0, wxALIGN_CENTER, 0);
 
 	m_url = new wxComboBox(m_toolbarPanel, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, 0|wxNO_BORDER|wxTE_PROCESS_ENTER);
 	toolbarSizer->Add(m_url, 1, wxALIGN_CENTER|wxEXPAND, 0);
 
-	//m_go = new wxButton(m_toolbarPanel, wxID_ANY, wxArtProvider::GetBitmap(wxT("gtk-refresh"), wxART_TOOLBAR), wxDefaultPosition, wxDefaultSize, wxBU_AUTODRAW|wxNO_BORDER);
 	m_go = new wxButton(m_toolbarPanel, wxID_ANY, wxT("Reload"), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
-	m_go->SetBitmap(wxArtProvider::GetBitmap(wxT("gtk-refresh"), wxART_BUTTON));
+	m_go->SetBitmap(wxArtProvider::GetBitmap(wxT("gtk-refresh"), wxART_FRAME_ICON));
 	toolbarSizer->Add(m_go, 0, wxALIGN_CENTER, 0);
 
 
@@ -127,15 +127,27 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	m_toolbarPanel->Layout();
 	toolbarSizer->Fit(m_toolbarPanel);
 	frameSizer->Add(m_toolbarPanel, 0, wxEXPAND,0);
-
-	p_url = url;
-	m_webView = wxWebView::New(this, wxID_ANY, p_url);
-	frameSizer->Add(m_webView, 1, wxALIGN_CENTER|wxEXPAND,0);
-
-
+//WebView and Tabs
+	wxSplitterWindow * m_split = new wxSplitterWindow(this);
+	m_webView = wxWebView::New(m_split, wxID_ANY, url);
+	m_split->Initialize(m_webView);
+	frameSizer->Add(m_split, 1, wxALIGN_CENTER|wxEXPAND,0);
+//Footer toolbar	
+	/*
+	m_footer = new wxPanel(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL);
+	wxBoxSizer* footerSizer;
+	footerSizer = new wxBoxSizer(wxHORIZONTAL);
+	
+	m_side = new wxBitmapToggleButton(m_footer, wxID_ANY, wxArtProvider::GetBitmap(wxART_HELP_SIDE_PANEL, wxART_FRAME_ICON), wxDefaultPosition, wxDefaultSize, wxNO_BORDER);
+	footerSizer->Add(m_side, 0, wxALIGN_CENTER, 0);
+	
+	m_footer->SetSizer(footerSizer);
+	m_footer->Layout();
+	footerSizer->Fit(m_footer);
+	frameSizer->Add(m_footer, 0, wxEXPAND,0);
+	*/
 	this->SetSizer(frameSizer);
 	this->Layout();
-
 	this->Centre(wxBOTH);
 	
 	m_url->SetValue(m_webView->GetCurrentURL());
@@ -173,12 +185,12 @@ void webFrame::UpdateState()
 
     if (m_webView->IsBusy())
     {
-        m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-stop", wxART_BUTTON));
+        m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-stop", wxART_FRAME_ICON));
         m_go->SetLabel(wxT("Stop"));
     }
     else
     {
-        m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_BUTTON));
+        m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_FRAME_ICON));
         m_go->SetLabel(wxT("Reload"));
     }
     if(m_webView->GetCurrentTitle() != wxEmptyString)
@@ -191,9 +203,6 @@ void webFrame::UpdateState()
 	}
 }
 
-/**
-  * Callback invoked when user entered an URL and pressed enter
-  */
 void webFrame::OnUrl(wxCommandEvent& WXUNUSED(evt))
 {
     m_webView->LoadURL(procUrl(m_url->GetValue()));
@@ -201,27 +210,18 @@ void webFrame::OnUrl(wxCommandEvent& WXUNUSED(evt))
     UpdateState();
 }
 
-/**
-    * Callback invoked when user pressed the "back" button
-    */
 void webFrame::OnBack(wxCommandEvent& WXUNUSED(evt))
 {
     m_webView->GoBack();
     UpdateState();
 }
 
-/**
-  * Callback invoked when user pressed the "forward" button
-  */
 void webFrame::OnForward(wxCommandEvent& WXUNUSED(evt))
 {
     m_webView->GoForward();
     UpdateState();
 }
 
-/**
-  * Callback invoked when user pressed the "reload/stop" button
-  */
 void webFrame::OnGo(wxCommandEvent& WXUNUSED(evt))
 {
     if (m_webView->IsBusy())
@@ -249,27 +249,18 @@ void webFrame::OnUrlMod(wxCommandEvent& WXUNUSED(evt))
 	{
 		if(m_webView->GetCurrentURL().IsSameAs(m_url->GetValue(),true))
 		{
-			m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_BUTTON));
+			m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_FRAME_ICON));
 			m_go->SetLabel(wxT("Reload"));
 		}
 		else
 		{
-			m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_BUTTON));
+			m_go->SetBitmap(wxArtProvider::GetBitmap("gtk-refresh", wxART_FRAME_ICON));
 			m_go->SetLabel(wxT("Go"));
 		}
 	}
 }
 
-/**
-  * Callback invoked when user pressed the "reload" button
-  */
 /*
-void webFrame::OnReload(wxCommandEvent& WXUNUSED(evt))
-{
-    m_webView->Reload();
-    UpdateState();
-}
-
 void webFrame::OnClearHistory(wxCommandEvent& WXUNUSED(evt))
 {
     m_webView->ClearHistory();
@@ -310,7 +301,7 @@ void webFrame::OnMode(wxCommandEvent& WXUNUSED(evt))
     m_webView->SetEditable(m_edit_mode->IsChecked());
 }
 
-/*void webFrame::OnLoadScheme(wxCommandEvent& WXUNUSED(evt))
+void webFrame::OnLoadScheme(wxCommandEvent& WXUNUSED(evt))
 {
     wxFileName helpfile("../help/doc.zip");
     helpfile.MakeAbsolute();
@@ -386,7 +377,7 @@ void webFrame::OnFindText(wxCommandEvent& evt)
     }
     wxLogMessage("Searching for:%s  current match:%i/%i", m_findText.c_str(), count, m_findCount);
 }
-
+*/
 /**
   * Callback invoked when there is a request to load a new page (for instance
   * when the user clicks a link)
@@ -416,7 +407,7 @@ void webFrame::OnNavigationRequest(wxWebViewEvent& evt)
         UpdateState();
     }
 }
-
+*/
 /**
   * Callback invoked when a navigation request was accepted
   */
@@ -424,6 +415,7 @@ void webFrame::OnNavigationComplete(wxWebViewEvent& evt)
 {
     //wxLogMessage("%s", "Navigation complete; url='" + evt.GetURL() + "'");
     m_url->SetValue(m_webView->GetCurrentURL());
+    SetTitle(m_webView->GetCurrentURL() + " - wxWebDemo");
     UpdateState();
 }
 
@@ -558,7 +550,7 @@ void webFrame::OnTitleChanged(wxWebViewEvent& evt)
     wxPoint position = ScreenToClient( wxGetMousePosition() );
     PopupMenu(m_tools_menu, position.x, position.y);
 }
-
+*/
 /**
   * Invoked when user selects the zoom size in the menu
   */
@@ -598,12 +590,12 @@ void webFrame::OnZoomLayout(wxCommandEvent& WXUNUSED(evt))
         m_webView->SetZoomType(wxWEBVIEW_ZOOM_TYPE_TEXT);
 }
 
-/*void webFrame::OnHistory(wxCommandEvent& evt)
+void webFrame::OnHistory(wxCommandEvent& evt)
 {
     m_webView->LoadHistoryItem(m_histMenuItems[evt.GetId()]);
 }
-*/
-/*void webFrame::OnRunScript(wxCommandEvent& WXUNUSED(evt))
+
+void webFrame::OnRunScript(wxCommandEvent& WXUNUSED(evt))
 {
     wxTextEntryDialog dialog(this, "Enter JavaScript to run.", wxGetTextFromUserPromptStr, "", wxOK|wxCANCEL|wxCENTRE|wxTE_MULTILINE);
     if(dialog.ShowModal() == wxID_OK)
