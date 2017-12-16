@@ -1,0 +1,61 @@
+#include <stdlib.h>
+#include <gtk/gtk.h>
+#include <webkit2/webkit2.h>
+#include <string.h>
+
+
+#define WK_CURRENT_TAB(notebook) \
+(WebKitWebView *) gtk_notebook_get_nth_page(notebook \
+    ,gtk_notebook_get_current_page(notebook))
+    
+#define WK_CURRENT_TAB_WIDGET(notebook) \
+(GtkWidget *) gtk_notebook_get_nth_page(notebook \
+    ,gtk_notebook_get_current_page(notebook))
+
+
+#define WK_TAB_CHAR_LEN 40
+
+struct menu_st
+{
+    GtkWidget * menu;
+    GtkWidget * fileMenu;
+    GtkWidget * fileMi;
+    GtkWidget * quitMi;
+};
+
+struct tool_st
+{
+    GtkWidget * top;
+    GtkToolButton * backTb;
+    GtkToolButton * forwardTb;
+    GtkContainer * addressTi;
+    GtkEntry * addressEn;
+    GtkToolButton * reloadTb;
+};
+
+struct webt_st
+{
+    GtkNotebook * tabsNb;
+};
+
+struct call_st
+{
+    struct menu_st * menu;
+    struct tool_st * tool;
+    struct webt_st * webv;
+    GtkWidget * twin;
+};
+
+struct call_st * G_call;
+
+struct newt_st
+{
+    WebKitWebView * webv;
+    struct call_st * call;
+};
+
+void connect_signals (WebKitWebView * wv, struct call_st * c);
+
+
+static void destroyWindowCb(GtkWidget* widget, GtkWidget* window);
+

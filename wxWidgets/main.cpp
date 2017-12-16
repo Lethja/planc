@@ -4,7 +4,7 @@ IMPLEMENT_APP(WebApp)
 
 bool WebApp::OnInit()
 {
-    if ( !wxApp::OnInit() )
+    if(!wxApp::OnInit())
         return false;
 
     webFrame *frame = new webFrame(m_url);
@@ -128,7 +128,8 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	toolbarSizer->Fit(m_toolbarPanel);
 	frameSizer->Add(m_toolbarPanel, 0, wxEXPAND,0);
 
-	m_webView = wxWebView::New(this, wxID_ANY, url);
+	p_url = url;
+	m_webView = wxWebView::New(this, wxID_ANY, p_url);
 	frameSizer->Add(m_webView, 1, wxALIGN_CENTER|wxEXPAND,0);
 
 
@@ -136,6 +137,7 @@ webFrame::webFrame(const wxString& url) : wxFrame(NULL, wxID_ANY, url)
 	this->Layout();
 
 	this->Centre(wxBOTH);
+	
 	m_url->SetValue(m_webView->GetCurrentURL());
 	UpdateState();
 
