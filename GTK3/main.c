@@ -66,7 +66,7 @@ static gboolean c_policy (WebKitWebView *web_view
 {
     switch (type) {
     case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
-        
+
         if(webkit_navigation_action_get_mouse_button
             (webkit_navigation_policy_decision_get_navigation_action
             ((WebKitNavigationPolicyDecision *)decision)) == 2)
@@ -74,12 +74,12 @@ static gboolean c_policy (WebKitWebView *web_view
             WebKitWebView * nt = c_new_tab(web_view
                 ,webkit_navigation_policy_decision_get_navigation_action
                 ((WebKitNavigationPolicyDecision *) decision),v);
-            
+
             webkit_web_view_load_request(nt
                 ,webkit_navigation_action_get_request
                 (webkit_navigation_policy_decision_get_navigation_action
                     ((WebKitNavigationPolicyDecision *)decision)));
-            
+
             g_signal_emit_by_name(nt,"ready-to-show");
             webkit_policy_decision_ignore(decision);
         }
@@ -92,7 +92,10 @@ static gboolean c_policy (WebKitWebView *web_view
 
 static void c_refresh(GtkWidget * widget, void * v)
 {
-    webkit_web_view_reload(WK_CURRENT_TAB(v));
+	if(webkit_web_view_is_loading(WK_CURRENT_TAB(v)))
+		webkit_web_view_stop_loading(WK_CURRENT_TAB(v));
+	else
+		webkit_web_view_reload(WK_CURRENT_TAB(v));
 }
 
 static void c_go_back(GtkWidget * widget, void * v)
@@ -109,7 +112,7 @@ static void c_go_back(GtkWidget * widget, void * v)
 static void c_go_forward(GtkWidget * widget, void * v)
 {
     webkit_web_view_go_forward(WK_CURRENT_TAB(v));
-    
+
     gtk_widget_set_sensitive(GTK_WIDGET(G_call->tool->backTb)
         ,webkit_web_view_can_go_back(WK_CURRENT_TAB(v)));
 
@@ -160,13 +163,13 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
         case WEBKIT_LOAD_STARTED:
         case WEBKIT_LOAD_COMMITTED:
         case WEBKIT_LOAD_REDIRECTED:
-            gtk_tool_button_set_icon_name(call->tool->reloadTb
-            ,"process-stop");
+            gtk_image_set_from_icon_name(call->tool->reloadIo
+				,"process-stop",GTK_ICON_SIZE_SMALL_TOOLBAR);
         break;
 
         case WEBKIT_LOAD_FINISHED:
-            gtk_tool_button_set_icon_name(call->tool->reloadTb
-            ,"view-refresh");
+            gtk_image_set_from_icon_name(call->tool->reloadIo
+				,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
         break;
     }
 
@@ -269,10 +272,10 @@ void InitToolbar(struct tool_st * tool)
     gtk_tool_item_set_expand(GTK_TOOL_ITEM(tool->addressTi), TRUE);
     gtk_tool_item_set_homogeneous(GTK_TOOL_ITEM(tool->addressTi), TRUE);
 
+	tool->reloadIo = (GtkImage *) gtk_image_new_from_icon_name
+		("view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
     tool->reloadTb = (GtkToolButton *)gtk_tool_button_new
-        (gtk_image_new_from_icon_name("view-refresh"
-            ,GTK_ICON_SIZE_SMALL_TOOLBAR)
-        ,"_Refresh");
+		(GTK_WIDGET(tool->reloadIo),"_Refresh");
     gtk_toolbar_insert(GTK_TOOLBAR(tool->top), (GtkToolItem *) tool->reloadTb, -1);
 }
 

@@ -7,7 +7,7 @@
 #define WK_CURRENT_TAB(notebook) \
 (WebKitWebView *) gtk_notebook_get_nth_page(notebook \
     ,gtk_notebook_get_current_page(notebook))
-    
+
 #define WK_CURRENT_TAB_WIDGET(notebook) \
 (GtkWidget *) gtk_notebook_get_nth_page(notebook \
     ,gtk_notebook_get_current_page(notebook))
@@ -31,6 +31,7 @@ struct tool_st
     GtkContainer * addressTi;
     GtkEntry * addressEn;
     GtkToolButton * reloadTb;
+    GtkImage * reloadIo;
 };
 
 struct webt_st
