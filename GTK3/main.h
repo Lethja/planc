@@ -1,3 +1,4 @@
+#include "config.h"
 #include <stdlib.h>
 #include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
@@ -37,6 +38,7 @@ struct tool_st
 struct webt_st
 {
     GtkNotebook * tabsNb;
+    WebKitWebContext * webc;
 };
 
 struct call_st

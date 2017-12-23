@@ -358,7 +358,7 @@ int main(int argc, char* argv[])
     g_signal_connect(webk.tabsNb, "switch-page", G_CALLBACK(c_switch_tab), &call);
 
 
-    if(argv[1])
+    if(argc > 1)
     {
         char * uri = prepAddress((const gchar *) argv[1]);
         webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb), uri);
