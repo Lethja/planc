@@ -13,7 +13,6 @@
 (GtkWidget *) gtk_notebook_get_nth_page(notebook \
     ,gtk_notebook_get_current_page(notebook))
 
-
 #define WK_TAB_CHAR_LEN 40
 
 struct menu_st

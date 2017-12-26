@@ -219,6 +219,10 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str)
     gtk_label_set_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
+    gtk_label_set_justify((GtkLabel *)label,GTK_JUSTIFY_LEFT);
+    
+    gtk_widget_set_halign(label,GTK_ALIGN_START);
+    gtk_widget_set_halign(ebox,GTK_ALIGN_START);
     gtk_widget_show(GTK_WIDGET(label));
     return ebox;
 }
@@ -266,7 +270,6 @@ void InitToolbar(struct tool_st * tool)
     gtk_widget_set_sensitive(GTK_WIDGET(tool->forwardTb), FALSE);
     tool->addressTi = (GtkContainer *) gtk_tool_item_new();
     tool->addressEn = (GtkEntry *) gtk_entry_new();
-    gtk_entry_set_text(tool->addressEn,"about:blank");
     gtk_container_add(tool->addressTi, GTK_WIDGET(tool->addressEn));
     gtk_toolbar_insert(GTK_TOOLBAR(tool->top), GTK_TOOL_ITEM(tool->addressTi), -1);
     gtk_tool_item_set_expand(GTK_TOOL_ITEM(tool->addressTi), TRUE);
@@ -302,7 +305,13 @@ void InitNotetab(struct webt_st * webv)
 
 void InitWebview(struct call_st * c)
 {
-    WebKitWebView * wv = WEBKIT_WEB_VIEW(webkit_web_view_new());
+    c->webv->webc = webkit_web_context_get_default();
+    webkit_web_context_set_cache_model(c->webv->webc
+		,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
+    
+    
+    WebKitWebView * wv = WEBKIT_WEB_VIEW(
+		webkit_web_view_new_with_context(c->webv->webc));
     GtkWidget * ebox = gtk_event_box_new();
     gtk_widget_set_has_window(ebox, FALSE);
     GtkWidget * label = gtk_label_new("New Tab");
@@ -364,12 +373,17 @@ int main(int argc, char* argv[])
         webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb), uri);
         free(uri);
     }
+    else
+    {
+		webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
+		,"about:blank");
+	}
 
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
 
 
     gtk_widget_show_all(window);
-    gtk_widget_hide(menu.menu);
+    //gtk_widget_hide(menu.menu);
 
     gtk_main();
 
