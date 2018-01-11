@@ -154,6 +154,17 @@ static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt, void * v)
         ,webkit_web_view_get_uri(webv));
 }
 
+static void c_loads(WebKitWebView * wv, WebKitWebResource * res
+	,WebKitURIRequest  *req, gpointer v)
+{
+	struct call_st * call = v;
+	gtk_widget_set_sensitive(GTK_WIDGET(call->tool->backTb)
+        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(call->webv->tabsNb)));
+
+    gtk_widget_set_sensitive(GTK_WIDGET(call->tool->forwardTb)
+        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB(call->webv->tabsNb)));
+}
+
 
 static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
 {
@@ -394,6 +405,7 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
 {
     g_signal_connect(wv, "create", G_CALLBACK(c_new_tab), c);
     g_signal_connect(wv, "load-changed", G_CALLBACK(c_load), c);
+    g_signal_connect(wv, "resource-load-started", G_CALLBACK(c_loads), c);
     g_signal_connect(wv, "notify::title", G_CALLBACK(c_update_title)
         ,c->webv->tabsNb);
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
