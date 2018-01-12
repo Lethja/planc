@@ -24,6 +24,12 @@ GtkWidget * update_tab_label(const gchar * str, GtkWidget * label)
     return l;
 }
 
+void update_win_label(GtkWidget * win, GtkNotebook * nb)
+{
+	gtk_window_set_title((GtkWindow *) win
+		,webkit_web_view_get_title((WK_CURRENT_TAB(nb))));
+}
+
 void update_tab(GtkNotebook * nb, GtkWidget * ch, const gchar * str)
 {
     GtkWidget * t = gtk_notebook_get_tab_label(nb,ch);
@@ -46,6 +52,7 @@ static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e, void * v)
 static gboolean c_enter_fullscreen(GtkWidget * widget, void * v)
 {
     struct call_st * c = v;
+    gtk_widget_hide(GTK_WIDGET(c->menu->menu));
     gtk_widget_hide(GTK_WIDGET(c->tool->top));
     gtk_notebook_set_show_tabs(c->webv->tabsNb,FALSE);
     return 0;
@@ -54,6 +61,7 @@ static gboolean c_enter_fullscreen(GtkWidget * widget, void * v)
 static gboolean c_leave_fullscreen(GtkWidget * widget, void * v)
 {
     struct call_st * c = v;
+    gtk_widget_show(GTK_WIDGET(c->menu->menu));
     gtk_widget_show(GTK_WIDGET(c->tool->top));
     gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
     return 0;
@@ -136,6 +144,9 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
     struct call_st * call = v;
     update_tab(nb,GTK_WIDGET(wv),webkit_web_view_get_title(wv));
 
+    gtk_window_set_title((GtkWindow *) call->twin
+		,webkit_web_view_get_title(wv));
+
     gtk_entry_set_text(call->tool->addressEn
         ,webkit_web_view_get_uri(wv));
 
@@ -149,9 +160,13 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt, void * v)
 {
     update_tab((GtkNotebook *) v,GTK_WIDGET(webv)
-        ,webkit_web_view_get_title(webv));
+		,webkit_web_view_get_title(webv));
+	if(webv == WK_CURRENT_TAB(v))
+	{
+		update_win_label(G_call->twin,(GtkNotebook *) v);
+	}
     gtk_entry_set_text(G_call->tool->addressEn
-        ,webkit_web_view_get_uri(webv));
+		,webkit_web_view_get_uri(webv));
 }
 
 static void c_loads(WebKitWebView * wv, WebKitWebResource * res
@@ -231,7 +246,7 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str)
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
     gtk_label_set_justify((GtkLabel *)label,GTK_JUSTIFY_LEFT);
-    
+
     gtk_widget_set_halign(label,GTK_ALIGN_START);
     gtk_widget_set_halign(ebox,GTK_ALIGN_START);
     gtk_widget_show(GTK_WIDGET(label));
@@ -319,8 +334,8 @@ void InitWebview(struct call_st * c)
     c->webv->webc = webkit_web_context_get_default();
     webkit_web_context_set_cache_model(c->webv->webc
 		,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
-    
-    
+
+
     WebKitWebView * wv = WEBKIT_WEB_VIEW(
 		webkit_web_view_new_with_context(c->webv->webc));
     GtkWidget * ebox = gtk_event_box_new();
@@ -392,10 +407,7 @@ int main(int argc, char* argv[])
 
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
 
-
     gtk_widget_show_all(window);
-    //gtk_widget_hide(menu.menu);
-
     gtk_main();
 
     return 0;
