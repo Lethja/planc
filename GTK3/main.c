@@ -24,10 +24,14 @@ GtkWidget * update_tab_label(const gchar * str, GtkWidget * label)
     return l;
 }
 
-void update_win_label(GtkWidget * win, GtkNotebook * nb)
+void update_win_label(GtkWidget * win, WebKitWebView * wv)
 {
-	gtk_window_set_title((GtkWindow *) win
-		,webkit_web_view_get_title((WK_CURRENT_TAB(nb))));
+	gchar * str;
+	str = g_strconcat
+		(webkit_web_view_get_title(wv), " - Browser", NULL);
+	gtk_window_set_title((GtkWindow *) win, str);
+	if(str)
+		g_free(str);
 }
 
 void update_tab(GtkNotebook * nb, GtkWidget * ch, const gchar * str)
@@ -144,8 +148,7 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
     struct call_st * call = v;
     update_tab(nb,GTK_WIDGET(wv),webkit_web_view_get_title(wv));
 
-    gtk_window_set_title((GtkWindow *) call->twin
-		,webkit_web_view_get_title(wv));
+    update_win_label(G_call->twin,(WebKitWebView*) page);
 
     gtk_entry_set_text(call->tool->addressEn
         ,webkit_web_view_get_uri(wv));
@@ -163,7 +166,7 @@ static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt, void * v)
 		,webkit_web_view_get_title(webv));
 	if(webv == WK_CURRENT_TAB(v))
 	{
-		update_win_label(G_call->twin,(GtkNotebook *) v);
+		update_win_label(G_call->twin,webv);
 	}
     gtk_entry_set_text(G_call->tool->addressEn
 		,webkit_web_view_get_uri(webv));
@@ -351,10 +354,43 @@ void InitWebview(struct call_st * c)
     connect_signals(wv,c);
 }
 
-void InitCallback(struct call_st * c
+void InitFindBar(struct find_st * f)
+{
+	f->top = gtk_toolbar_new();
+    gtk_toolbar_set_style(GTK_TOOLBAR(f->top), GTK_TOOLBAR_ICONS);
+
+	f->findSb = (GtkSearchBar *)gtk_search_bar_new();
+	f->findEn = (GtkEntry *) gtk_entry_new();
+	gtk_widget_set_hexpand ((GtkWidget *) f->findEn, TRUE);
+
+	gtk_search_bar_connect_entry (GTK_SEARCH_BAR (f->findSb)
+		,GTK_ENTRY (f->findEn));
+	GtkContainer * c = (GtkContainer *) gtk_tool_item_new();
+
+	gtk_container_add(c, GTK_WIDGET(f->findEn));
+	gtk_tool_item_set_expand(GTK_TOOL_ITEM(c), TRUE);
+    gtk_tool_item_set_homogeneous(GTK_TOOL_ITEM(c), TRUE);
+    gtk_toolbar_insert(GTK_TOOLBAR(f->top), (GtkToolItem *) c, -1);
+
+
+    f->backTb = (GtkToolButton *)gtk_tool_button_new
+        (gtk_image_new_from_icon_name("go-previous"
+            ,GTK_ICON_SIZE_SMALL_TOOLBAR)
+        ,"_Previous");
+    gtk_toolbar_insert(GTK_TOOLBAR(f->top), (GtkToolItem *) f->backTb, -1);
+
+    f->forwardTb = (GtkToolButton *)gtk_tool_button_new
+        (gtk_image_new_from_icon_name("go-next"
+            ,GTK_ICON_SIZE_SMALL_TOOLBAR)
+        ,"_Next");
+    gtk_toolbar_insert(GTK_TOOLBAR(f->top), (GtkToolItem *) f->forwardTb, -1);
+}
+
+void InitCallback(struct call_st * c, struct find_st * f
     ,struct menu_st * m,struct tool_st * t,struct webt_st * w, GtkWidget * x)
 {
     c->menu = m;
+    c->find = f;
     c->tool = t;
     c->webv = w;
     c->twin = x;
@@ -365,6 +401,7 @@ int main(int argc, char* argv[])
     struct menu_st menu;
     struct tool_st tool;
     struct webt_st webk;
+    struct find_st find;
     struct call_st call;
 
     gtk_init(&argc, &argv);
@@ -378,12 +415,14 @@ int main(int argc, char* argv[])
     InitMenubar(&menu);
     InitToolbar(&tool);
     InitNotetab(&webk);
-    InitCallback(&call,&menu,&tool,&webk,window);
+    InitFindBar(&find);
+    InitCallback(&call,&find,&menu,&tool,&webk,window);
     InitWebview(&call);
     G_call = &call;
     gtk_box_pack_start(GTK_BOX(vbox), menu.menu, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), tool.top, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(webk.tabsNb), TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), find.top, FALSE, FALSE, 0);
 
     g_signal_connect(window, "destroy", G_CALLBACK(destroyWindowCb), NULL);
     g_signal_connect(tool.addressEn, "activate", G_CALLBACK(c_act), &call);
@@ -408,6 +447,7 @@ int main(int argc, char* argv[])
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
 
     gtk_widget_show_all(window);
+    gtk_widget_hide(GTK_WIDGET(find.top));
     gtk_main();
 
     return 0;

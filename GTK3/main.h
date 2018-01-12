@@ -40,11 +40,21 @@ struct webt_st
     WebKitWebContext * webc;
 };
 
+struct find_st
+{
+	GtkWidget * top;
+	GtkSearchBar * findSb;
+	GtkEntry * findEn;
+    GtkToolButton * backTb;
+    GtkToolButton * forwardTb;
+};
+
 struct call_st
 {
     struct menu_st * menu;
     struct tool_st * tool;
     struct webt_st * webv;
+    struct find_st * find;
     GtkWidget * twin;
 };
 
