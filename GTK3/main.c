@@ -105,32 +105,55 @@ static gboolean c_policy (WebKitWebView *web_view
 
 static void c_toggleSearch(GtkWidget * w, void * v)
 {
-	if(gtk_widget_get_visible(G_call->find->top))
-		gtk_widget_hide(G_call->find->top);
-	else
-		gtk_widget_show(G_call->find->top);
+    if(gtk_widget_get_visible(G_call->find->top))
+    {
+        gtk_widget_hide(G_call->find->top);
+        webkit_find_controller_search_finish
+            (webkit_web_view_get_find_controller
+            (WK_CURRENT_TAB(G_call->webv->tabsNb)));
+    }
+    else
+        gtk_widget_show(G_call->find->top);
 }
 
 static void search_page(GtkEditable * w, GtkNotebook * n)
 {
-	WebKitFindController * f
-		= webkit_web_view_get_find_controller(WK_CURRENT_TAB(n));
-	
-	webkit_find_controller_search(f,gtk_entry_get_text(GTK_ENTRY(w))
-		,WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE 
-		| WEBKIT_FIND_OPTIONS_WRAP_AROUND, -1);
+    WebKitFindController * f
+        = webkit_web_view_get_find_controller(WK_CURRENT_TAB(n));
+
+    webkit_find_controller_search(f,gtk_entry_get_text(GTK_ENTRY(w))
+        ,WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE
+        | WEBKIT_FIND_OPTIONS_WRAP_AROUND, -1);
+}
+
+static void c_search_nxt(GtkButton * b, GtkNotebook * n)
+{
+    const gchar * s = webkit_find_controller_get_search_text
+        (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
+    if(s)
+        webkit_find_controller_search_next
+        (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
+}
+
+static void c_search_prv(GtkButton * b, GtkNotebook * n)
+{
+    const gchar * s = webkit_find_controller_get_search_text
+        (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
+    if(s)
+        webkit_find_controller_search_previous
+        (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
 }
 
 static void c_search_ins(GtkEditable * e, gchar* t, gint l, gpointer p,
-	GtkNotebook * d)
+    GtkNotebook * d)
 {
-	search_page(e,d);
+    search_page(e,d);
 }
 
 static void c_search_del(GtkEditable* e, gint sp, gint ep
-	,GtkNotebook * d)
+    ,GtkNotebook * d)
 {
-	search_page(e,d);	
+    search_page(e,d);
 }
 
 static void c_refresh(GtkWidget * widget, void * v)
@@ -367,13 +390,13 @@ void InitMenubar(struct menu_st * menu)
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMi)
         ,menu->fileMenu);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->findMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->findMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMi);
-    
+
     g_signal_connect(G_OBJECT(menu->findMi), "activate",
         G_CALLBACK(c_toggleSearch), NULL);
-    
+
     g_signal_connect(G_OBJECT(menu->quitMi), "activate",
         G_CALLBACK(destroyWindowCb), NULL);
 }
@@ -444,11 +467,16 @@ void InitFindBar(struct find_st * f, GtkNotebook * w)
 
     gtk_toolbar_insert(GTK_TOOLBAR(f->top)
         ,(GtkToolItem *) f->forwardTb, -1);
-        
-	g_signal_connect_after(f->findEn, "insert-text"
-		,G_CALLBACK(c_search_ins), w);
-	g_signal_connect_after(f->findEn, "delete-text"
-		,G_CALLBACK(c_search_del), w);
+
+    g_signal_connect(f->backTb, "clicked"
+        ,G_CALLBACK(c_search_prv), w);
+    g_signal_connect(f->forwardTb, "clicked"
+        ,G_CALLBACK(c_search_nxt), w);
+
+    g_signal_connect_after(f->findEn, "insert-text"
+        ,G_CALLBACK(c_search_ins), w);
+    g_signal_connect_after(f->findEn, "delete-text"
+        ,G_CALLBACK(c_search_del), w);
 }
 
 void InitCallback(struct call_st * c, struct find_st * f
