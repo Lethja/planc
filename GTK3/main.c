@@ -26,12 +26,12 @@ GtkWidget * update_tab_label(const gchar * str, GtkWidget * label)
 
 void update_win_label(GtkWidget * win, WebKitWebView * wv)
 {
-	gchar * str;
-	str = g_strconcat
-		(webkit_web_view_get_title(wv), " - Browser", NULL);
-	gtk_window_set_title((GtkWindow *) win, str);
-	if(str)
-		g_free(str);
+    gchar * str;
+    str = g_strconcat
+        (webkit_web_view_get_title(wv), " - Browser", NULL);
+    gtk_window_set_title((GtkWindow *) win, str);
+    if(str)
+        g_free(str);
 }
 
 void update_tab(GtkNotebook * nb, GtkWidget * ch, const gchar * str)
@@ -41,7 +41,8 @@ void update_tab(GtkNotebook * nb, GtkWidget * ch, const gchar * str)
     gtk_label_set_text((GtkLabel *)l,str);
 }
 
-static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e, void * v)
+static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
+    ,void * v)
 {
     if (e->button == 2)
     {
@@ -104,10 +105,10 @@ static gboolean c_policy (WebKitWebView *web_view
 
 static void c_refresh(GtkWidget * widget, void * v)
 {
-	if(webkit_web_view_is_loading(WK_CURRENT_TAB(v)))
-		webkit_web_view_stop_loading(WK_CURRENT_TAB(v));
-	else
-		webkit_web_view_reload(WK_CURRENT_TAB(v));
+    if(webkit_web_view_is_loading(WK_CURRENT_TAB(v)))
+        webkit_web_view_stop_loading(WK_CURRENT_TAB(v));
+    else
+        webkit_web_view_reload(WK_CURRENT_TAB(v));
 }
 
 static void c_go_back(GtkWidget * widget, void * v)
@@ -135,7 +136,8 @@ static void c_go_forward(GtkWidget * widget, void * v)
 static void c_act(GtkWidget * widget, void * v)
 {
     struct call_st * call = (struct call_st *) v;
-    const gchar * uri = gtk_entry_get_text(GTK_ENTRY(call->tool->addressEn));
+    const gchar * uri = gtk_entry_get_text
+        (GTK_ENTRY(call->tool->addressEn));
     char * curi = prepAddress(uri);
     webkit_web_view_load_uri(WK_CURRENT_TAB(call->webv->tabsNb),curi);
     free(curi);
@@ -160,27 +162,30 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
         ,webkit_web_view_can_go_forward(wv));
 }
 
-static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt, void * v)
+static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
+    ,void * v)
 {
     update_tab((GtkNotebook *) v,GTK_WIDGET(webv)
-		,webkit_web_view_get_title(webv));
-	if(webv == WK_CURRENT_TAB(v))
-	{
-		update_win_label(G_call->twin,webv);
-	}
+        ,webkit_web_view_get_title(webv));
+    if(webv == WK_CURRENT_TAB(v))
+    {
+        update_win_label(G_call->twin,webv);
+    }
     gtk_entry_set_text(G_call->tool->addressEn
-		,webkit_web_view_get_uri(webv));
+        ,webkit_web_view_get_uri(webv));
 }
 
 static void c_loads(WebKitWebView * wv, WebKitWebResource * res
-	,WebKitURIRequest  *req, gpointer v)
+    ,WebKitURIRequest  *req, gpointer v)
 {
-	struct call_st * call = v;
-	gtk_widget_set_sensitive(GTK_WIDGET(call->tool->backTb)
-        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(call->webv->tabsNb)));
+    struct call_st * call = v;
+    gtk_widget_set_sensitive(GTK_WIDGET(call->tool->backTb)
+        ,webkit_web_view_can_go_back
+        (WK_CURRENT_TAB(call->webv->tabsNb)));
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->forwardTb)
-        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB(call->webv->tabsNb)));
+        ,webkit_web_view_can_go_forward
+        (WK_CURRENT_TAB(call->webv->tabsNb)));
 }
 
 
@@ -193,25 +198,28 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
         case WEBKIT_LOAD_COMMITTED:
         case WEBKIT_LOAD_REDIRECTED:
             gtk_image_set_from_icon_name(call->tool->reloadIo
-				,"process-stop",GTK_ICON_SIZE_SMALL_TOOLBAR);
+                ,"process-stop",GTK_ICON_SIZE_SMALL_TOOLBAR);
         break;
 
         case WEBKIT_LOAD_FINISHED:
             gtk_image_set_from_icon_name(call->tool->reloadIo
-				,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
+                ,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
         break;
     }
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->backTb)
-        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(call->webv->tabsNb)));
+        ,webkit_web_view_can_go_back
+        (WK_CURRENT_TAB(call->webv->tabsNb)));
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->forwardTb)
-        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB(call->webv->tabsNb)));
+        ,webkit_web_view_can_go_forward
+        (WK_CURRENT_TAB(call->webv->tabsNb)));
 
     if(webkit_web_view_get_uri(webv))
     {
         gtk_entry_set_text(call->tool->addressEn
-            ,webkit_web_view_get_uri(WK_CURRENT_TAB(call->webv->tabsNb)));
+            ,webkit_web_view_get_uri
+            (WK_CURRENT_TAB(call->webv->tabsNb)));
     }
 
     if(!webkit_web_view_get_title(webv))
@@ -237,7 +245,8 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str)
 {
     GtkWidget * ebox = gtk_event_box_new();
     gtk_widget_set_has_window(ebox, FALSE);
-    g_signal_connect(ebox, "button-press-event", G_CALLBACK(c_notebook_click), wv);
+    g_signal_connect(ebox, "button-press-event"
+        ,G_CALLBACK(c_notebook_click), wv);
     GtkWidget * label;
     if(str == NULL || strcmp(str,"") == 0)
         label = gtk_label_new("New Tab");
@@ -267,10 +276,11 @@ static void c_show_tab(WebKitWebView * wv, void * v)
     free(newtab);
 }
 
-static WebKitWebView * c_new_tab(WebKitWebView * wv, WebKitNavigationAction * na
-    ,struct call_st * c)
+static WebKitWebView * c_new_tab(WebKitWebView * wv
+    ,WebKitNavigationAction * na, struct call_st * c)
 {
-    WebKitWebView * nt = (WebKitWebView *) webkit_web_view_new_with_related_view(wv);
+    WebKitWebView * nt
+        = (WebKitWebView *) webkit_web_view_new_with_related_view(wv);
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->call = c;
@@ -286,29 +296,34 @@ void InitToolbar(struct tool_st * tool)
 
     tool->backTb = (GtkToolButton *)gtk_tool_button_new
         (gtk_image_new_from_icon_name("go-previous"
-            ,GTK_ICON_SIZE_SMALL_TOOLBAR)
-        ,"_Back");
-    gtk_toolbar_insert(GTK_TOOLBAR(tool->top), (GtkToolItem *) tool->backTb, -1);
+        ,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Back");
+
+    gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
+        ,(GtkToolItem *) tool->backTb, -1);
+
     gtk_widget_set_sensitive(GTK_WIDGET(tool->backTb), FALSE);
 
     tool->forwardTb = (GtkToolButton *)gtk_tool_button_new
         (gtk_image_new_from_icon_name("go-next"
-            ,GTK_ICON_SIZE_SMALL_TOOLBAR)
-        ,"_Forward");
-    gtk_toolbar_insert(GTK_TOOLBAR(tool->top), (GtkToolItem *) tool->forwardTb, -1);
+        ,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Forward");
+
+    gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
+        ,(GtkToolItem *) tool->forwardTb, -1);
     gtk_widget_set_sensitive(GTK_WIDGET(tool->forwardTb), FALSE);
     tool->addressTi = (GtkContainer *) gtk_tool_item_new();
     tool->addressEn = (GtkEntry *) gtk_entry_new();
     gtk_container_add(tool->addressTi, GTK_WIDGET(tool->addressEn));
-    gtk_toolbar_insert(GTK_TOOLBAR(tool->top), GTK_TOOL_ITEM(tool->addressTi), -1);
+    gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
+        ,GTK_TOOL_ITEM(tool->addressTi), -1);
     gtk_tool_item_set_expand(GTK_TOOL_ITEM(tool->addressTi), TRUE);
     gtk_tool_item_set_homogeneous(GTK_TOOL_ITEM(tool->addressTi), TRUE);
 
-	tool->reloadIo = (GtkImage *) gtk_image_new_from_icon_name
-		("view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
+    tool->reloadIo = (GtkImage *) gtk_image_new_from_icon_name
+        ("view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
     tool->reloadTb = (GtkToolButton *)gtk_tool_button_new
-		(GTK_WIDGET(tool->reloadIo),"_Refresh");
-    gtk_toolbar_insert(GTK_TOOLBAR(tool->top), (GtkToolItem *) tool->reloadTb, -1);
+        (GTK_WIDGET(tool->reloadIo),"_Refresh");
+    gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
+        ,(GtkToolItem *) tool->reloadTb, -1);
 }
 
 void InitMenubar(struct menu_st * menu)
@@ -319,7 +334,8 @@ void InitMenubar(struct menu_st * menu)
     menu->fileMi = gtk_menu_item_new_with_mnemonic("_File");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
 
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMi), menu->fileMenu);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMi)
+        ,menu->fileMenu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMi);
 }
@@ -336,16 +352,17 @@ void InitWebview(struct call_st * c)
 {
     c->webv->webc = webkit_web_context_get_default();
     webkit_web_context_set_cache_model(c->webv->webc
-		,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
+        ,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
 
 
     WebKitWebView * wv = WEBKIT_WEB_VIEW(
-		webkit_web_view_new_with_context(c->webv->webc));
+        webkit_web_view_new_with_context(c->webv->webc));
     GtkWidget * ebox = gtk_event_box_new();
     gtk_widget_set_has_window(ebox, FALSE);
     GtkWidget * label = gtk_label_new("New Tab");
     gtk_container_add(GTK_CONTAINER(ebox), label);
-    g_signal_connect(ebox, "button-press-event", G_CALLBACK(c_notebook_click), wv);
+    g_signal_connect(ebox, "button-press-event"
+        , G_CALLBACK(c_notebook_click), wv);
     gtk_label_set_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
@@ -356,38 +373,43 @@ void InitWebview(struct call_st * c)
 
 void InitFindBar(struct find_st * f)
 {
-	f->top = gtk_toolbar_new();
+    f->top = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(f->top), GTK_TOOLBAR_ICONS);
 
-	f->findSb = (GtkSearchBar *)gtk_search_bar_new();
-	f->findEn = (GtkEntry *) gtk_entry_new();
-	gtk_widget_set_hexpand ((GtkWidget *) f->findEn, TRUE);
+    f->findSb = (GtkSearchBar *)gtk_search_bar_new();
+    f->findEn = (GtkEntry *) gtk_entry_new();
+    gtk_widget_set_hexpand ((GtkWidget *) f->findEn, TRUE);
 
-	gtk_search_bar_connect_entry (GTK_SEARCH_BAR (f->findSb)
-		,GTK_ENTRY (f->findEn));
-	GtkContainer * c = (GtkContainer *) gtk_tool_item_new();
+    gtk_search_bar_connect_entry (GTK_SEARCH_BAR (f->findSb)
+        ,GTK_ENTRY (f->findEn));
+    GtkContainer * c = (GtkContainer *) gtk_tool_item_new();
 
-	gtk_container_add(c, GTK_WIDGET(f->findEn));
-	gtk_tool_item_set_expand(GTK_TOOL_ITEM(c), TRUE);
+    gtk_container_add(c, GTK_WIDGET(f->findEn));
+    gtk_tool_item_set_expand(GTK_TOOL_ITEM(c), TRUE);
     gtk_tool_item_set_homogeneous(GTK_TOOL_ITEM(c), TRUE);
     gtk_toolbar_insert(GTK_TOOLBAR(f->top), (GtkToolItem *) c, -1);
 
 
     f->backTb = (GtkToolButton *)gtk_tool_button_new
         (gtk_image_new_from_icon_name("go-previous"
-            ,GTK_ICON_SIZE_SMALL_TOOLBAR)
+        ,GTK_ICON_SIZE_SMALL_TOOLBAR)
         ,"_Previous");
-    gtk_toolbar_insert(GTK_TOOLBAR(f->top), (GtkToolItem *) f->backTb, -1);
+
+    gtk_toolbar_insert(GTK_TOOLBAR(f->top)
+        , (GtkToolItem *) f->backTb, -1);
 
     f->forwardTb = (GtkToolButton *)gtk_tool_button_new
         (gtk_image_new_from_icon_name("go-next"
-            ,GTK_ICON_SIZE_SMALL_TOOLBAR)
+        ,GTK_ICON_SIZE_SMALL_TOOLBAR)
         ,"_Next");
-    gtk_toolbar_insert(GTK_TOOLBAR(f->top), (GtkToolItem *) f->forwardTb, -1);
+
+    gtk_toolbar_insert(GTK_TOOLBAR(f->top)
+        , (GtkToolItem *) f->forwardTb, -1);
 }
 
 void InitCallback(struct call_st * c, struct find_st * f
-    ,struct menu_st * m,struct tool_st * t,struct webt_st * w, GtkWidget * x)
+    ,struct menu_st * m,struct tool_st * t,struct webt_st * w
+    ,GtkWidget * x)
 {
     c->menu = m;
     c->find = f;
@@ -421,15 +443,22 @@ int main(int argc, char* argv[])
     G_call = &call;
     gtk_box_pack_start(GTK_BOX(vbox), menu.menu, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), tool.top, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(webk.tabsNb), TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(webk.tabsNb)
+        , TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), find.top, FALSE, FALSE, 0);
 
-    g_signal_connect(window, "destroy", G_CALLBACK(destroyWindowCb), NULL);
-    g_signal_connect(tool.addressEn, "activate", G_CALLBACK(c_act), &call);
-    g_signal_connect(tool.backTb, "clicked", G_CALLBACK(c_go_back), webk.tabsNb);
-    g_signal_connect(tool.forwardTb, "clicked", G_CALLBACK(c_go_forward), webk.tabsNb);
-    g_signal_connect(tool.reloadTb, "clicked", G_CALLBACK(c_refresh), webk.tabsNb);
-    g_signal_connect(webk.tabsNb, "switch-page", G_CALLBACK(c_switch_tab), &call);
+    g_signal_connect(window, "destroy"
+        ,G_CALLBACK(destroyWindowCb), NULL);
+    g_signal_connect(tool.addressEn, "activate"
+        ,G_CALLBACK(c_act), &call);
+    g_signal_connect(tool.backTb, "clicked"
+        ,G_CALLBACK(c_go_back), webk.tabsNb);
+    g_signal_connect(tool.forwardTb, "clicked"
+        ,G_CALLBACK(c_go_forward), webk.tabsNb);
+    g_signal_connect(tool.reloadTb, "clicked"
+        ,G_CALLBACK(c_refresh), webk.tabsNb);
+    g_signal_connect(webk.tabsNb, "switch-page"
+        ,G_CALLBACK(c_switch_tab), &call);
 
 
     if(argc > 1)
@@ -440,9 +469,9 @@ int main(int argc, char* argv[])
     }
     else
     {
-		webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
-		,"about:blank");
-	}
+        webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
+        ,"about:blank");
+    }
 
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
 
@@ -457,7 +486,8 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
 {
     g_signal_connect(wv, "create", G_CALLBACK(c_new_tab), c);
     g_signal_connect(wv, "load-changed", G_CALLBACK(c_load), c);
-    g_signal_connect(wv, "resource-load-started", G_CALLBACK(c_loads), c);
+    g_signal_connect(wv, "resource-load-started", G_CALLBACK(c_loads)
+        ,c);
     g_signal_connect(wv, "notify::title", G_CALLBACK(c_update_title)
         ,c->webv->tabsNb);
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
