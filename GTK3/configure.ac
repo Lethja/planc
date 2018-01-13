@@ -5,7 +5,7 @@ AC_PREREQ([2.68])
 AC_INIT([browser], [0.01])
 AM_INIT_AUTOMAKE([-Wall foreign])
 AC_CONFIG_SRCDIR([main.c])
-AC_CONFIG_HEADERS([config.h main.h])
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
