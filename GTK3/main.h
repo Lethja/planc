@@ -20,6 +20,7 @@ struct menu_st
     GtkWidget * menu;
     GtkWidget * fileMenu;
     GtkWidget * fileMi;
+    GtkWidget * findMi;
     GtkWidget * quitMi;
 };
 

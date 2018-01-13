@@ -103,6 +103,36 @@ static gboolean c_policy (WebKitWebView *web_view
     return TRUE;
 }
 
+static void c_toggleSearch(GtkWidget * w, void * v)
+{
+	if(gtk_widget_get_visible(G_call->find->top))
+		gtk_widget_hide(G_call->find->top);
+	else
+		gtk_widget_show(G_call->find->top);
+}
+
+static void search_page(GtkEditable * w, GtkNotebook * n)
+{
+	WebKitFindController * f
+		= webkit_web_view_get_find_controller(WK_CURRENT_TAB(n));
+	
+	webkit_find_controller_search(f,gtk_entry_get_text(GTK_ENTRY(w))
+		,WEBKIT_FIND_OPTIONS_CASE_INSENSITIVE 
+		| WEBKIT_FIND_OPTIONS_WRAP_AROUND, -1);
+}
+
+static void c_search_ins(GtkEditable * e, gchar* t, gint l, gpointer p,
+	GtkNotebook * d)
+{
+	search_page(e,d);
+}
+
+static void c_search_del(GtkEditable* e, gint sp, gint ep
+	,GtkNotebook * d)
+{
+	search_page(e,d);	
+}
+
 static void c_refresh(GtkWidget * widget, void * v)
 {
     if(webkit_web_view_is_loading(WK_CURRENT_TAB(v)))
@@ -332,12 +362,20 @@ void InitMenubar(struct menu_st * menu)
     menu->fileMenu = gtk_menu_new();
 
     menu->fileMi = gtk_menu_item_new_with_mnemonic("_File");
+    menu->findMi = gtk_menu_item_new_with_mnemonic("_Search Page");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMi)
         ,menu->fileMenu);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->findMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMi);
+    
+    g_signal_connect(G_OBJECT(menu->findMi), "activate",
+        G_CALLBACK(c_toggleSearch), NULL);
+    
+    g_signal_connect(G_OBJECT(menu->quitMi), "activate",
+        G_CALLBACK(destroyWindowCb), NULL);
 }
 
 void InitNotetab(struct webt_st * webv)
@@ -362,7 +400,7 @@ void InitWebview(struct call_st * c)
     GtkWidget * label = gtk_label_new("New Tab");
     gtk_container_add(GTK_CONTAINER(ebox), label);
     g_signal_connect(ebox, "button-press-event"
-        , G_CALLBACK(c_notebook_click), wv);
+        ,G_CALLBACK(c_notebook_click), wv);
     gtk_label_set_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
@@ -371,12 +409,13 @@ void InitWebview(struct call_st * c)
     connect_signals(wv,c);
 }
 
-void InitFindBar(struct find_st * f)
+void InitFindBar(struct find_st * f, GtkNotebook * w)
 {
     f->top = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(f->top), GTK_TOOLBAR_ICONS);
 
     f->findSb = (GtkSearchBar *)gtk_search_bar_new();
+    gtk_search_bar_set_show_close_button(f->findSb,TRUE);
     f->findEn = (GtkEntry *) gtk_entry_new();
     gtk_widget_set_hexpand ((GtkWidget *) f->findEn, TRUE);
 
@@ -404,7 +443,12 @@ void InitFindBar(struct find_st * f)
         ,"_Next");
 
     gtk_toolbar_insert(GTK_TOOLBAR(f->top)
-        , (GtkToolItem *) f->forwardTb, -1);
+        ,(GtkToolItem *) f->forwardTb, -1);
+        
+	g_signal_connect_after(f->findEn, "insert-text"
+		,G_CALLBACK(c_search_ins), w);
+	g_signal_connect_after(f->findEn, "delete-text"
+		,G_CALLBACK(c_search_del), w);
 }
 
 void InitCallback(struct call_st * c, struct find_st * f
@@ -437,7 +481,7 @@ int main(int argc, char* argv[])
     InitMenubar(&menu);
     InitToolbar(&tool);
     InitNotetab(&webk);
-    InitFindBar(&find);
+    InitFindBar(&find, webk.tabsNb);
     InitCallback(&call,&find,&menu,&tool,&webk,window);
     InitWebview(&call);
     G_call = &call;
