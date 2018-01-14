@@ -111,9 +111,14 @@ static void c_toggleSearch(GtkWidget * w, void * v)
         webkit_find_controller_search_finish
             (webkit_web_view_get_find_controller
             (WK_CURRENT_TAB(G_call->webv->tabsNb)));
+        gtk_widget_grab_focus
+			(WK_CURRENT_TAB_WIDGET(G_call->webv->tabsNb));
     }
     else
+    {
         gtk_widget_show(G_call->find->top);
+        gtk_widget_grab_focus((GtkWidget *) G_call->find->findEn);
+    }
 }
 
 static void search_page(GtkEditable * w, GtkNotebook * n)
@@ -379,7 +384,7 @@ void InitToolbar(struct tool_st * tool)
         ,(GtkToolItem *) tool->reloadTb, -1);
 }
 
-void InitMenubar(struct menu_st * menu)
+void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 {
     menu->menu = gtk_menu_bar_new();
     menu->fileMenu = gtk_menu_new();
@@ -393,6 +398,9 @@ void InitMenubar(struct menu_st * menu)
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->findMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMi);
+
+    gtk_widget_add_accelerator(menu->findMi, "activate", accel_group,
+      GDK_KEY_F, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
     g_signal_connect(G_OBJECT(menu->findMi), "activate",
         G_CALLBACK(c_toggleSearch), NULL);
@@ -501,12 +509,14 @@ int main(int argc, char* argv[])
     gtk_init(&argc, &argv);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    GtkAccelGroup * accel_group = gtk_accel_group_new();
+    gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
     gtk_window_set_default_size(GTK_WINDOW(window), 800, 600);
 
     GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    InitMenubar(&menu);
+    InitMenubar(&menu, accel_group);
     InitToolbar(&tool);
     InitNotetab(&webk);
     InitFindBar(&find, webk.tabsNb);
