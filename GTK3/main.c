@@ -112,7 +112,7 @@ static void c_toggleSearch(GtkWidget * w, void * v)
             (webkit_web_view_get_find_controller
             (WK_CURRENT_TAB(G_call->webv->tabsNb)));
         gtk_widget_grab_focus
-			(WK_CURRENT_TAB_WIDGET(G_call->webv->tabsNb));
+            (WK_CURRENT_TAB_WIDGET(G_call->webv->tabsNb));
     }
     else
     {
@@ -347,7 +347,7 @@ static WebKitWebView * c_new_tab(WebKitWebView * wv
     return nt;
 }
 
-void InitToolbar(struct tool_st * tool)
+void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
 {
     tool->top = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(tool->top), GTK_TOOLBAR_ICONS);
@@ -382,6 +382,8 @@ void InitToolbar(struct tool_st * tool)
         (GTK_WIDGET(tool->reloadIo),"_Refresh");
     gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
         ,(GtkToolItem *) tool->reloadTb, -1);
+    gtk_widget_add_accelerator((GtkWidget *) tool->reloadTb
+        ,"clicked", accel_group, GDK_KEY_F5, 0, 0);
 }
 
 void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
@@ -517,7 +519,7 @@ int main(int argc, char* argv[])
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
     InitMenubar(&menu, accel_group);
-    InitToolbar(&tool);
+    InitToolbar(&tool, accel_group);
     InitNotetab(&webk);
     InitFindBar(&find, webk.tabsNb);
     InitCallback(&call,&find,&menu,&tool,&webk,window);
