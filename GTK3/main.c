@@ -84,7 +84,7 @@ static gboolean c_policy (WebKitWebView *web_view
             (webkit_navigation_policy_decision_get_navigation_action
             ((WebKitNavigationPolicyDecision *)decision)) == 2)
         {
-            WebKitWebView * nt = c_new_tab(web_view
+            WebKitWebView * nt = c_new_tab_url(web_view
                 ,webkit_navigation_policy_decision_get_navigation_action
                 ((WebKitNavigationPolicyDecision *) decision),v);
 
@@ -334,7 +334,22 @@ static void c_show_tab(WebKitWebView * wv, void * v)
     free(newtab);
 }
 
-static WebKitWebView * c_new_tab(WebKitWebView * wv
+static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
+{
+    WebKitWebView * nt
+        = (WebKitWebView *) webkit_web_view_new_with_related_view
+        (WK_CURRENT_TAB(c->webv->tabsNb));
+    webkit_web_view_load_uri(nt,"about:blank");
+    struct newt_st * newtab = malloc(sizeof(struct newt_st));
+    newtab->webv = nt;
+    newtab->call = c;
+    g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
+        ,newtab);
+    g_signal_emit_by_name(nt,"ready-to-show");
+    return nt;
+}
+
+static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na, struct call_st * c)
 {
     WebKitWebView * nt
@@ -392,20 +407,28 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
     menu->fileMenu = gtk_menu_new();
 
     menu->fileMi = gtk_menu_item_new_with_mnemonic("_File");
+    menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Search Page");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMi)
         ,menu->fileMenu);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->findMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->nTabMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMi);
 
     gtk_widget_add_accelerator(menu->findMi, "activate", accel_group,
       GDK_KEY_F, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
+    gtk_widget_add_accelerator(menu->nTabMi, "activate", accel_group,
+      GDK_KEY_T, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
     g_signal_connect(G_OBJECT(menu->findMi), "activate",
         G_CALLBACK(c_toggleSearch), NULL);
+
+    g_signal_connect(G_OBJECT(menu->nTabMi), "activate",
+        G_CALLBACK(c_new_tab), G_call);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate",
         G_CALLBACK(destroyWindowCb), NULL);
@@ -424,7 +447,6 @@ void InitWebview(struct call_st * c)
     c->webv->webc = webkit_web_context_get_default();
     webkit_web_context_set_cache_model(c->webv->webc
         ,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
-
 
     WebKitWebView * wv = WEBKIT_WEB_VIEW(
         webkit_web_view_new_with_context(c->webv->webc));
@@ -508,6 +530,8 @@ int main(int argc, char* argv[])
     struct find_st find;
     struct call_st call;
 
+    G_call = &call;
+
     gtk_init(&argc, &argv);
 
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -524,7 +548,7 @@ int main(int argc, char* argv[])
     InitFindBar(&find, webk.tabsNb);
     InitCallback(&call,&find,&menu,&tool,&webk,window);
     InitWebview(&call);
-    G_call = &call;
+
     gtk_box_pack_start(GTK_BOX(vbox), menu.menu, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), tool.top, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(webk.tabsNb)
@@ -568,7 +592,7 @@ int main(int argc, char* argv[])
 
 void connect_signals (WebKitWebView * wv, struct call_st * c)
 {
-    g_signal_connect(wv, "create", G_CALLBACK(c_new_tab), c);
+    g_signal_connect(wv, "create", G_CALLBACK(c_new_tab_url), c);
     g_signal_connect(wv, "load-changed", G_CALLBACK(c_load), c);
     g_signal_connect(wv, "resource-load-started", G_CALLBACK(c_loads)
         ,c);

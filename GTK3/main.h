@@ -21,6 +21,7 @@ struct menu_st
     GtkWidget * fileMenu;
     GtkWidget * fileMi;
     GtkWidget * findMi;
+    GtkWidget * nTabMi;
     GtkWidget * quitMi;
 };
 
@@ -72,4 +73,4 @@ void connect_signals (WebKitWebView * wv, struct call_st * c);
 
 static void destroyWindowCb(GtkWidget* widget, GtkWidget* window);
 static void c_show_tab(WebKitWebView * wv, void * v);
-static WebKitWebView * c_new_tab(WebKitWebView * wv, WebKitNavigationAction * na ,struct call_st * c);
+static WebKitWebView * c_new_tab_url(WebKitWebView * wv, WebKitNavigationAction * na ,struct call_st * c);
