@@ -330,6 +330,11 @@ static void c_show_tab(WebKitWebView * wv, void * v)
     gtk_notebook_append_page((GtkNotebook *) newtab->call->webv->tabsNb
         ,GTK_WIDGET(newtab->webv),ebox);
     gtk_widget_show_all(GTK_WIDGET(newtab->call->webv->tabsNb));
+    gtk_notebook_set_current_page
+        ((GtkNotebook *) newtab->call->webv->tabsNb
+        ,gtk_notebook_page_num
+        (newtab->call->webv->tabsNb,(GtkWidget *) newtab->webv));
+
     connect_signals(newtab->webv,newtab->call);
     free(newtab);
 }
