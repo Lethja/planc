@@ -41,6 +41,40 @@ void update_tab(GtkNotebook * nb, GtkWidget * ch, const gchar * str)
     gtk_label_set_text((GtkLabel *)l,str);
 }
 
+gboolean c_download_start(WebKitWebView * wv, WebKitDownload * dl, void * v)
+{
+    GtkWidget *dialog;
+    GtkFileChooser *chooser;
+    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+    gint res;
+
+    dialog = gtk_file_chooser_dialog_new ("Save File" ,NULL
+        ,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
+        ,GTK_RESPONSE_CANCEL ,("_Save") ,GTK_RESPONSE_ACCEPT,NULL);
+
+chooser = GTK_FILE_CHOOSER (dialog);
+
+gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+
+//if (webkit_download_get_suggested_filename(dl) == NULL)
+    gtk_file_chooser_set_current_name (chooser, ("Untitled download"));
+/*else
+    gtk_file_chooser_set_filename (chooser
+        ,webkit_download_get_suggested_filename(dl));*/
+
+res = gtk_dialog_run (GTK_DIALOG (dialog));
+if (res == GTK_RESPONSE_ACCEPT)
+    {
+        char * fn = gtk_file_chooser_get_uri(chooser);
+        webkit_download_set_destination(dl,fn);
+        g_free(fn);
+        gtk_widget_destroy (dialog);
+        return TRUE;
+    }
+
+    gtk_widget_destroy (dialog);
+}
+
 static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
     ,void * v)
 {
@@ -74,7 +108,7 @@ static gboolean c_leave_fullscreen(GtkWidget * widget, void * v)
 
 
 static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
-	,WebKitPolicyDecisionType t, void * v)
+    ,WebKitPolicyDecisionType t, void * v)
 {
     switch (t) {
     case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
@@ -96,18 +130,19 @@ static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
             webkit_policy_decision_ignore(d);
         }
         break;
-	case WEBKIT_POLICY_DECISION_TYPE_RESPONSE:
-	
-		if(webkit_response_policy_decision_is_mime_type_supported
-			((WebKitResponsePolicyDecision *) d))
-		{
-			webkit_policy_decision_use(d);
-		}
-		else
-		{
-			webkit_policy_decision_download(d);
-		}
-		break;
+    case WEBKIT_POLICY_DECISION_TYPE_RESPONSE:
+
+        if(webkit_response_policy_decision_is_mime_type_supported
+            ((WebKitResponsePolicyDecision *) d))
+        {
+            webkit_policy_decision_use(d);
+        }
+        else
+        {
+            webkit_policy_decision_download(d);
+            return TRUE;
+        }
+        break;
     default:
         return FALSE;
     }
@@ -583,6 +618,8 @@ int main(int argc, char* argv[])
         ,G_CALLBACK(c_refresh), webk.tabsNb);
     g_signal_connect(webk.tabsNb, "switch-page"
         ,G_CALLBACK(c_switch_tab), &call);
+    g_signal_connect(webk.webc, "download-started"
+        ,G_CALLBACK(c_download_start), &call);
 
 
     if(argc > 1)
