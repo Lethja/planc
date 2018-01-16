@@ -44,9 +44,9 @@ struct webt_st
 
 struct find_st
 {
-	GtkWidget * top;
-	GtkSearchBar * findSb;
-	GtkEntry * findEn;
+    GtkWidget * top;
+    GtkSearchBar * findSb;
+    GtkEntry * findEn;
     GtkToolButton * backTb;
     GtkToolButton * forwardTb;
 };

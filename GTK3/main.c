@@ -73,30 +73,41 @@ static gboolean c_leave_fullscreen(GtkWidget * widget, void * v)
 }
 
 
-static gboolean c_policy (WebKitWebView *web_view
-    ,WebKitPolicyDecision *decision, WebKitPolicyDecisionType type
-    ,void * v)
+static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
+	,WebKitPolicyDecisionType t, void * v)
 {
-    switch (type) {
+    switch (t) {
     case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
 
         if(webkit_navigation_action_get_mouse_button
             (webkit_navigation_policy_decision_get_navigation_action
-            ((WebKitNavigationPolicyDecision *)decision)) == 2)
+            ((WebKitNavigationPolicyDecision *)d)) == 2)
         {
-            WebKitWebView * nt = c_new_tab_url(web_view
+            WebKitWebView * nt = c_new_tab_url(wv
                 ,webkit_navigation_policy_decision_get_navigation_action
-                ((WebKitNavigationPolicyDecision *) decision),v);
+                ((WebKitNavigationPolicyDecision *) d),v);
 
             webkit_web_view_load_request(nt
                 ,webkit_navigation_action_get_request
                 (webkit_navigation_policy_decision_get_navigation_action
-                    ((WebKitNavigationPolicyDecision *)decision)));
+                    ((WebKitNavigationPolicyDecision *)d)));
 
             g_signal_emit_by_name(nt,"ready-to-show");
-            webkit_policy_decision_ignore(decision);
+            webkit_policy_decision_ignore(d);
         }
         break;
+	case WEBKIT_POLICY_DECISION_TYPE_RESPONSE:
+	
+		if(webkit_response_policy_decision_is_mime_type_supported
+			((WebKitResponsePolicyDecision *) d))
+		{
+			webkit_policy_decision_use(d);
+		}
+		else
+		{
+			webkit_policy_decision_download(d);
+		}
+		break;
     default:
         return FALSE;
     }
