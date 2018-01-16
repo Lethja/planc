@@ -41,7 +41,7 @@ void update_tab(GtkNotebook * nb, GtkWidget * ch, const gchar * str)
     gtk_label_set_text((GtkLabel *)l,str);
 }
 
-gboolean c_download_start(WebKitWebView * wv, WebKitDownload * dl, void * v)
+gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
 {
     GtkWidget *dialog;
     GtkFileChooser *chooser;
@@ -52,27 +52,39 @@ gboolean c_download_start(WebKitWebView * wv, WebKitDownload * dl, void * v)
         ,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
         ,GTK_RESPONSE_CANCEL ,("_Save") ,GTK_RESPONSE_ACCEPT,NULL);
 
-chooser = GTK_FILE_CHOOSER (dialog);
+    chooser = GTK_FILE_CHOOSER (dialog);
 
-gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+    gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
-//if (webkit_download_get_suggested_filename(dl) == NULL)
-    gtk_file_chooser_set_current_name (chooser, ("Untitled download"));
-/*else
-    gtk_file_chooser_set_filename (chooser
-        ,webkit_download_get_suggested_filename(dl));*/
+    if (fn == NULL || strcmp(fn,"") == 0)
+        gtk_file_chooser_set_current_name (chooser, ("Untitled download"));
+    else
+        gtk_file_chooser_set_current_name(chooser, fn);
 
-res = gtk_dialog_run (GTK_DIALOG (dialog));
-if (res == GTK_RESPONSE_ACCEPT)
+    gtk_file_chooser_set_current_folder(chooser
+        ,g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD));
+
+    res = gtk_dialog_run (GTK_DIALOG (dialog));
+    if (res == GTK_RESPONSE_ACCEPT)
     {
-        char * fn = gtk_file_chooser_get_uri(chooser);
-        webkit_download_set_destination(dl,fn);
-        g_free(fn);
+        webkit_download_set_destination(d
+            ,gtk_file_chooser_get_uri(chooser));
         gtk_widget_destroy (dialog);
-        return TRUE;
+        return FALSE;
     }
-
+    else
+    {
+        webkit_download_cancel(d);
+    }
     gtk_widget_destroy (dialog);
+    return TRUE;
+}
+
+static void c_download_start(WebKitWebContext * wv
+    ,WebKitDownload * dl, void * v)
+{
+    g_signal_connect(dl, "decide-destination"
+        ,G_CALLBACK(c_download_name), v);
 }
 
 static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
