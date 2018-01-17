@@ -34,11 +34,15 @@ void update_win_label(GtkWidget * win, WebKitWebView * wv)
         g_free(str);
 }
 
-void update_tab(GtkNotebook * nb, GtkWidget * ch, const gchar * str)
+void update_tab(GtkNotebook * nb, WebKitWebView * ch)
 {
-    GtkWidget * t = gtk_notebook_get_tab_label(nb,ch);
+    GtkWidget * t = gtk_notebook_get_tab_label(nb,(GtkWidget *) ch);
     GtkWidget * l = gtk_bin_get_child(GTK_BIN(t));
-    gtk_label_set_text((GtkLabel *)l,str);
+    const gchar * c = webkit_web_view_get_title(ch);
+    if(c && strcmp(c,"") != 0)
+        gtk_label_set_text((GtkLabel *)l,c);
+    else
+        gtk_label_set_text((GtkLabel *)l,webkit_web_view_get_uri(ch));
 }
 
 gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
@@ -304,7 +308,7 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 {
     WebKitWebView * wv = (WebKitWebView *) page;
     struct call_st * call = v;
-    update_tab(nb,GTK_WIDGET(wv),webkit_web_view_get_title(wv));
+    update_tab(nb,wv);
 
     update_win_label(G_call->twin,(WebKitWebView*) page);
 
@@ -324,8 +328,7 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
     ,void * v)
 {
-    update_tab((GtkNotebook *) v,GTK_WIDGET(webv)
-        ,webkit_web_view_get_title(webv));
+    update_tab((GtkNotebook *) v,webv);
     if(webv == WK_CURRENT_TAB(v))
     {
         update_win_label(G_call->twin,webv);
@@ -385,17 +388,15 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
     {
         if(webkit_web_view_get_uri(webv))
         {
-            update_tab(call->webv->tabsNb,GTK_WIDGET(webv)
-                ,webkit_web_view_get_uri(webv));
+            update_tab(call->webv->tabsNb,webv);
         }
         else if (gtk_entry_get_text_length(call->tool->addressEn))
         {
-            update_tab(call->webv->tabsNb,GTK_WIDGET(webv)
-                ,gtk_entry_get_text(call->tool->addressEn));
+            update_tab(call->webv->tabsNb,webv);
         }
         else
         {
-            update_tab(call->webv->tabsNb,GTK_WIDGET(webv),"New Tab");
+            update_tab(call->webv->tabsNb,webv);
         }
     }
 }
