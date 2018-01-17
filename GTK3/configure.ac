@@ -17,9 +17,9 @@ AS_CASE([$host_os],
 AC_MSG_RESULT([$windows_host])
 AM_CONDITIONAL([WINDOWS_HOST], [test "x$windows_host" = "xyes"])
 
-#m4_include([m4/ax_check_enable_debug.m4])
+m4_include([m4/ax_check_enable_debug.m4])
 
-#AX_CHECK_ENABLE_DEBUG([no])
+AX_CHECK_ENABLE_DEBUG([no])
 
 # Checks for programs.
 AC_PROG_CC_C99
