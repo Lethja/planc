@@ -97,8 +97,9 @@ static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
 {
     if (e->button == 2)
     {
-        gtk_notebook_remove_page(G_call->webv->tabsNb
-            ,gtk_notebook_page_num(G_call->webv->tabsNb,v));
+        if(gtk_notebook_get_n_pages(G_call->webv->tabsNb) > 1)
+            gtk_notebook_remove_page(G_call->webv->tabsNb
+                ,gtk_notebook_page_num(G_call->webv->tabsNb,v));
 
         return TRUE;
     }
