@@ -57,7 +57,8 @@ gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
     gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
     if (fn == NULL || strcmp(fn,"") == 0)
-        gtk_file_chooser_set_current_name (chooser, ("Untitled download"));
+        gtk_file_chooser_set_current_name (chooser
+            ,("Untitled download"));
     else
         gtk_file_chooser_set_current_name(chooser, fn);
 
@@ -132,11 +133,6 @@ static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
             WebKitWebView * nt = c_new_tab_url(wv
                 ,webkit_navigation_policy_decision_get_navigation_action
                 ((WebKitNavigationPolicyDecision *) d),v);
-
-            webkit_web_view_load_request(nt
-                ,webkit_navigation_action_get_request
-                (webkit_navigation_policy_decision_get_navigation_action
-                    ((WebKitNavigationPolicyDecision *)d)));
 
             g_signal_emit_by_name(nt,"ready-to-show");
             webkit_policy_decision_ignore(d);
@@ -467,6 +463,10 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->call = c;
+
+    webkit_web_view_load_request(nt
+        ,webkit_navigation_action_get_request(na));
+
     g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
         ,newtab);
     return nt;
