@@ -467,19 +467,30 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
 void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 {
     menu->menu = gtk_menu_bar_new();
-    menu->fileMenu = gtk_menu_new();
 
-    menu->fileMi = gtk_menu_item_new_with_mnemonic("_File");
+    menu->fileMenu = gtk_menu_new();
+    menu->editMenu = gtk_menu_new();
+    /*menu->viewMenu = gtk_menu_new();
+    menu->helpMenu = gtk_menu_new();*/
+
+    menu->fileMh = gtk_menu_item_new_with_mnemonic("_File");
+    menu->editMh = gtk_menu_item_new_with_mnemonic("_Edit");
+    /*menu->viewMh = gtk_menu_item_new_with_mnemonic("_View");
+    menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");*/
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Search Page");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
 
-    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMi)
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMh)
         ,menu->fileMenu);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->findMi);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->editMh)
+        ,menu->editMenu);
+
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->editMenu), menu->findMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->nTabMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
-    gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMh);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->editMh);
 
     gtk_widget_add_accelerator(menu->findMi, "activate", accel_group,
       GDK_KEY_F, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);

@@ -19,7 +19,13 @@ struct menu_st
 {
     GtkWidget * menu;
     GtkWidget * fileMenu;
-    GtkWidget * fileMi;
+    GtkWidget * editMenu;
+    GtkWidget * viewMenu;
+    GtkWidget * helpMenu;
+    GtkWidget * fileMh;
+    GtkWidget * editMh;
+    GtkWidget * viewMh;
+    GtkWidget * helpMh;
     GtkWidget * findMi;
     GtkWidget * nTabMi;
     GtkWidget * quitMi;
