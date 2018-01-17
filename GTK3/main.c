@@ -453,6 +453,7 @@ static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
     g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
         ,newtab);
     g_signal_emit_by_name(nt,"ready-to-show");
+    gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
     return nt;
 }
 
