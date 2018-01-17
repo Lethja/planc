@@ -219,6 +219,50 @@ static void c_search_del(GtkEditable* e, gint sp, gint ep
     search_page(e,d);
 }
 
+static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
+    ,void * v)
+{
+    struct call_st * c = v;
+    if(webkit_web_view_is_loading(wv))
+    {
+        gtk_image_set_from_icon_name(c->tool->reloadIo
+            ,"process-stop",GTK_ICON_SIZE_SMALL_TOOLBAR);
+        return 0;
+    }
+    if(strcmp(gtk_entry_get_text((GtkEntry *) e)
+        ,webkit_web_view_get_uri(wv)) == 0)
+    {
+        gtk_image_set_from_icon_name(c->tool->reloadIo
+            ,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
+        return 1;
+    }
+    else
+    {
+        gtk_image_set_from_icon_name(c->tool->reloadIo
+            ,"go-last",GTK_ICON_SIZE_SMALL_TOOLBAR);
+        return 2;
+    }
+}
+
+static char addrEntryState(GtkEditable * e, void * v)
+{
+    struct call_st * c = v;
+    return addrEntryState_webView(e, WK_CURRENT_TAB(c->webv->tabsNb)
+        ,v);
+}
+
+static void c_addr_ins(GtkEditable * e, gchar* t, gint l, gpointer p,
+    void * v)
+{
+    addrEntryState(e,v);
+}
+
+static void c_addr_del(GtkEditable* e, gint sp, gint ep
+    ,void * v)
+{
+    addrEntryState(e,v);
+}
+
 static void c_refresh(GtkWidget * widget, void * v)
 {
     if(webkit_web_view_is_loading(WK_CURRENT_TAB(v)))
@@ -270,6 +314,9 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 
     gtk_entry_set_text(call->tool->addressEn
         ,webkit_web_view_get_uri(wv));
+
+    addrEntryState_webView((GtkEditable *) call->tool->addressEn, wv
+        ,call);
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->backTb)
         ,webkit_web_view_can_go_back(wv));
@@ -643,6 +690,11 @@ int main(int argc, char* argv[])
         ,G_CALLBACK(c_switch_tab), &call);
     g_signal_connect(webk.webc, "download-started"
         ,G_CALLBACK(c_download_start), &call);
+
+    g_signal_connect_after(tool.addressEn, "insert-text"
+        ,G_CALLBACK(c_addr_ins), &call);
+    g_signal_connect_after(tool.addressEn, "delete-text"
+        ,G_CALLBACK(c_addr_del), &call);
 
 
     if(argc > 1)
