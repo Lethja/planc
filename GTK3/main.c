@@ -294,14 +294,48 @@ static void c_go_forward(GtkWidget * widget, void * v)
         ,webkit_web_view_can_go_forward(WK_CURRENT_TAB(v)));
 }
 
+static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
+{
+    guint k;
+    if(gdk_event_get_keyval(e,&k))
+    {
+        switch(k)
+        {
+        case GDK_KEY_F5:
+            c_refresh(w,c->webv->tabsNb);
+        break;
+        case GDK_KEY_F6:
+            gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
+        break;
+        }
+
+    }
+}
+
 static void c_act(GtkWidget * widget, void * v)
 {
     struct call_st * call = (struct call_st *) v;
-    const gchar * uri = gtk_entry_get_text
-        (GTK_ENTRY(call->tool->addressEn));
-    char * curi = prepAddress(uri);
-    webkit_web_view_load_uri(WK_CURRENT_TAB(call->webv->tabsNb),curi);
-    free(curi);
+    char * curi = NULL;// = prepAddress(uri);
+    switch(addrEntryState((GtkEditable *) widget,v))
+    {
+        case 0: //Stop loading and don't hang on this request
+            webkit_web_view_stop_loading
+                (WK_CURRENT_TAB(call->webv->tabsNb));
+
+        case 2: //Go
+            curi = prepAddress(gtk_entry_get_text
+                (GTK_ENTRY(call->tool->addressEn)));
+            webkit_web_view_load_uri(WK_CURRENT_TAB(call->webv->tabsNb)
+                ,curi);
+            if(curi)
+                free(curi);
+        break;
+
+        /*case 1: //Refresh
+            webkit_web_view_reload(WK_CURRENT_TAB(call->webv->tabsNb));
+        break;*/
+    }
+    gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->webv->tabsNb));
 }
 
 static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
@@ -510,14 +544,13 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
         (GTK_WIDGET(tool->reloadIo),"_Refresh");
     gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
         ,(GtkToolItem *) tool->reloadTb, -1);
-    gtk_widget_add_accelerator((GtkWidget *) tool->reloadTb
-        ,"clicked", accel_group, GDK_KEY_F5, 0, 0);
+    /*gtk_widget_add_accelerator((GtkWidget *) tool->reloadTb
+        ,"clicked", accel_group, GDK_KEY_F5, 0, 0);*/
 }
 
 void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 {
     menu->menu = gtk_menu_bar_new();
-
     menu->fileMenu = gtk_menu_new();
     menu->editMenu = gtk_menu_new();
     /*menu->viewMenu = gtk_menu_new();
@@ -698,7 +731,8 @@ int main(int argc, char* argv[])
         ,G_CALLBACK(c_addr_ins), &call);
     g_signal_connect_after(tool.addressEn, "delete-text"
         ,G_CALLBACK(c_addr_del), &call);
-
+    g_signal_connect_after(window, "key-release-event"
+        ,G_CALLBACK(c_accl_rels), &call);
 
     if(argc > 1)
     {
