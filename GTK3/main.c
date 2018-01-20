@@ -24,6 +24,12 @@ GtkWidget * update_tab_label(const gchar * str, GtkWidget * label)
     return l;
 }
 
+void update_addr_entry(GtkEntry * a, const gchar * s)
+{
+    if(!gtk_widget_has_focus((GtkWidget *) a))
+        gtk_entry_set_text(a,s);
+}
+
 void update_win_label(GtkWidget * win, WebKitWebView * wv)
 {
     gchar * str;
@@ -361,15 +367,15 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 }
 
 static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
-    ,void * v)
+    ,struct call_st * v)
 {
-    update_tab((GtkNotebook *) v,webv);
-    if(webv == WK_CURRENT_TAB(v))
+    update_tab((GtkNotebook *) v->webv->tabsNb,webv);
+    if(webv == WK_CURRENT_TAB(v->webv->tabsNb))
     {
-        update_win_label(G_call->twin,webv);
+        update_win_label(v->twin,webv);
+        update_addr_entry(v->tool->addressEn
+            ,webkit_web_view_get_uri(webv));
     }
-    gtk_entry_set_text(G_call->tool->addressEn
-        ,webkit_web_view_get_uri(webv));
 }
 
 static void c_loads(WebKitWebView * wv, WebKitWebResource * res
@@ -414,9 +420,11 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
 
     if(webkit_web_view_get_uri(webv))
     {
-        gtk_entry_set_text(call->tool->addressEn
-            ,webkit_web_view_get_uri
-            (WK_CURRENT_TAB(call->webv->tabsNb)));
+        if(webv == WK_CURRENT_TAB(call->webv->tabsNb))
+        {
+            update_addr_entry(call->tool->addressEn
+                ,webkit_web_view_get_uri(webv));
+        }
     }
 
     if(!webkit_web_view_get_title(webv))
@@ -762,7 +770,7 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     g_signal_connect(wv, "resource-load-started", G_CALLBACK(c_loads)
         ,c);
     g_signal_connect(wv, "notify::title", G_CALLBACK(c_update_title)
-        ,c->webv->tabsNb);
+        ,c);
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
         ,c->webv->tabsNb);
     g_signal_connect(wv, "enter-fullscreen"
