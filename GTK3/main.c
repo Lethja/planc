@@ -607,14 +607,41 @@ void InitNotetab(struct webt_st * webv)
     gtk_notebook_set_scrollable(webv->tabsNb,TRUE);
 }
 
+
+
 void InitWebview(struct call_st * c)
 {
-    c->webv->webc = webkit_web_context_get_default();
-    webkit_web_context_set_cache_model(c->webv->webc
-        ,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
+    char * cd;
+    char * dd;
+    char * cs;
 
-    WebKitWebView * wv = WEBKIT_WEB_VIEW(
-        webkit_web_view_new_with_context(c->webv->webc));
+    cd = g_build_filename(g_get_user_data_dir(),g_get_prgname(),NULL);
+    dd = g_build_filename(g_get_user_cache_dir(),g_get_prgname(),NULL);
+    cs = g_build_filename(g_get_user_data_dir(),g_get_prgname()
+        ,"cookies",NULL);
+    WebKitWebsiteDataManager * d = webkit_website_data_manager_new
+        ("base-data-directory", dd, "base-cache-directory", cd, NULL);
+    WebKitCookieManager * cm
+        = webkit_website_data_manager_get_cookie_manager(d);
+
+    webkit_cookie_manager_set_persistent_storage(cm, cs
+        ,WEBKIT_COOKIE_PERSISTENT_STORAGE_TEXT);
+    webkit_cookie_manager_set_accept_policy(cm
+        ,WEBKIT_COOKIE_POLICY_ACCEPT_ALWAYS);
+
+    /*g_signal_connect(G_OBJECT(cm), "changed",G_CALLBACK(c_cookie_ping)
+        ,NULL);*/
+
+    g_free(cs);
+    g_free(cd);
+    g_free(dd);
+
+    c->webv->webc = webkit_web_context_new_with_website_data_manager(d);
+    webkit_web_context_set_cache_model(c->webv->webc
+        ,WEBKIT_CACHE_MODEL_WEB_BROWSER);
+
+    WebKitWebView * wv = WEBKIT_WEB_VIEW
+        (webkit_web_view_new_with_context(c->webv->webc));
     GtkWidget * ebox = gtk_event_box_new();
     gtk_widget_set_has_window(ebox, FALSE);
     GtkWidget * label = gtk_label_new("New Tab");
