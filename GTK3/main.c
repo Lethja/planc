@@ -30,11 +30,13 @@ void update_addr_entry(GtkEntry * a, const gchar * s)
         gtk_entry_set_text(a,s);
 }
 
-void update_win_label(GtkWidget * win, WebKitWebView * wv)
+void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
 {
+    GtkWidget * l = gtk_bin_get_child(GTK_BIN
+        (gtk_notebook_get_tab_label(nb,e)));
     gchar * str;
     str = g_strconcat
-        (webkit_web_view_get_title(wv), " - Browser", NULL);
+        (gtk_label_get_text((GtkLabel *)l), " - Browser", NULL);
     gtk_window_set_title((GtkWindow *) win, str);
     if(str)
         g_free(str);
@@ -42,8 +44,9 @@ void update_win_label(GtkWidget * win, WebKitWebView * wv)
 
 void update_tab(GtkNotebook * nb, WebKitWebView * ch)
 {
-    GtkWidget * t = gtk_notebook_get_tab_label(nb,(GtkWidget *) ch);
-    GtkWidget * l = gtk_bin_get_child(GTK_BIN(t));
+    GtkWidget * l = gtk_bin_get_child(GTK_BIN
+        (gtk_notebook_get_tab_label(nb,(GtkWidget *) ch)));
+
     const gchar * c = webkit_web_view_get_title(ch);
     if(c && strcmp(c,"") != 0)
         gtk_label_set_text((GtkLabel *)l,c);
@@ -129,7 +132,6 @@ static gboolean c_leave_fullscreen(GtkWidget * widget, void * v)
     gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
     return 0;
 }
-
 
 static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
     ,WebKitPolicyDecisionType t, void * v)
@@ -318,14 +320,13 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
     }
 }
 
-
 static void c_act(GtkWidget * widget, void * v)
 {
     struct call_st * call = (struct call_st *) v;
     char * curi = NULL;// = prepAddress(uri);
     switch(addrEntryState((GtkEditable *) widget,v))
     {
-        case 0: //Stop loading and don't hang on this request
+        case 0: //Stop loading current page before requesting new uri
             webkit_web_view_stop_loading
                 (WK_CURRENT_TAB(call->webv->tabsNb));
 
@@ -337,10 +338,6 @@ static void c_act(GtkWidget * widget, void * v)
             if(curi)
                 free(curi);
         break;
-
-        /*case 1: //Refresh
-            webkit_web_view_reload(WK_CURRENT_TAB(call->webv->tabsNb));
-        break;*/
     }
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->webv->tabsNb));
 }
@@ -352,10 +349,13 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
     struct call_st * call = v;
     update_tab(nb,wv);
 
-    update_win_label(G_call->twin,(WebKitWebView*) page);
+    update_win_label(call->twin,nb,(GtkWidget *) wv);
 
-    gtk_entry_set_text(call->tool->addressEn
-        ,webkit_web_view_get_uri(wv));
+    const gchar * url = webkit_web_view_get_uri(wv);
+    gtk_entry_set_text(call->tool->addressEn, url);
+
+    if(strcmp(url,"") || strcmp(url,"about:blank"))
+        gtk_widget_grab_focus(GTK_WIDGET(call->tool->addressEn));
 
     addrEntryState_webView((GtkEditable *) call->tool->addressEn, wv
         ,call);
@@ -373,7 +373,9 @@ static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
     update_tab((GtkNotebook *) v->webv->tabsNb,webv);
     if(webv == WK_CURRENT_TAB(v->webv->tabsNb))
     {
-        update_win_label(v->twin,webv);
+        update_win_label(v->twin,v->webv->tabsNb
+            ,WK_CURRENT_TAB_WIDGET(v->webv->tabsNb));
+
         update_addr_entry(v->tool->addressEn
             ,webkit_web_view_get_uri(webv));
     }
@@ -625,7 +627,11 @@ void InitWebview(struct call_st * c)
     c->webv->webc = webkit_web_context_new_with_website_data_manager(d);
     webkit_web_context_set_cache_model(c->webv->webc
         ,WEBKIT_CACHE_MODEL_WEB_BROWSER);
-
+	
+	webkit_web_context_set_spell_checking_enabled(c->webv->webc,TRUE);
+	webkit_web_context_set_spell_checking_languages(c->webv->webc
+		,g_get_language_names());
+	
     WebKitCookieManager * cm
         = webkit_web_context_get_cookie_manager(c->webv->webc);
 
@@ -636,8 +642,12 @@ void InitWebview(struct call_st * c)
 
     g_free(cs);
 
+    c->webv->webs = webkit_settings_new();
+    webkit_settings_set_enable_mediasource(c->webv->webs, TRUE);
+
     WebKitWebView * wv = WEBKIT_WEB_VIEW
         (webkit_web_view_new_with_context(c->webv->webc));
+
     GtkWidget * ebox = gtk_event_box_new();
     gtk_widget_set_has_window(ebox, FALSE);
     GtkWidget * label = gtk_label_new("New Tab");
@@ -801,6 +811,7 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     g_signal_connect(wv, "leave-fullscreen"
         ,G_CALLBACK(c_leave_fullscreen), c);
     g_signal_connect(wv, "decide-policy", G_CALLBACK(c_policy), c);
+    webkit_web_view_set_settings(wv,c->webv->webs);
 }
 
 static void destroyWindowCb(GtkWidget* widget, GtkWidget* window)

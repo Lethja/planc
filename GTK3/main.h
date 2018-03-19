@@ -3,6 +3,8 @@
 #include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
 #include <string.h>
+#include <glib.h>
+#include <glib/gi18n.h>
 
 
 #define WK_CURRENT_TAB(notebook) \
@@ -46,6 +48,7 @@ struct webt_st
 {
     GtkNotebook * tabsNb;
     WebKitWebContext * webc;
+    WebKitSettings * webs;
 };
 
 struct find_st
