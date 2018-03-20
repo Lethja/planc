@@ -354,7 +354,7 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
     const gchar * url = webkit_web_view_get_uri(wv);
     gtk_entry_set_text(call->tool->addressEn, url);
 
-    if(strcmp(url,"") || strcmp(url,"about:blank"))
+    if(strcmp(url,"") == 0 || strcmp(url,"about:blank") == 0)
         gtk_widget_grab_focus(GTK_WIDGET(call->tool->addressEn));
 
     addrEntryState_webView((GtkEditable *) call->tool->addressEn, wv
@@ -627,11 +627,11 @@ void InitWebview(struct call_st * c)
     c->webv->webc = webkit_web_context_new_with_website_data_manager(d);
     webkit_web_context_set_cache_model(c->webv->webc
         ,WEBKIT_CACHE_MODEL_WEB_BROWSER);
-	
-	webkit_web_context_set_spell_checking_enabled(c->webv->webc,TRUE);
-	webkit_web_context_set_spell_checking_languages(c->webv->webc
-		,g_get_language_names());
-	
+
+    webkit_web_context_set_spell_checking_enabled(c->webv->webc,TRUE);
+    webkit_web_context_set_spell_checking_languages(c->webv->webc
+        ,g_get_language_names());
+
     WebKitCookieManager * cm
         = webkit_web_context_get_cookie_manager(c->webv->webc);
 
