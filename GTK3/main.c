@@ -70,8 +70,36 @@ gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
     gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
     if (fn == NULL || strcmp(fn,"") == 0)
-        gtk_file_chooser_set_current_name (chooser
-            ,("Untitled download"));
+    {
+		WebKitURIResponse * u = webkit_download_get_response(d);
+		SoupMessageHeaders * s = NULL;
+		char * f = NULL;
+		if(u)
+			s = webkit_uri_response_get_http_headers(u);
+		if(s)
+		{
+			if(soup_message_headers_get_content_disposition(s,&f,NULL))
+			{
+				char * a = malloc(strlen(f)+1);
+				strncpy(a,f,strlen(f)+1);
+				char * b = strrchr (f, '=')+1;
+				char * c = strrchr (b, '/');
+				if(c)
+					b = c+1;
+				if (b[0] == '"' || b[0] == '\'')
+					b++;
+				if((b[strlen(b)-1] == '"') || (b[strlen(b)-1] == '\''))
+					b[strlen(b)-1] = '\0';
+				gtk_file_chooser_set_current_name (chooser,b);
+				free(a);
+			}
+		}
+		else
+			gtk_file_chooser_set_current_name(chooser
+				,"Untitled download");
+		if(f)
+			free(f);
+	}
     else
         gtk_file_chooser_set_current_name(chooser, fn);
 
