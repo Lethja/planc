@@ -112,14 +112,14 @@ gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
         webkit_download_set_destination(d
             ,gtk_file_chooser_get_uri(chooser));
         gtk_widget_destroy (dialog);
-        return FALSE;
+        return TRUE;
     }
     else
     {
         webkit_download_cancel(d);
     }
     gtk_widget_destroy (dialog);
-    return TRUE;
+    return FALSE;
 }
 
 static void c_download_start(WebKitWebContext * wv
