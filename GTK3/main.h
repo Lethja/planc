@@ -58,6 +58,7 @@ struct find_st
     GtkEntry * findEn;
     GtkToolButton * backTb;
     GtkToolButton * forwardTb;
+    GtkToolButton * closeTb;
 };
 
 struct call_st

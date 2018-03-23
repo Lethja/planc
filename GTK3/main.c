@@ -284,12 +284,11 @@ static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
 static char addrEntryState(GtkEditable * e, void * v)
 {
     struct call_st * c = v;
-    return addrEntryState_webView(e, WK_CURRENT_TAB(c->webv->tabsNb)
-        ,v);
+    return addrEntryState_webView(e, WK_CURRENT_TAB(c->webv->tabsNb),v);
 }
 
-static void c_addr_ins(GtkEditable * e, gchar* t, gint l, gpointer p,
-    void * v)
+static void c_addr_ins(GtkEditable * e, gchar* t, gint l, gpointer p
+	,void * v)
 {
     addrEntryState(e,v);
 }
@@ -333,8 +332,28 @@ static void c_go_forward(GtkWidget * widget, void * v)
 static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
 {
     guint k;
+    guint m;
     if(gdk_event_get_keyval(e,&k))
     {
+		if(gdk_event_get_state(e,&m))
+		{
+			switch(k)
+			{
+			case GDK_KEY_Tab:
+				if(m & GDK_CONTROL_MASK)
+				{
+					gtk_notebook_next_page(c->webv->tabsNb);
+				}
+			break;
+
+			case GDK_KEY_ISO_Left_Tab:
+				if(m & GDK_CONTROL_MASK)
+				{
+					gtk_notebook_prev_page(c->webv->tabsNb);
+				}
+			break;
+			}
+		}
         switch(k)
         {
         case GDK_KEY_F5:
@@ -598,7 +617,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
     /*menu->viewMh = gtk_menu_item_new_with_mnemonic("_View");
     menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");*/
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
-    menu->findMi = gtk_menu_item_new_with_mnemonic("_Search Page");
+    menu->findMi = gtk_menu_item_new_with_mnemonic("_Find");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMh)
@@ -726,10 +745,20 @@ void InitFindBar(struct find_st * f, GtkNotebook * w)
     gtk_toolbar_insert(GTK_TOOLBAR(f->top)
         ,(GtkToolItem *) f->forwardTb, -1);
 
+	f->closeTb = (GtkToolButton *)gtk_tool_button_new
+        (gtk_image_new_from_icon_name("window-close"
+        ,GTK_ICON_SIZE_SMALL_TOOLBAR)
+        ,"_Close");
+
+    gtk_toolbar_insert(GTK_TOOLBAR(f->top)
+        ,(GtkToolItem *) f->closeTb, -1);
+
     g_signal_connect(f->backTb, "clicked"
         ,G_CALLBACK(c_search_prv), w);
     g_signal_connect(f->forwardTb, "clicked"
         ,G_CALLBACK(c_search_nxt), w);
+	g_signal_connect(f->closeTb, "clicked"
+        ,G_CALLBACK(c_toggleSearch), w);
 
     g_signal_connect_after(f->findEn, "insert-text"
         ,G_CALLBACK(c_search_ins), w);
