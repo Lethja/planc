@@ -341,16 +341,11 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
 			{
 			case GDK_KEY_Tab:
 				if(m & GDK_CONTROL_MASK)
-				{
 					gtk_notebook_next_page(c->webv->tabsNb);
-				}
 			break;
-
 			case GDK_KEY_ISO_Left_Tab:
 				if(m & GDK_CONTROL_MASK)
-				{
 					gtk_notebook_prev_page(c->webv->tabsNb);
-				}
 			break;
 			}
 		}
@@ -363,7 +358,6 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
             gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
         break;
         }
-
     }
 }
 
