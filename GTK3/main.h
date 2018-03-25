@@ -5,7 +5,7 @@
 #include <string.h>
 #include <glib.h>
 #include <glib/gi18n.h>
-
+#include <gmodule.h>
 
 #define WK_CURRENT_TAB(notebook) \
 (WebKitWebView *) gtk_notebook_get_nth_page(notebook \
@@ -23,11 +23,16 @@ struct menu_st
     GtkWidget * fileMenu;
     GtkWidget * editMenu;
     GtkWidget * viewMenu;
+    GtkWidget * viewTabMenu;
     GtkWidget * helpMenu;
     GtkWidget * fileMh;
     GtkWidget * editMh;
     GtkWidget * viewMh;
     GtkWidget * helpMh;
+    GtkWidget * viewTabMh;
+    GtkWidget * tab1;
+    GtkWidget * tabH;
+    GtkWidget * tabV;
     GtkWidget * findMi;
     GtkWidget * nTabMi;
     GtkWidget * quitMi;

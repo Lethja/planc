@@ -54,6 +54,14 @@ void update_tab(GtkNotebook * nb, WebKitWebView * ch)
         gtk_label_set_text((GtkLabel *)l,webkit_web_view_get_uri(ch));
 }
 
+void c_update_tabs_layout(GtkWidget * r, struct call_st * c)
+{
+	if(r == c->menu->tabH)
+		gtk_notebook_set_tab_pos(c->webv->tabsNb,GTK_POS_TOP);
+	else if(r == c->menu->tabV)
+		gtk_notebook_set_tab_pos(c->webv->tabsNb,GTK_POS_LEFT);
+}
+
 gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
 {
     GtkWidget *dialog;
@@ -600,16 +608,26 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
 
 void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 {
+	//Top Menu
     menu->menu = gtk_menu_bar_new();
     menu->fileMenu = gtk_menu_new();
     menu->editMenu = gtk_menu_new();
-    /*menu->viewMenu = gtk_menu_new();
-    menu->helpMenu = gtk_menu_new();*/
+    menu->viewMenu = gtk_menu_new();
+    menu->viewTabMenu = gtk_menu_new();
+    /*menu->helpMenu = gtk_menu_new();*/
 
     menu->fileMh = gtk_menu_item_new_with_mnemonic("_File");
     menu->editMh = gtk_menu_item_new_with_mnemonic("_Edit");
-    /*menu->viewMh = gtk_menu_item_new_with_mnemonic("_View");
-    menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");*/
+    menu->viewMh = gtk_menu_item_new_with_mnemonic("_View");
+    menu->viewTabMh = gtk_menu_item_new_with_mnemonic("_Tabs");
+    menu->tab1 = gtk_check_menu_item_new_with_mnemonic("_Autohide");
+    menu->tabH = gtk_radio_menu_item_new_with_mnemonic(NULL
+		,"_Horizontal");
+    menu->tabV = gtk_radio_menu_item_new_with_mnemonic_from_widget
+		((GtkRadioMenuItem *)menu->tabH, "_Vertical");
+	gtk_check_menu_item_set_active((GtkCheckMenuItem *)menu->tabV
+		,FALSE);
+    /*menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");*/
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Find");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
@@ -618,12 +636,28 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
         ,menu->fileMenu);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->editMh)
         ,menu->editMenu);
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->viewMh)
+        ,menu->viewMenu);
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->viewTabMh)
+        ,menu->viewTabMenu);
 
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu)
+		,menu->viewTabMh);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tab1);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu)
+		,gtk_separator_menu_item_new());
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabH);
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabV);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->editMenu), menu->findMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->nTabMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu)
+		,gtk_separator_menu_item_new());
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->editMh);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->viewMh);
+    /*gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMh)
+		,menu->viewTabMh);*/
 
     gtk_widget_add_accelerator(menu->findMi, "activate", accel_group,
       GDK_KEY_F, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -646,7 +680,7 @@ void InitNotetab(struct webt_st * webv)
     webv->tabsNb = (GtkNotebook *) gtk_notebook_new();
     gtk_notebook_set_show_border(webv->tabsNb,FALSE);
     gtk_notebook_set_tab_pos(webv->tabsNb,GTK_POS_TOP);
-    gtk_notebook_set_scrollable(webv->tabsNb,TRUE);
+    //gtk_notebook_set_scrollable(webv->tabsNb,TRUE);
 }
 
 void InitWebview(struct call_st * c)
@@ -825,6 +859,10 @@ int main(int argc, char* argv[])
         ,G_CALLBACK(c_addr_del), &call);
     g_signal_connect_after(window, "key-release-event"
         ,G_CALLBACK(c_accl_rels), &call);
+	g_signal_connect(G_OBJECT(call.menu->tabV), "activate",
+        G_CALLBACK(c_update_tabs_layout), &call);
+	g_signal_connect(G_OBJECT(call.menu->tabH), "activate",
+        G_CALLBACK(c_update_tabs_layout), &call);
 
     if(argc > 1)
     {
