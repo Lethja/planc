@@ -150,6 +150,14 @@ static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
     return FALSE;
 }
 
+void c_notebook_close_current(GtkWidget * w, struct call_st * c)
+{
+	if(gtk_notebook_get_n_pages(c->webv->tabsNb) > 1)
+		gtk_notebook_remove_page
+			(c->webv->tabsNb,gtk_notebook_get_current_page
+			(c->webv->tabsNb));
+}
+
 void c_notebook_tabs_autohide(GtkCheckMenuItem * cbmi
 	,struct call_st * c)
 {
@@ -261,7 +269,7 @@ static void c_search_nxt(GtkButton * b, GtkNotebook * n)
         (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
     if(s)
         webkit_find_controller_search_next
-        (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
+			(webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
 }
 
 static void c_search_prv(GtkButton * b, GtkNotebook * n)
@@ -270,7 +278,7 @@ static void c_search_prv(GtkButton * b, GtkNotebook * n)
         (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
     if(s)
         webkit_find_controller_search_previous
-        (webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
+			(webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
 }
 
 static void c_search_ins(GtkEditable * e, gchar* t, gint l, gpointer p,
@@ -650,6 +658,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 		,FALSE);
     /*menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");*/
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
+    menu->cTabMi = gtk_menu_item_new_with_mnemonic("_Close Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Find");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
 
@@ -673,6 +682,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->nTabMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu)
 		,gtk_separator_menu_item_new());
+	gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->cTabMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->quitMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->editMh);
@@ -680,20 +690,26 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
     /*gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMh)
 		,menu->viewTabMh);*/
 
-    gtk_widget_add_accelerator(menu->findMi, "activate", accel_group,
-      GDK_KEY_F, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+	gtk_widget_add_accelerator(menu->cTabMi, "activate", accel_group
+		,GDK_KEY_W, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
-    gtk_widget_add_accelerator(menu->nTabMi, "activate", accel_group,
-      GDK_KEY_T, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+    gtk_widget_add_accelerator(menu->findMi, "activate", accel_group
+		,GDK_KEY_F, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
-    g_signal_connect(G_OBJECT(menu->findMi), "activate",
-        G_CALLBACK(c_toggleSearch), NULL);
+    gtk_widget_add_accelerator(menu->nTabMi, "activate", accel_group
+		,GDK_KEY_T, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
-    g_signal_connect(G_OBJECT(menu->nTabMi), "activate",
-        G_CALLBACK(c_new_tab), G_call);
+    g_signal_connect(G_OBJECT(menu->cTabMi), "activate"
+		,G_CALLBACK(c_notebook_close_current), G_call);
 
-    g_signal_connect(G_OBJECT(menu->quitMi), "activate",
-        G_CALLBACK(destroyWindowCb), G_call);
+    g_signal_connect(G_OBJECT(menu->findMi), "activate"
+		,G_CALLBACK(c_toggleSearch), G_call);
+
+    g_signal_connect(G_OBJECT(menu->nTabMi), "activate"
+		,G_CALLBACK(c_new_tab), G_call);
+
+    g_signal_connect(G_OBJECT(menu->quitMi), "activate"
+		,G_CALLBACK(destroyWindowCb), G_call);
 }
 
 void InitNotetab(struct webt_st * webv)

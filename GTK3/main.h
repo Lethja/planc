@@ -34,6 +34,7 @@ struct menu_st
     GtkWidget * tabH;
     GtkWidget * tabV;
     GtkWidget * findMi;
+    GtkWidget * cTabMi;
     GtkWidget * nTabMi;
     GtkWidget * quitMi;
 };
