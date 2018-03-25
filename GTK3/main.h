@@ -66,12 +66,18 @@ struct find_st
     GtkToolButton * closeTb;
 };
 
+struct sign_st
+{
+	gulong nb_changed;
+};
+
 struct call_st
 {
     struct menu_st * menu;
     struct tool_st * tool;
     struct webt_st * webv;
     struct find_st * find;
+    struct sign_st * sign;
     GtkWidget * twin;
 };
 
@@ -86,8 +92,11 @@ struct newt_st
 void connect_signals (WebKitWebView * wv, struct call_st * c);
 
 
-static void destroyWindowCb(GtkWidget* widget, GtkWidget* window);
+static void destroyWindowCb(GtkWidget* widget, struct call_st * c);
 static void c_show_tab(WebKitWebView * wv, void * v);
+
+void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
+	,guint n, struct call_st * c);
 
 static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na ,struct call_st * c);

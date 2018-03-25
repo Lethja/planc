@@ -145,10 +145,31 @@ static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
         if(gtk_notebook_get_n_pages(G_call->webv->tabsNb) > 1)
             gtk_notebook_remove_page(G_call->webv->tabsNb
                 ,gtk_notebook_page_num(G_call->webv->tabsNb,v));
-
-        return TRUE;
+		return TRUE;
     }
     return FALSE;
+}
+
+void c_notebook_tabs_autohide(GtkCheckMenuItem * cbmi
+	,struct call_st * c)
+{
+	if(gtk_check_menu_item_get_active(cbmi))
+		c_notebook_tabs_changed(c->webv->tabsNb,NULL,0,c);
+	else if(!gtk_notebook_get_show_tabs(c->webv->tabsNb))
+		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
+}
+
+void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
+	,guint n, struct call_st * c)
+{
+	if(gtk_check_menu_item_get_active(
+		(GtkCheckMenuItem *)c->menu->tab1))
+	{
+		if(gtk_notebook_get_n_pages(c->webv->tabsNb) == 1)
+			gtk_notebook_set_show_tabs(G_call->webv->tabsNb,FALSE);
+		else
+			gtk_notebook_set_show_tabs(G_call->webv->tabsNb,TRUE);
+	}
 }
 
 static gboolean c_enter_fullscreen(GtkWidget * widget, void * v)
@@ -672,7 +693,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
         G_CALLBACK(c_new_tab), G_call);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate",
-        G_CALLBACK(destroyWindowCb), NULL);
+        G_CALLBACK(destroyWindowCb), G_call);
 }
 
 void InitNotetab(struct webt_st * webv)
@@ -787,7 +808,6 @@ void InitFindBar(struct find_st * f, GtkNotebook * w)
         ,G_CALLBACK(c_search_nxt), w);
 	g_signal_connect(f->closeTb, "clicked"
         ,G_CALLBACK(c_toggleSearch), w);
-
     g_signal_connect_after(f->findEn, "insert-text"
         ,G_CALLBACK(c_search_ins), w);
     g_signal_connect_after(f->findEn, "delete-text"
@@ -795,11 +815,12 @@ void InitFindBar(struct find_st * f, GtkNotebook * w)
 }
 
 void InitCallback(struct call_st * c, struct find_st * f
-    ,struct menu_st * m,struct tool_st * t,struct webt_st * w
-    ,GtkWidget * x)
+    ,struct menu_st * m, struct tool_st * t, struct webt_st * w
+    ,struct sign_st * s, GtkWidget * x)
 {
     c->menu = m;
     c->find = f;
+    c->sign = s;
     c->tool = t;
     c->webv = w;
     c->twin = x;
@@ -811,6 +832,7 @@ int main(int argc, char* argv[])
     struct tool_st tool;
     struct webt_st webk;
     struct find_st find;
+    struct sign_st sign;
     struct call_st call;
 
     G_call = &call;
@@ -829,7 +851,7 @@ int main(int argc, char* argv[])
     InitToolbar(&tool, accel_group);
     InitNotetab(&webk);
     InitFindBar(&find, webk.tabsNb);
-    InitCallback(&call,&find,&menu,&tool,&webk,window);
+    InitCallback(&call,&find,&menu,&tool,&webk,&sign,window);
     InitWebview(&call);
 
     gtk_box_pack_start(GTK_BOX(vbox), menu.menu, FALSE, FALSE, 0);
@@ -839,7 +861,7 @@ int main(int argc, char* argv[])
     gtk_box_pack_start(GTK_BOX(vbox), find.top, FALSE, FALSE, 0);
 
     g_signal_connect(window, "destroy"
-        ,G_CALLBACK(destroyWindowCb), NULL);
+        ,G_CALLBACK(destroyWindowCb), &call);
     g_signal_connect(tool.addressEn, "activate"
         ,G_CALLBACK(c_act), &call);
     g_signal_connect(tool.backTb, "clicked"
@@ -852,17 +874,22 @@ int main(int argc, char* argv[])
         ,G_CALLBACK(c_switch_tab), &call);
     g_signal_connect(webk.webc, "download-started"
         ,G_CALLBACK(c_download_start), &call);
-
+	g_signal_connect(webk.tabsNb, "page-added"
+		,G_CALLBACK(c_notebook_tabs_changed), &call);
+	sign.nb_changed = g_signal_connect(webk.tabsNb, "page-removed"
+		,G_CALLBACK(c_notebook_tabs_changed), &call);
     g_signal_connect_after(tool.addressEn, "insert-text"
         ,G_CALLBACK(c_addr_ins), &call);
     g_signal_connect_after(tool.addressEn, "delete-text"
         ,G_CALLBACK(c_addr_del), &call);
     g_signal_connect_after(window, "key-release-event"
         ,G_CALLBACK(c_accl_rels), &call);
-	g_signal_connect(G_OBJECT(call.menu->tabV), "activate",
-        G_CALLBACK(c_update_tabs_layout), &call);
-	g_signal_connect(G_OBJECT(call.menu->tabH), "activate",
-        G_CALLBACK(c_update_tabs_layout), &call);
+	g_signal_connect(G_OBJECT(call.menu->tabV), "activate"
+        ,G_CALLBACK(c_update_tabs_layout), &call);
+	g_signal_connect(G_OBJECT(call.menu->tabH), "activate"
+        ,G_CALLBACK(c_update_tabs_layout), &call);
+	g_signal_connect(call.menu->tab1, "activate"
+		,G_CALLBACK(c_notebook_tabs_autohide), &call);
 
     if(argc > 1)
     {
@@ -903,7 +930,8 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     webkit_web_view_set_settings(wv,c->webv->webs);
 }
 
-static void destroyWindowCb(GtkWidget* widget, GtkWidget* window)
+static void destroyWindowCb(GtkWidget* widget, struct call_st * c)
 {
+	g_signal_handler_disconnect(c->webv->tabsNb,c->sign->nb_changed);
     gtk_main_quit();
 }
