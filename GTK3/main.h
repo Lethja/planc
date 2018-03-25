@@ -23,16 +23,19 @@ struct menu_st
     GtkWidget * fileMenu;
     GtkWidget * editMenu;
     GtkWidget * viewMenu;
+    GtkWidget * tabsMenu;
     GtkWidget * viewTabMenu;
     GtkWidget * helpMenu;
     GtkWidget * fileMh;
     GtkWidget * editMh;
     GtkWidget * viewMh;
+    GtkWidget * tabsMh;
     GtkWidget * helpMh;
     GtkWidget * viewTabMh;
     GtkWidget * tab1;
     GtkWidget * tabH;
     GtkWidget * tabV;
+    GtkWidget * tabM;
     GtkWidget * findMi;
     GtkWidget * cTabMi;
     GtkWidget * nTabMi;
@@ -98,6 +101,8 @@ static void c_show_tab(WebKitWebView * wv, void * v);
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	,guint n, struct call_st * c);
+
+void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c);
 
 static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na ,struct call_st * c);
