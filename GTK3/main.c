@@ -83,7 +83,8 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 		gtk_menu_item_set_label((GtkMenuItem *)n
 			,gtk_label_get_text((GtkLabel* )l));
 
-		g_signal_connect(n,"button-press-event",G_CALLBACK(c_onclick_tabsMi)
+		g_signal_connect(n,"button-release-event"
+			,G_CALLBACK(c_onclick_tabsMi)
 			,gtk_notebook_get_nth_page(c->webv->tabsNb,i));
 		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),n);
 	}
