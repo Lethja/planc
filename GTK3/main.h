@@ -83,6 +83,7 @@ struct call_st
     struct find_st * find;
     struct sign_st * sign;
     GtkWidget * twin;
+    GtkApplication * gApp;
 };
 
 struct call_st * G_call;

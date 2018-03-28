@@ -1,3 +1,5 @@
+gsettings_SCHEMAS = priv.dis.browser.gschema.xml
+@GSETTINGS_RULES@
 bin_PROGRAMS = browser
 browser_SOURCES = main.c main.h
 browser_CFLAGS= $(GTK3_CFLAGS) $(WK4_CFLAGS)

@@ -902,7 +902,7 @@ void InitFindBar(struct find_st * f, GtkNotebook * w)
 
 void InitCallback(struct call_st * c, struct find_st * f
     ,struct menu_st * m, struct tool_st * t, struct webt_st * w
-    ,struct sign_st * s, GtkWidget * x)
+    ,struct sign_st * s, GtkWidget * x, GtkApplication * a)
 {
     c->menu = m;
     c->find = f;
@@ -910,7 +910,10 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->tool = t;
     c->webv = w;
     c->twin = x;
+    c->gApp = a;
 }
+
+GtkApplication * G_APP = NULL;
 
 int main(int argc, char* argv[])
 {
@@ -925,6 +928,9 @@ int main(int argc, char* argv[])
 
     gtk_init(&argc, &argv);
 
+	G_APP = gtk_application_new("priv.dis.browser"
+		,G_APPLICATION_FLAGS_NONE);
+
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     GtkAccelGroup * accel_group = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
@@ -937,7 +943,7 @@ int main(int argc, char* argv[])
     InitToolbar(&tool, accel_group);
     InitNotetab(&webk);
     InitFindBar(&find, webk.tabsNb);
-    InitCallback(&call,&find,&menu,&tool,&webk,&sign,window);
+    InitCallback(&call,&find,&menu,&tool,&webk,&sign,window,G_APP);
     InitWebview(&call);
 
     gtk_box_pack_start(GTK_BOX(vbox), menu.menu, FALSE, FALSE, 0);

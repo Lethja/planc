@@ -38,7 +38,7 @@ PKG_CHECK_MODULES(WK4, webkit2gtk-4.0 >= 2.18)
 #PKG_CHECK_MODULES(WK3G3, webkit2gtk-3.0 >= 2.4)
 #PKG_CHECK_MODULES(WK3G2, webkitgtk-3.0 >= 2)
 
-
+GLIB_GSETTINGS
 
 # Checks for header files.
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h netinet/in.h string.h sys/socket.h unistd.h netdb.h])
