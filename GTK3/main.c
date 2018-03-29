@@ -974,12 +974,12 @@ int main(int argc, char* argv[])
     G_call = &call;
 
     gtk_init(&argc, &argv);
-
 	G_APP = gtk_application_new("priv.dis.browser"
 		,G_APPLICATION_FLAGS_NONE);
 
 	G_SETTINGS = g_settings_new("priv.dis.browser");
-
+	
+	gtk_window_set_default_icon_name("web-browser");
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
     GtkAccelGroup * accel_group = gtk_accel_group_new();
