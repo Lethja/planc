@@ -2,6 +2,8 @@
 
 char * prepAddress(const gchar * c)
 {
+	if(strstr(c,"about:blank"))
+		return NULL;
     char * p = strstr(c,"://");
     if(!p)
     {
@@ -36,7 +38,7 @@ void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
         (gtk_notebook_get_tab_label(nb,e)));
     gchar * str;
     str = g_strconcat
-        (gtk_label_get_text((GtkLabel *)l), " - Browser", NULL);
+        (gtk_label_get_text((GtkLabel *)l), " - Plan C", NULL);
     gtk_window_set_title((GtkWindow *) win, str);
     if(str)
         g_free(str);
@@ -834,6 +836,9 @@ void InitNotetab(struct webt_st * webv)
 		default:
 			gtk_notebook_set_tab_pos(webv->tabsNb,GTK_POS_TOP);
 	}
+	gboolean b = g_settings_get_boolean(G_SETTINGS,"tab-autohide");
+	if(b)
+		gtk_notebook_set_show_tabs(webv->tabsNb,FALSE);
     gtk_notebook_set_scrollable(webv->tabsNb,TRUE);
 }
 
@@ -974,11 +979,11 @@ int main(int argc, char* argv[])
     G_call = &call;
 
     gtk_init(&argc, &argv);
-	G_APP = gtk_application_new("priv.dis.browser"
+	G_APP = gtk_application_new("priv.dis.planc"
 		,G_APPLICATION_FLAGS_NONE);
 
-	G_SETTINGS = g_settings_new("priv.dis.browser");
-	
+	G_SETTINGS = g_settings_new("priv.dis.planc");
+
 	gtk_window_set_default_icon_name("web-browser");
     GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 
@@ -1054,7 +1059,14 @@ int main(int argc, char* argv[])
     {
 		gchar * uri = prepAddress(g_settings_get_string
 			(G_SETTINGS,"start-page"));
-        webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb),uri);
+		if(uri)
+		{
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb),uri);
+			free(uri);
+		}
+		else
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
+				,"about:blank");
     }
 
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
