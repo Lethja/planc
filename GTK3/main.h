@@ -17,6 +17,9 @@
 
 #define WK_TAB_CHAR_LEN 40
 
+GtkApplication * G_APP = NULL;
+GSettings * G_SETTINGS = NULL;
+
 struct menu_st
 {
     GtkWidget * menu;
@@ -84,6 +87,13 @@ struct call_st
     struct sign_st * sign;
     GtkWidget * twin;
     GtkApplication * gApp;
+    GSettings * gSet;
+};
+
+struct dpco_st //Dual Pointer (Call and Other)
+{
+	struct call_st * call;
+	void * other;
 };
 
 struct call_st * G_call;

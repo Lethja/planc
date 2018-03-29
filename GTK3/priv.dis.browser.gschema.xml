@@ -2,13 +2,48 @@
 
 <schemalist>
 
-	<schema path="/priv/dis/browser/" id="priv.dis.browser">
+	<schema path="/priv/dis/browser/" id="priv.dis.browser" gettext-domain="test">
 
 		<key name='tab-type' type='i'>
 			<default>0</default>
 			<summary>Tab Layout</summary>
 			<description>
 				Decide on the layout tabs should be
+			</description>
+		</key>
+		<key name='tab-autohide' type='b'>
+			<default>false</default>
+			<summary>Tab Autohide</summary>
+			<description>
+				Hide tab interface when only one tab is in a window
+			</description>
+		</key>
+		<key name='init-settings' type='b'>
+			<default>false</default>
+			<summary>Settings Initialized</summary>
+			<description>
+				Has user started the program and initialized defaults
+			</description>
+		</key>
+		<key name="start-page" type="s">
+			<default l10n="messages">"about:blank"</default>
+			<summary>Startup page</summary>
+			<description>
+				The page to load on browser start
+			</description>
+		</key>
+		<key name="home-page" type="s">
+			<default l10n="messages">"about:blank"</default>
+			<summary>Homepage</summary>
+			<description>
+				The page to go to when home is clicked
+			</description>
+		</key>
+		<key name="new-tab-page" type="s">
+			<default l10n="messages">"about:blank"</default>
+			<summary>New Tab Page</summary>
+			<description>
+				The page to load in a new tab
 			</description>
 		</key>
 
