@@ -2,7 +2,7 @@
 
 char * prepAddress(const gchar * c)
 {
-	if(strstr(c,"about:blank"))
+	if(strstr(c,"about:"))
 		return NULL;
     char * p = strstr(c,"://");
     if(!p)
@@ -518,6 +518,8 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 
     if(strcmp(url,"") == 0 || strcmp(url,"about:blank") == 0)
         gtk_widget_grab_focus(GTK_WIDGET(call->tool->addressEn));
+	else
+		gtk_widget_grab_focus(GTK_WIDGET(wv));
 
     addrEntryState_webView((GtkEditable *) call->tool->addressEn, wv
         ,call);
@@ -652,16 +654,24 @@ static void c_show_tab(WebKitWebView * wv, void * v)
 static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
 {
     WebKitWebView * nt
-        = (WebKitWebView *) webkit_web_view_new_with_related_view
-        (WK_CURRENT_TAB(c->webv->tabsNb));
-    webkit_web_view_load_uri(nt,"about:blank");
+        = (WebKitWebView *) webkit_web_view_new_with_context
+        (c->webv->webc);
+	gchar * u = prepAddress(g_settings_get_string
+		(G_SETTINGS,"tab-newpage"));
+	if(u)
+	{
+		webkit_web_view_load_uri(nt,u);
+		free(u);
+	}
+	else
+		webkit_web_view_load_uri(nt,"about:blank");
+
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->call = c;
     g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
         ,newtab);
     g_signal_emit_by_name(nt,"ready-to-show");
-    gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
     return nt;
 }
 
@@ -669,7 +679,8 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na, struct call_st * c)
 {
     WebKitWebView * nt
-        = (WebKitWebView *) webkit_web_view_new_with_related_view(wv);
+        = (WebKitWebView *) webkit_web_view_new_with_context
+		(c->webv->webc);
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->call = c;
@@ -859,6 +870,14 @@ void InitWebview(struct call_st * c)
     g_free(dd);
 
     c->webv->webc = webkit_web_context_new_with_website_data_manager(d);
+
+    if(g_settings_get_boolean(G_SETTINGS,"webkit-multiproc"))
+		webkit_web_context_set_process_model(c->webv->webc
+			,WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
+	else
+		webkit_web_context_set_process_model(c->webv->webc
+			,WEBKIT_PROCESS_MODEL_SHARED_SECONDARY_PROCESS);
+
     webkit_web_context_set_cache_model(c->webv->webc
         ,WEBKIT_CACHE_MODEL_WEB_BROWSER);
 
@@ -877,8 +896,11 @@ void InitWebview(struct call_st * c)
     g_free(cs);
 
     c->webv->webs = webkit_settings_new();
-    webkit_settings_set_enable_mediasource(c->webv->webs, TRUE);
-
+    if(g_settings_get_boolean(G_SETTINGS,"webkit-mse"))
+		webkit_settings_set_enable_mediasource(c->webv->webs,TRUE);
+#ifdef WK_MEDIA_ENCRYPT
+	webkit_settings_set_enable_encrypted_media(c->webv->webs, TRUE);
+#endif
     WebKitWebView * wv = WEBKIT_WEB_VIEW
         (webkit_web_view_new_with_context(c->webv->webc));
 
@@ -1052,13 +1074,19 @@ int main(int argc, char* argv[])
     if(argc > 1)
     {
         gchar * uri = prepAddress((const gchar *) argv[1]);
-        webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb), uri);
-        free(uri);
+        if(uri)
+        {
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb), uri);
+			free(uri);
+		}
+		else
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
+				,"about:blank");
     }
     else
     {
 		gchar * uri = prepAddress(g_settings_get_string
-			(G_SETTINGS,"start-page"));
+			(G_SETTINGS,"planc-startpage"));
 		if(uri)
 		{
 			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb),uri);
