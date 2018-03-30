@@ -4,7 +4,7 @@
 
 	<schema path="/priv/dis/planc/" id="priv.dis.planc" gettext-domain="test">
 
-		<key name='tab-type' type='i'>
+		<key name='tab-layout' type='i'>
 			<default>0</default>
 			<summary>Tab Layout</summary>
 			<description>
@@ -18,32 +18,47 @@
 				Hide tab interface when only one tab is in a window
 			</description>
 		</key>
-		<key name='init-settings' type='b'>
+		<key name='planc-init' type='b'>
 			<default>false</default>
 			<summary>Settings Initialized</summary>
 			<description>
 				Has user started the program and initialized defaults
 			</description>
 		</key>
-		<key name="start-page" type="s">
+		<key name='webkit-mse' type='b'>
+			<default>false</default>
+			<summary>Media Source Extensions</summary>
+			<description>
+				Is Media Source Extensions enabled or not. 
+				Disabled by default due to stability issues.
+			</description>
+		</key>
+		<key name='webkit-multiproc' type='b'>
+			<default>false</default>
+			<summary>Multiple Processes</summary>
+			<description>
+				Will webkit run one process per each tab
+			</description>
+		</key>
+		<key name="planc-startpage" type="s">
 			<default l10n="messages">"about:blank"</default>
 			<summary>Startup page</summary>
 			<description>
 				The page to load on browser start
 			</description>
 		</key>
-		<key name="home-page" type="s">
+		<key name="planc-homepage" type="s">
 			<default l10n="messages">"about:blank"</default>
 			<summary>Homepage</summary>
 			<description>
 				The page to go to when home is clicked
 			</description>
 		</key>
-		<key name="new-tab-page" type="s">
+		<key name="tab-newpage" type="s">
 			<default l10n="messages">"about:blank"</default>
 			<summary>New Tab Page</summary>
 			<description>
-				The page to load in a new tab
+				The page to load in a new tab when none is specified
 			</description>
 		</key>
 

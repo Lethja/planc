@@ -797,7 +797,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
 		,G_CALLBACK(destroyWindowCb), G_call);
 
-	gint g = g_settings_get_int(G_SETTINGS,"tab-type");
+	gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
 	switch(g)
 	{
 		case 2:
@@ -824,7 +824,7 @@ void InitNotetab(struct webt_st * webv)
 {
     webv->tabsNb = (GtkNotebook *) gtk_notebook_new();
     gtk_notebook_set_show_border(webv->tabsNb,FALSE);
-    gint g = g_settings_get_int(G_SETTINGS,"tab-type");
+    gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
     switch(g)
     {
 		case 2:
