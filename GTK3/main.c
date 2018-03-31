@@ -145,6 +145,34 @@ void c_update_tabs_layout(GtkWidget * r, struct call_st * c)
 		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
 }
 
+void c_download_progress(WebKitDownload * d, guint pro, GtkWidget * w)
+{
+	gchar * l = g_strdup_printf("Downloading: %f"
+		,webkit_download_get_estimated_progress(d),NULL);
+	printf("Downloading: %f\n"
+		,webkit_download_get_estimated_progress(d));
+	gtk_label_set_text((GtkLabel *) w,l);
+	free(l);
+}
+
+GtkWindow * InitDownloadProgressWindow(WebKitDownload * d
+	,guint pro)
+{
+	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_default_size(r,40,40);
+	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
+	gtk_window_set_icon_name(r,"preferences-system-network");
+	gtk_window_set_title(r,"Download - Plan C");
+	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	GtkWidget * lab = gtk_label_new("Downloading: 0.0");
+    //gtk_container_add((GtkContainer *)vbox,(GtkWidget *) lab);
+    gtk_container_add((GtkContainer *)r, vbox);
+    g_signal_connect(d,"received-data"
+		,G_CALLBACK(c_download_progress),lab);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(lab),TRUE,TRUE,0);
+	gtk_widget_show_all((GtkWidget *)r);
+}
+
 gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
 {
     GtkWidget *dialog;
@@ -203,6 +231,7 @@ gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
         webkit_download_set_destination(d
             ,gtk_file_chooser_get_uri(chooser));
         gtk_widget_destroy (dialog);
+        InitDownloadProgressWindow(d,0);
         return TRUE;
     }
     else
