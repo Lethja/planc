@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Name=Plan C
+Comment=When the other web browsers let you down...
+Exec=planc %u
+Icon=web-browser
+Terminal=false
+Type=Application
+StartupNotify=true
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;
+Categories=Network;WebBrowser;GTK;
+Name[en_US.utf8]=Plan C
