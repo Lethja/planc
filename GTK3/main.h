@@ -17,8 +17,8 @@
 
 #define WK_TAB_CHAR_LEN 40
 
-GtkApplication * G_APP = NULL;
-GSettings * G_SETTINGS = NULL;
+extern GtkApplication * G_APP;
+extern GSettings * G_SETTINGS;
 
 struct menu_st
 {
@@ -35,11 +35,12 @@ struct menu_st
     GtkWidget * tabsMh;
     GtkWidget * helpMh;
     GtkWidget * viewTabMh;
-    GtkWidget * tab1;
+//    GtkWidget * tab1;
     GtkWidget * tabH;
     GtkWidget * tabV;
     GtkWidget * tabM;
     GtkWidget * findMi;
+    GtkWidget * setwMi;
     GtkWidget * cTabMi;
     GtkWidget * nTabMi;
     GtkWidget * quitMi;
@@ -106,6 +107,8 @@ struct newt_st
 
 void connect_signals (WebKitWebView * wv, struct call_st * c);
 
+void c_notebook_tabs_autohide(GtkToggleButton * cbmi
+	,struct call_st * c);
 
 static void destroyWindowCb(GtkWidget* widget, struct call_st * c);
 static void c_show_tab(WebKitWebView * wv, void * v);

@@ -1,0 +1,87 @@
+#include "main.h"
+#include "settings.h"
+
+GtkWindow * G_WIN_SETTINGS = NULL;
+
+GtkWidget * InitComboBoxLabel(const gchar * l, GtkWidget * c)
+{
+	GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	GtkWidget * cbl = gtk_label_new(l);
+	gtk_container_add((GtkContainer *)hbox, cbl);
+	if(!c)
+		c = gtk_combo_box_new();
+	gtk_container_add((GtkContainer *)hbox, c);
+	return hbox;
+}
+
+GtkWindow * InitSettingsWindow(struct call_st * c)
+{
+	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_default_size(r,400,400);
+	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
+	gtk_window_set_icon_name(r,"preferences-system-network");
+	gtk_window_set_title(r,"Settings - Plan C");
+	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
+	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_container_add((GtkContainer *)r, scrl);
+    gtk_container_add((GtkContainer *)scrl, vbox);
+
+    //Init
+    GtkWidget * tabBox = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
+		,"Horizontal");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
+		,"Vertical");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
+		,"Menu");
+
+    GtkWidget * ch = gtk_check_button_new_with_label
+		("Enable Page Cache");
+    GtkWidget * ta = gtk_check_button_new_with_label
+		("Autohide tab bar in single tab windows");
+	GtkWidget * tt = (GtkWidget *) InitComboBoxLabel
+		("Default Tab Layout",tabBox);
+	GtkWidget * js = gtk_check_button_new_with_label
+		("Enable JavaScript");
+	GtkWidget * jv = gtk_check_button_new_with_label
+		("Enable Java");
+	GtkWidget * ms = gtk_check_button_new_with_label
+		("Enable Media Source Extensions");
+	GtkWidget * in = gtk_check_button_new_with_label
+		("Enable Plugins");
+	GtkWidget * pt = gtk_check_button_new_with_label
+		("Enable Process Per Tab (Requires Restart)");
+
+	//Bind to setting
+	g_settings_bind (G_SETTINGS,"webkit-cache",ch,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"tab-autohide",ta,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"webkit-mse",ms,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"webkit-plugins",in,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"webkit-js",js,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"webkit-java",jv,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"webkit-ppt",pt,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	//Connect events
+	g_signal_connect(ta, "toggled"
+		,G_CALLBACK(c_notebook_tabs_autohide), c);
+
+	//Parent
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(jv),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(js),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(in),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ms),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ch),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(pt),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tt),FALSE,FALSE,0);
+	gtk_widget_show_all((GtkWidget *)r);
+	return r;
+}
