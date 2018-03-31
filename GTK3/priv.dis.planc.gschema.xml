@@ -6,14 +6,15 @@
 
 		<key name='tab-layout' type='i'>
 			<default>0</default>
+			<range min="0" max="2"/>
 			<summary>Tab Layout</summary>
 			<description>
-				Decide on the layout tabs should be
+				Decide on the layout tabs should be on a new window
 			</description>
 		</key>
 		<key name='tab-autohide' type='b'>
 			<default>false</default>
-			<summary>Tab Autohide</summary>
+			<summary>Autohide Tab</summary>
 			<description>
 				Hide tab interface when only one tab is in a window
 			</description>
@@ -25,19 +26,89 @@
 				Has user started the program and initialized defaults
 			</description>
 		</key>
+		<key name='webkit-cache' type='b'>
+			<default>true</default>
+			<summary>Memory Cache</summary>
+			<description>
+				Is Memory Cache enabled.
+				Memory Cache (not to be confused with Disk Cache) keeps pages suspended in memory to accellerate the process of navigating back/forward between them.
+				Users with low system memory and/or high disk I/O performance should consider disabling this option.
+				Enabled by default for performance.
+			</description>
+		</key>
+		<key name='webkit-java' type='b'>
+			<default>false</default>
+			<summary>Java execution</summary>
+			<description>
+				Is Java allowed to run.
+				Is Java (not to be confused with JavaScript) allowed to be executed by webkit.
+				Disable by default for security.
+			</description>
+		</key>
+		<key name='webkit-js' type='b'>
+			<default>true</default>
+			<summary>JavaScript execution</summary>
+			<description>
+				Is JavaScript allowed to run.
+				Is JavaScript (not to be confused with Java) allowed to be executed by webkit.
+				JavaScript has become the defacto scripting language in HTML5. Disabling this option may make some websites not display correctly.
+				This is a master switch, disabling this feature will override all settings in the application that contradict it. If you want to disable/enable JavaScript on certian domains use configure Domain Policies within Plan C.
+				Enabled by default for compatibility.
+			</description>
+		</key>
 		<key name='webkit-mse' type='b'>
 			<default>false</default>
 			<summary>Media Source Extensions</summary>
 			<description>
-				Is Media Source Extensions enabled or not. 
-				Disabled by default due to stability issues.
+				Is Media Source Extensions enabled.
+				MSE allows a websites player to deliver blobs of multimedia content though JavaScript.
+				Disabled by default for stability and security.
 			</description>
 		</key>
-		<key name='webkit-multiproc' type='b'>
+		<key name='webkit-eme' type='b'>
 			<default>false</default>
-			<summary>Multiple Processes</summary>
+			<summary>Encrypted Media Extensions</summary>
 			<description>
-				Will webkit run one process per each tab
+				Is Encrypted Media Extensions enabled.
+				EME allows JavaScript to be used for playing encrypted media in HTML.
+				Disabled by default due to controversial nature of the standard.
+			</description>
+		</key>
+		<key name='webkit-webaudio' type='b'>
+			<default>false</default>
+			<summary>Web Audio API</summary>
+			<description>
+				Is WebAudio enabled.
+				WebAudio allows webpages to generate Audio WAVE data from JavaScript.
+				Disabled by default for stability.
+			</description>
+		</key>
+		<key name='webkit-rtc' type='b'>
+			<default>false</default>
+			<summary>Web Real-Time Communication</summary>
+			<description>
+				Is WebRTC enabled or not.
+				WebRTC allows websites to get multimedia input from periphrals such as a microphone or webcam.
+				Disabled by default for privacy.
+			</description>
+		</key>
+		<key name='webkit-ppt' type='b'>
+			<default>false</default>
+			<summary>Processes Per Tab</summary>
+			<description>
+				Is webkit running each tab in it's own process.
+				PPT segregates each tab from the others. In the event a tab crashes or freezes, it will not effect other tabs but this comes at the cost of additional memory overhead.
+				This setting will not take effect until program restart.
+				Disabled by default for resource management.
+			</description>
+		</key>
+		<key name='webkit-plugins' type='b'>
+			<default>false</default>
+			<summary>Third Party Plugins</summary>
+			<description>
+				Is webkit allowed to run third party plugins.
+				Plugins are small programs that are embedded into webpages to provide functionality that can't (or could not when the page was developed) be achieved though standard web technoligies.
+				Disabled by default for security.
 			</description>
 		</key>
 		<key name="planc-startpage" type="s">

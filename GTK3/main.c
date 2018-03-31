@@ -871,7 +871,7 @@ void InitWebview(struct call_st * c)
 
     c->webv->webc = webkit_web_context_new_with_website_data_manager(d);
 
-    if(g_settings_get_boolean(G_SETTINGS,"webkit-multiproc"))
+    if(g_settings_get_boolean(G_SETTINGS,"webkit-ppt"))
 		webkit_web_context_set_process_model(c->webv->webc
 			,WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
 	else
@@ -896,11 +896,26 @@ void InitWebview(struct call_st * c)
     g_free(cs);
 
     c->webv->webs = webkit_settings_new();
-    if(g_settings_get_boolean(G_SETTINGS,"webkit-mse"))
-		webkit_settings_set_enable_mediasource(c->webv->webs,TRUE);
+	
+	webkit_settings_set_enable_page_cache(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-cache"));
+	webkit_settings_set_enable_java(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-java"));
+	webkit_settings_set_enable_javascript(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-js"));
+	webkit_settings_set_enable_plugins(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-plugins"));
+	webkit_settings_set_enable_webaudio(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-webaudio"));
+	webkit_settings_set_enable_media_stream(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-rtc"));
+	webkit_settings_set_enable_mediasource(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-mse"));
 #ifdef WK_MEDIA_ENCRYPT
-	webkit_settings_set_enable_encrypted_media(c->webv->webs, TRUE);
+	webkit_settings_set_enable_encrypted_media(c->webv->webs
+		,g_settings_get_boolean(G_SETTINGS,"webkit-eme"));
 #endif
+
     WebKitWebView * wv = WEBKIT_WEB_VIEW
         (webkit_web_view_new_with_context(c->webv->webc));
 
