@@ -145,43 +145,95 @@ void c_update_tabs_layout(GtkWidget * r, struct call_st * c)
 		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
 }
 
+void c_download_finished(WebKitDownload * d, GtkWidget * w)
+{
+	guint64 len = webkit_uri_response_get_content_length
+		(webkit_download_get_response(d));
+	gchar * l = NULL;
+	if(len)
+	{
+		l = g_strdup_printf
+			("Downloaded: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
+			,webkit_download_get_received_data_length(d),len,NULL);
+		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+	}
+	else
+	{
+		l = g_strdup_printf
+			("Downloaded: %" G_GUINT64_FORMAT
+			,webkit_download_get_received_data_length(d), NULL);
+		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+	}
+	free(l);
+	gtk_progress_bar_set_fraction((GtkProgressBar *)w
+		,webkit_download_get_estimated_progress(d));
+}
+
 void c_download_progress(WebKitDownload * d, guint pro, GtkWidget * w)
 {
-	gchar * l = g_strdup_printf("Downloading: %f"
-		,webkit_download_get_estimated_progress(d),NULL);
-	printf("Downloading: %f\n"
-		,webkit_download_get_estimated_progress(d));
-	gtk_label_set_text((GtkLabel *) w,l);
+	guint64 len = webkit_uri_response_get_content_length
+		(webkit_download_get_response(d));
+	gchar * l = NULL;
+	if(len)
+	{
+		l = g_strdup_printf
+			("Downloading: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
+			,webkit_download_get_received_data_length(d),len,NULL);
+		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+		gtk_progress_bar_set_fraction((GtkProgressBar *)w
+			,webkit_download_get_estimated_progress(d));
+	}
+	else
+	{
+		l = g_strdup_printf
+			("Downloading: %" G_GUINT64_FORMAT
+			,webkit_download_get_received_data_length(d), NULL);
+		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+		gtk_progress_bar_pulse((GtkProgressBar *)w);
+	}
 	free(l);
 }
 
-GtkWindow * InitDownloadProgressWindow(WebKitDownload * d
-	,guint pro)
+void c_download_destination_created(WebKitDownload * d, gchar * fn
+	,void * v)
 {
 	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(r,40,40);
+	gtk_window_set_default_size(r,280,40);
 	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
-	gtk_window_set_icon_name(r,"preferences-system-network");
-	gtk_window_set_title(r,"Download - Plan C");
+	gtk_window_set_icon_name(r,"document-save");
+	char * f = strrchr(fn,'/');
+	gchar * t = NULL;
+	if(f)
+		t = g_strdup_printf("%s - Plan C",f+1);
+	else
+		t = g_strdup_printf("%s - Plan C",fn);
+
+	gtk_window_set_title(r,t);
+	free(t);
 	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	GtkWidget * lab = gtk_label_new("Downloading: 0.0");
+	GtkWidget * lab = gtk_progress_bar_new();
+	gtk_progress_bar_set_show_text((GtkProgressBar *)lab,TRUE);
+	gtk_progress_bar_set_text((GtkProgressBar *)lab,"0");
     //gtk_container_add((GtkContainer *)vbox,(GtkWidget *) lab);
     gtk_container_add((GtkContainer *)r, vbox);
     g_signal_connect(d,"received-data"
 		,G_CALLBACK(c_download_progress),lab);
+	g_signal_connect(d, "finished"
+        ,G_CALLBACK(c_download_finished),lab);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(lab),TRUE,TRUE,0);
 	gtk_widget_show_all((GtkWidget *)r);
 }
 
 gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
 {
+	struct call_st * c = v;
     GtkWidget *dialog;
     GtkFileChooser *chooser;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
     gint res;
 
-    dialog = gtk_file_chooser_dialog_new ("Save File" ,NULL
-        ,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
+    dialog = gtk_file_chooser_dialog_new ("Save File"
+		,(GtkWindow *) c->twin,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
         ,GTK_RESPONSE_CANCEL ,("_Save") ,GTK_RESPONSE_ACCEPT,NULL);
 
     chooser = GTK_FILE_CHOOSER (dialog);
@@ -231,7 +283,6 @@ gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
         webkit_download_set_destination(d
             ,gtk_file_chooser_get_uri(chooser));
         gtk_widget_destroy (dialog);
-        InitDownloadProgressWindow(d,0);
         return TRUE;
     }
     else
@@ -245,8 +296,11 @@ gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
 static void c_download_start(WebKitWebContext * wv
     ,WebKitDownload * dl, void * v)
 {
+	webkit_download_set_allow_overwrite(dl,TRUE);
     g_signal_connect(dl, "decide-destination"
         ,G_CALLBACK(c_download_name), v);
+	g_signal_connect(dl, "created-destination"
+        ,G_CALLBACK(c_download_destination_created), v);
 }
 
 static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
