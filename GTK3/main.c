@@ -60,11 +60,22 @@ void update_tab(GtkNotebook * nb, WebKitWebView * ch)
         gtk_label_set_text((GtkLabel *)l,webkit_web_view_get_uri(ch));
 }
 
-static void c_onclick_tabsMi(GtkMenuItem * mi, GdkEvent * e
+gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
 	,GtkWidget * w)
 {
+	if (e->button == 2)
+    {
+        if(gtk_notebook_get_n_pages(G_call->webv->tabsNb) > 1)
+        {
+            gtk_notebook_remove_page(G_call->webv->tabsNb
+                ,gtk_notebook_page_num(G_call->webv->tabsNb,w));
+			gtk_widget_set_sensitive(GTK_WIDGET(mi),FALSE);
+			return TRUE;
+		}
+    }
 	gtk_notebook_set_current_page(G_call->webv->tabsNb
 		,gtk_notebook_page_num(G_call->webv->tabsNb,w));
+	return FALSE;
 }
 
 void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c)
