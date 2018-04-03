@@ -166,7 +166,7 @@ void c_download_finished(WebKitDownload * d, GtkWidget * w)
 	}
 	free(l);
 	gtk_progress_bar_set_fraction((GtkProgressBar *)w
-		,webkit_download_get_estimated_progress(d));
+		,1.0);
 }
 
 void c_download_progress(WebKitDownload * d, guint pro, GtkWidget * w)
@@ -213,6 +213,7 @@ void c_download_destination_created(WebKitDownload * d, gchar * fn
 	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	GtkWidget * lab = gtk_progress_bar_new();
 	gtk_progress_bar_set_show_text((GtkProgressBar *)lab,TRUE);
+	gtk_progress_bar_set_pulse_step((GtkProgressBar *)lab,0.001);
 	gtk_progress_bar_set_text((GtkProgressBar *)lab,"0");
     //gtk_container_add((GtkContainer *)vbox,(GtkWidget *) lab);
     gtk_container_add((GtkContainer *)r, vbox);
