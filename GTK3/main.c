@@ -923,7 +923,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 		,G_CALLBACK(c_new_tab), G_call);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
-		,G_CALLBACK(destroyWindowCb), G_call);
+		,G_CALLBACK(c_destroy_window_request), G_call);
 
 	gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
 	switch(g)
@@ -1171,7 +1171,9 @@ int main(int argc, char* argv[])
     gtk_box_pack_start(GTK_BOX(vbox), find.top, FALSE, FALSE, 0);
 
     g_signal_connect(window, "destroy"
-        ,G_CALLBACK(destroyWindowCb), &call);
+        ,G_CALLBACK(c_destroy_window), &call);
+	g_signal_connect(window, "delete-event"
+        ,G_CALLBACK(c_destroy_window_request), &call);
     g_signal_connect(tool.addressEn, "activate"
         ,G_CALLBACK(c_act), &call);
     g_signal_connect(tool.backTb, "clicked"
@@ -1256,7 +1258,29 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     webkit_web_view_set_settings(wv,c->webv->webs);
 }
 
-static void destroyWindowCb(GtkWidget* widget, struct call_st * c)
+gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
+	,struct call_st * call)
+{
+	guint g = gtk_notebook_get_n_pages(call->webv->tabsNb);
+	if(g > 1)
+	{
+		GtkWidget * dialog = gtk_message_dialog_new
+			((GtkWindow *) call->twin
+			,GTK_DIALOG_DESTROY_WITH_PARENT
+			,GTK_MESSAGE_QUESTION
+			,GTK_BUTTONS_YES_NO
+			,"Are you sure you want to close this window with %d tabs?"
+			,g);
+
+		g = gtk_dialog_run (GTK_DIALOG (dialog));
+		gtk_widget_destroy (dialog);
+		if(g == GTK_RESPONSE_NO)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+static void c_destroy_window(GtkWidget* widget, struct call_st * c)
 {
 	g_signal_handler_disconnect(c->webv->tabsNb,c->sign->nb_changed);
     gtk_main_quit();

@@ -110,7 +110,11 @@ void connect_signals (WebKitWebView * wv, struct call_st * c);
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 	,struct call_st * c);
 
-static void destroyWindowCb(GtkWidget* widget, struct call_st * c);
+static void c_destroy_window(GtkWidget* widget, struct call_st * c);
+
+gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
+	,struct call_st * call);
+
 static void c_show_tab(WebKitWebView * wv, void * v);
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
