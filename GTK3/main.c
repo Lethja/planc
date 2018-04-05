@@ -400,11 +400,14 @@ static gboolean c_leave_fullscreen(GtkWidget * widget
 {
     gtk_widget_show(GTK_WIDGET(c->menu->menu));
     gtk_widget_show(GTK_WIDGET(c->tool->top));
+    if(gtk_check_menu_item_get_active(
+		(GtkCheckMenuItem *)c->menu->tabM))
+		return FALSE;
     if(g_settings_get_boolean(G_SETTINGS,"tab-autohide"))
 		c_notebook_tabs_changed(c->webv->tabsNb,NULL,0,c);
 	else
 		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
-    return 0;
+    return FALSE;
 }
 
 static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
@@ -953,6 +956,7 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
 		,G_CALLBACK(c_destroy_window_request), c);
 
+	c->menu = menu;
 	gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
 	switch(g)
 	{
@@ -1080,7 +1084,8 @@ void InitWebview(struct call_st * c)
     connect_signals(wv,c);
 }
 
-void InitFindBar(struct find_st * f, GtkNotebook * w)
+void InitFindBar(struct find_st * f, GtkNotebook * w
+	,struct call_st * call)
 {
     f->top = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(f->top), GTK_TOOLBAR_ICONS);
@@ -1129,7 +1134,7 @@ void InitFindBar(struct find_st * f, GtkNotebook * w)
     g_signal_connect(f->forwardTb, "clicked"
         ,G_CALLBACK(c_search_nxt), w);
 	g_signal_connect(f->closeTb, "clicked"
-        ,G_CALLBACK(c_toggleSearch), w);
+        ,G_CALLBACK(c_toggleSearch), call);
     g_signal_connect_after(f->findEn, "insert-text"
         ,G_CALLBACK(c_search_ins), w);
     g_signal_connect_after(f->findEn, "delete-text"
@@ -1187,7 +1192,7 @@ int main(int argc, char* argv[])
     InitMenubar(&menu, &call, accel_group);
     InitToolbar(&tool, accel_group);
     InitNotetab(&webk);
-    InitFindBar(&find, webk.tabsNb);
+    InitFindBar(&find, webk.tabsNb, &call);
     InitCallback(&call,&find,&menu,&tool,&webk,&sign
 		,window,G_APP,G_SETTINGS);
     InitWebview(&call);
