@@ -40,9 +40,8 @@ void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
 {
     GtkWidget * l = gtk_bin_get_child(GTK_BIN
         (gtk_notebook_get_tab_label(nb,e)));
-    gchar * str;
-    str = g_strconcat
-        (gtk_label_get_text((GtkLabel *)l), " - Plan C", NULL);
+    gchar * str = g_strconcat(gtk_label_get_text((GtkLabel *)l)
+		," - Plan C", NULL);
     gtk_window_set_title((GtkWindow *) win, str);
     if(str)
         g_free(str);
@@ -61,20 +60,21 @@ void update_tab(GtkNotebook * nb, WebKitWebView * ch)
 }
 
 gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
-	,GtkWidget * w)
+	,struct dpco_st * dp)
 {
 	if (e->button == 2)
     {
-        if(gtk_notebook_get_n_pages(G_call->webv->tabsNb) > 1)
+        if(gtk_notebook_get_n_pages(dp->call->webv->tabsNb) > 1)
         {
-            gtk_notebook_remove_page(G_call->webv->tabsNb
-                ,gtk_notebook_page_num(G_call->webv->tabsNb,w));
+            gtk_notebook_remove_page(dp->call->webv->tabsNb
+                ,gtk_notebook_page_num(dp->call->webv->tabsNb
+                ,dp->other));
 			gtk_widget_set_sensitive(GTK_WIDGET(mi),FALSE);
 			return TRUE;
 		}
     }
-	gtk_notebook_set_current_page(G_call->webv->tabsNb
-		,gtk_notebook_page_num(G_call->webv->tabsNb,w));
+	gtk_notebook_set_current_page(dp->call->webv->tabsNb
+		,gtk_notebook_page_num(dp->call->webv->tabsNb,dp->other));
 	return FALSE;
 }
 
@@ -99,36 +99,37 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 		GtkWidget * n = gtk_menu_item_new();
 		gtk_menu_item_set_label((GtkMenuItem *)n
 			,gtk_label_get_text((GtkLabel* )l));
-
+		struct dpco_st dp;
+		dp.call = c;
+		dp.other= gtk_notebook_get_nth_page(c->webv->tabsNb,i);
 		g_signal_connect(n,"button-release-event"
-			,G_CALLBACK(c_onclick_tabsMi)
-			,gtk_notebook_get_nth_page(c->webv->tabsNb,i));
+			,G_CALLBACK(c_onclick_tabsMi), &dp);
 		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),n);
 	}
 	gtk_widget_show_all((GtkWidget *)mi);
 }
 
-void t_tabs_menu(struct menu_st * m, gboolean b)
+void t_tabs_menu(struct call_st * c, gboolean b)
 {
 	if(b)
 	{
-		m->tabsMh = gtk_menu_item_new_with_mnemonic("_Tabs");
-		gtk_menu_shell_insert(GTK_MENU_SHELL(m->menu)
-			,m->tabsMh,3);
-		gtk_widget_show_all(m->menu);
-		m->tabsMenu = gtk_menu_new();
-		gtk_menu_item_set_submenu((GtkMenuItem *) m->tabsMh
-			,m->tabsMenu);
-		g_signal_connect(m->tabsMh, "select"
-			,G_CALLBACK(c_onclick_tabsMh), G_call);
-		g_signal_connect_after(m->tabsMh,"deselect"
-			,G_CALLBACK(c_onrelease_tabsMh),G_call);
+		c->menu->tabsMh = gtk_menu_item_new_with_mnemonic("_Tabs");
+		gtk_menu_shell_insert(GTK_MENU_SHELL(c->menu->menu)
+			,c->menu->tabsMh,3);
+		gtk_widget_show_all(c->menu->menu);
+		c->menu->tabsMenu = gtk_menu_new();
+		gtk_menu_item_set_submenu((GtkMenuItem *) c->menu->tabsMh
+			,c->menu->tabsMenu);
+		g_signal_connect(c->menu->tabsMh, "select"
+			,G_CALLBACK(c_onclick_tabsMh), c);
+		g_signal_connect_after(c->menu->tabsMh,"deselect"
+			,G_CALLBACK(c_onrelease_tabsMh),c);
 	}
 	else
 	{
-		gtk_container_remove(GTK_CONTAINER(m->menu)
-			,m->tabsMh);
-		m->tabsMh = NULL;
+		gtk_container_remove(GTK_CONTAINER(c->menu->menu)
+			,c->menu->tabsMh);
+		c->menu->tabsMh = NULL;
 	}
 }
 
@@ -137,11 +138,11 @@ void c_update_tabs_layout(GtkWidget * r, struct call_st * c)
 	if(r == c->menu->tabM && !c->menu->tabsMh)
 	{
 		gtk_notebook_set_show_tabs(c->webv->tabsNb,FALSE);
-		t_tabs_menu(c->menu,TRUE);
+		t_tabs_menu(c,TRUE);
 		return;
 	}
 	else if(c->menu->tabsMh)
-		t_tabs_menu(c->menu,FALSE);
+		t_tabs_menu(c,FALSE);
 
 	if(r == c->menu->tabH)
 		gtk_notebook_set_tab_pos(c->webv->tabsNb,GTK_POS_TOP);
@@ -333,13 +334,14 @@ static gboolean c_notebook_scroll(GtkWidget * w, GdkEventScroll * e
 }
 
 static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
-    ,void * v)
+    ,struct dpco_st * dp)
 {
     if (e->button == 2)
     {
-        if(gtk_notebook_get_n_pages(G_call->webv->tabsNb) > 1)
-            gtk_notebook_remove_page(G_call->webv->tabsNb
-                ,gtk_notebook_page_num(G_call->webv->tabsNb,v));
+        if(gtk_notebook_get_n_pages(dp->call->webv->tabsNb) > 1)
+            gtk_notebook_remove_page(dp->call->webv->tabsNb
+                ,gtk_notebook_page_num(dp->call->webv->tabsNb
+				,dp->other));
 		return TRUE;
     }
     return FALSE;
@@ -443,21 +445,21 @@ static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
     return TRUE;
 }
 
-static void c_toggleSearch(GtkWidget * w, void * v)
+static void c_toggleSearch(GtkWidget * w, struct call_st * c)
 {
-    if(gtk_widget_get_visible(G_call->find->top))
+    if(gtk_widget_get_visible(c->find->top))
     {
-        gtk_widget_hide(G_call->find->top);
+        gtk_widget_hide(c->find->top);
         webkit_find_controller_search_finish
             (webkit_web_view_get_find_controller
-            (WK_CURRENT_TAB(G_call->webv->tabsNb)));
+            (WK_CURRENT_TAB(c->webv->tabsNb)));
         gtk_widget_grab_focus
-            (WK_CURRENT_TAB_WIDGET(G_call->webv->tabsNb));
+            (WK_CURRENT_TAB_WIDGET(c->webv->tabsNb));
     }
     else
     {
-        gtk_widget_show(G_call->find->top);
-        gtk_widget_grab_focus((GtkWidget *) G_call->find->findEn);
+        gtk_widget_show(c->find->top);
+        gtk_widget_grab_focus((GtkWidget *) c->find->findEn);
     }
 }
 
@@ -552,26 +554,28 @@ static void c_refresh(GtkWidget * widget, void * v)
         webkit_web_view_reload(WK_CURRENT_TAB(v));
 }
 
-static void c_go_back(GtkWidget * widget, void * v)
+static void c_go_back(GtkWidget * widget, struct call_st * c)
 {
-    webkit_web_view_go_back(WK_CURRENT_TAB(v));
+    webkit_web_view_go_back(WK_CURRENT_TAB(c->webv->tabsNb));
 
-    gtk_widget_set_sensitive(GTK_WIDGET(G_call->tool->backTb)
-        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(v)));
+    gtk_widget_set_sensitive(GTK_WIDGET(c->tool->backTb)
+        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(c->webv->tabsNb)));
 
-    gtk_widget_set_sensitive(GTK_WIDGET(G_call->tool->forwardTb)
-        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB(v)));
+    gtk_widget_set_sensitive(GTK_WIDGET(c->tool->forwardTb)
+        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB
+		(c->webv->tabsNb)));
 }
 
-static void c_go_forward(GtkWidget * widget, void * v)
+static void c_go_forward(GtkWidget * widget, struct call_st * c)
 {
-    webkit_web_view_go_forward(WK_CURRENT_TAB(v));
+    webkit_web_view_go_forward(WK_CURRENT_TAB(c->webv->tabsNb));
 
-    gtk_widget_set_sensitive(GTK_WIDGET(G_call->tool->backTb)
-        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(v)));
+    gtk_widget_set_sensitive(GTK_WIDGET(c->tool->backTb)
+        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(c->webv->tabsNb)));
 
-    gtk_widget_set_sensitive(GTK_WIDGET(G_call->tool->forwardTb)
-        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB(v)));
+    gtk_widget_set_sensitive(GTK_WIDGET(c->tool->forwardTb)
+        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB
+        (c->webv->tabsNb)));
 }
 
 static void c_open_settings(GtkWidget * w, struct call_st * c)
@@ -740,7 +744,8 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
     }
 }
 
-GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str)
+GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
+	,struct call_st * c)
 {
     GtkWidget * ebox = gtk_event_box_new();
     gtk_widget_set_has_window(ebox, FALSE);
@@ -748,7 +753,7 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str)
         ,G_CALLBACK(c_notebook_click), wv);
 	gtk_widget_add_events(ebox, GDK_SCROLL_MASK);
 	g_signal_connect(ebox, "scroll-event"
-		,G_CALLBACK(c_notebook_scroll), G_call);
+		,G_CALLBACK(c_notebook_scroll), c);
     GtkWidget * label;
     if(str == NULL || strcmp(str,"") == 0)
         label = gtk_label_new("New Tab");
@@ -767,10 +772,9 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str)
     return ebox;
 }
 
-static void c_show_tab(WebKitWebView * wv, void * v)
+static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
 {
-    struct newt_st * newtab = v;
-    GtkWidget * ebox = InitTabLabel(wv,NULL);
+    GtkWidget * ebox = InitTabLabel(wv,NULL,newtab->call);
     gtk_notebook_append_page((GtkNotebook *) newtab->call->webv->tabsNb
         ,GTK_WIDGET(newtab->webv),ebox);
     gtk_widget_show_all(GTK_WIDGET(newtab->call->webv->tabsNb));
@@ -862,7 +866,8 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
         ,(GtkToolItem *) tool->reloadTb, -1);
 }
 
-void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
+void InitMenubar(struct menu_st * menu, struct call_st * c
+	,GtkAccelGroup * accel_group)
 {
 	//Top Menu
     menu->menu = gtk_menu_bar_new();
@@ -903,7 +908,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu)
 		,menu->viewTabMh);
-		
+
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabH);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabV);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabM);
@@ -927,24 +932,24 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 
     gtk_widget_add_accelerator(menu->nTabMi, "activate", accel_group
 		,GDK_KEY_T, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-		
+
 	gtk_widget_add_accelerator(menu->nWinMi, "activate", accel_group
 		,GDK_KEY_N, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
     g_signal_connect(G_OBJECT(menu->cTabMi), "activate"
-		,G_CALLBACK(c_notebook_close_current), G_call);
+		,G_CALLBACK(c_notebook_close_current), c);
 
     g_signal_connect(G_OBJECT(menu->findMi), "activate"
-		,G_CALLBACK(c_toggleSearch), G_call);
+		,G_CALLBACK(c_toggleSearch), c);
 
 	g_signal_connect(G_OBJECT(menu->setwMi), "activate"
-		,G_CALLBACK(c_open_settings), G_call);
+		,G_CALLBACK(c_open_settings), c);
 
     g_signal_connect(G_OBJECT(menu->nTabMi), "activate"
-		,G_CALLBACK(c_new_tab), G_call);
+		,G_CALLBACK(c_new_tab), c);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
-		,G_CALLBACK(c_destroy_window_request), G_call);
+		,G_CALLBACK(c_destroy_window_request), c);
 
 	gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
 	switch(g)
@@ -952,7 +957,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 		case 2:
 			gtk_check_menu_item_set_active
 				((GtkCheckMenuItem *)menu->tabM,TRUE);
-			t_tabs_menu(menu,TRUE);
+			t_tabs_menu(c,TRUE);
 		break;
 		case 1:
 			gtk_check_menu_item_set_active
@@ -1150,8 +1155,6 @@ int main(int argc, char* argv[])
     struct sign_st sign;
     struct call_st call;
 
-    G_call = &call;
-
     gtk_init(&argc, &argv);
 	G_APP = gtk_application_new("priv.dis.planc"
 		,G_APPLICATION_FLAGS_NONE);
@@ -1176,7 +1179,7 @@ int main(int argc, char* argv[])
     GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    InitMenubar(&menu, accel_group);
+    InitMenubar(&menu, &call, accel_group);
     InitToolbar(&tool, accel_group);
     InitNotetab(&webk);
     InitFindBar(&find, webk.tabsNb);
@@ -1222,8 +1225,6 @@ int main(int argc, char* argv[])
         ,G_CALLBACK(c_update_tabs_layout), &call);
 	g_signal_connect(G_OBJECT(call.menu->tabM), "activate"
         ,G_CALLBACK(c_update_tabs_layout), &call);
-	/*g_signal_connect(call.menu->tab1, "activate"
-		,G_CALLBACK(c_notebook_tabs_autohide), &call);*/
 
     if(argc > 1)
     {

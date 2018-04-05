@@ -98,8 +98,6 @@ struct dpco_st //Dual Pointer (Call and Other)
 	void * other;
 };
 
-struct call_st * G_call;
-
 struct newt_st
 {
     WebKitWebView * webv;
@@ -116,7 +114,7 @@ static void c_destroy_window(GtkWidget* widget, struct call_st * c);
 gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
 	,struct call_st * call);
 
-static void c_show_tab(WebKitWebView * wv, void * v);
+static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	,guint n, struct call_st * c);
