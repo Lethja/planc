@@ -315,6 +315,23 @@ static void c_download_start(WebKitWebContext * wv
         ,G_CALLBACK(c_download_destination_created), v);
 }
 
+static gboolean c_notebook_scroll(GtkWidget * w, GdkEventScroll * e
+	,struct call_st * c)
+{
+	switch(e->direction)
+	{
+		case GDK_SCROLL_UP:
+		case GDK_SCROLL_LEFT:
+			gtk_notebook_prev_page(c->webv->tabsNb);
+		break;
+		case GDK_SCROLL_DOWN:
+		case GDK_SCROLL_RIGHT:
+			gtk_notebook_next_page(c->webv->tabsNb);
+		break;
+	}
+	return FALSE;
+}
+
 static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
     ,void * v)
 {
@@ -729,6 +746,9 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str)
     gtk_widget_set_has_window(ebox, FALSE);
     g_signal_connect(ebox, "button-press-event"
         ,G_CALLBACK(c_notebook_click), wv);
+	gtk_widget_add_events(ebox, GDK_SCROLL_MASK);
+	g_signal_connect(ebox, "scroll-event"
+		,G_CALLBACK(c_notebook_scroll), G_call);
     GtkWidget * label;
     if(str == NULL || strcmp(str,"") == 0)
         label = gtk_label_new("New Tab");
@@ -1042,6 +1062,9 @@ void InitWebview(struct call_st * c)
     gtk_container_add(GTK_CONTAINER(ebox), label);
     g_signal_connect(ebox, "button-press-event"
         ,G_CALLBACK(c_notebook_click), wv);
+	gtk_widget_add_events(ebox, GDK_SCROLL_MASK);
+	g_signal_connect(ebox, "scroll-event"
+		,G_CALLBACK(c_notebook_scroll), c);
     gtk_label_set_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
