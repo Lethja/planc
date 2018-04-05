@@ -35,7 +35,6 @@ struct menu_st
     GtkWidget * tabsMh;
     GtkWidget * helpMh;
     GtkWidget * viewTabMh;
-//    GtkWidget * tab1;
     GtkWidget * tabH;
     GtkWidget * tabV;
     GtkWidget * tabM;
@@ -103,6 +102,8 @@ struct newt_st
     WebKitWebView * webv;
     struct call_st * call;
 };
+
+void c_free_docp(gpointer data, GClosure *closure);
 
 void connect_signals (WebKitWebView * wv, struct call_st * c);
 

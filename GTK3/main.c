@@ -59,6 +59,11 @@ void update_tab(GtkNotebook * nb, WebKitWebView * ch)
         gtk_label_set_text((GtkLabel *)l,webkit_web_view_get_uri(ch));
 }
 
+void c_free_docp(gpointer data, GClosure *closure)
+{
+     free(data);
+}
+
 gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
 	,struct dpco_st * dp)
 {
@@ -99,11 +104,11 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 		GtkWidget * n = gtk_menu_item_new();
 		gtk_menu_item_set_label((GtkMenuItem *)n
 			,gtk_label_get_text((GtkLabel* )l));
-		struct dpco_st dp;
-		dp.call = c;
-		dp.other= gtk_notebook_get_nth_page(c->webv->tabsNb,i);
-		g_signal_connect(n,"button-release-event"
-			,G_CALLBACK(c_onclick_tabsMi), &dp);
+		struct dpco_st * dp = malloc(sizeof(struct dpco_st));
+		dp->call = c;
+		dp->other= gtk_notebook_get_nth_page(c->webv->tabsNb,i);
+		g_signal_connect_data(n,"button-release-event"
+			,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
 		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),n);
 	}
 	gtk_widget_show_all((GtkWidget *)mi);
@@ -149,9 +154,7 @@ void c_update_tabs_layout(GtkWidget * r, struct call_st * c)
 	else if(r == c->menu->tabV)
 		gtk_notebook_set_tab_pos(c->webv->tabsNb,GTK_POS_LEFT);
 
-	if(/*gtk_check_menu_item_get_active(
-		(GtkCheckMenuItem *)c->menu->tab1)*/
-		g_settings_get_boolean(G_SETTINGS,"tab-autohide"))
+	if(g_settings_get_boolean(G_SETTINGS,"tab-autohide"))
 		c_notebook_tabs_changed(c->webv->tabsNb,NULL,0,c);
 	else
 		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
@@ -372,9 +375,7 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	,guint n, struct call_st * c)
 {
-	if(/*gtk_check_menu_item_get_active(
-		(GtkCheckMenuItem *)c->menu->tab1)*/
-		g_settings_get_boolean(G_SETTINGS,"tab-autohide")
+	if(g_settings_get_boolean(G_SETTINGS,"tab-autohide")
 		&& !gtk_check_menu_item_get_active(
 		(GtkCheckMenuItem *)c->menu->tabM))
 	{
@@ -385,9 +386,9 @@ void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	}
 }
 
-static gboolean c_enter_fullscreen(GtkWidget * widget, void * v)
+static gboolean c_enter_fullscreen(GtkWidget * widget
+	,struct call_st * c)
 {
-    struct call_st * c = v;
     gtk_widget_hide(GTK_WIDGET(c->menu->menu));
     gtk_widget_hide(GTK_WIDGET(c->tool->top));
     gtk_notebook_set_show_tabs(c->webv->tabsNb,FALSE);
@@ -399,9 +400,7 @@ static gboolean c_leave_fullscreen(GtkWidget * widget
 {
     gtk_widget_show(GTK_WIDGET(c->menu->menu));
     gtk_widget_show(GTK_WIDGET(c->tool->top));
-    if(/*(gtk_check_menu_item_get_active
-		((GtkCheckMenuItem *)c->menu->tab1))*/
-		g_settings_get_boolean(G_SETTINGS,"tab-autohide"))
+    if(g_settings_get_boolean(G_SETTINGS,"tab-autohide"))
 		c_notebook_tabs_changed(c->webv->tabsNb,NULL,0,c);
 	else
 		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
@@ -749,8 +748,11 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
 {
     GtkWidget * ebox = gtk_event_box_new();
     gtk_widget_set_has_window(ebox, FALSE);
-    g_signal_connect(ebox, "button-press-event"
-        ,G_CALLBACK(c_notebook_click), wv);
+    struct dpco_st * dp = malloc(sizeof(struct dpco_st));
+    dp->call = c;
+    dp->other=wv;
+    g_signal_connect_data(ebox, "button-press-event"
+        ,G_CALLBACK(c_notebook_click), dp, c_free_docp,0);
 	gtk_widget_add_events(ebox, GDK_SCROLL_MASK);
 	g_signal_connect(ebox, "scroll-event"
 		,G_CALLBACK(c_notebook_scroll), c);
@@ -1062,8 +1064,11 @@ void InitWebview(struct call_st * c)
     gtk_widget_set_has_window(ebox, FALSE);
     GtkWidget * label = gtk_label_new("New Tab");
     gtk_container_add(GTK_CONTAINER(ebox), label);
-    g_signal_connect(ebox, "button-press-event"
-        ,G_CALLBACK(c_notebook_click), wv);
+    struct dpco_st * dp = malloc(sizeof(struct dpco_st));
+    dp->call = c;
+    dp->other=wv;
+    g_signal_connect_data(ebox, "button-press-event"
+        ,G_CALLBACK(c_notebook_click), dp, c_free_docp,0);
 	gtk_widget_add_events(ebox, GDK_SCROLL_MASK);
 	g_signal_connect(ebox, "scroll-event"
 		,G_CALLBACK(c_notebook_scroll), c);
@@ -1200,9 +1205,9 @@ int main(int argc, char* argv[])
     g_signal_connect(tool.addressEn, "activate"
         ,G_CALLBACK(c_act), &call);
     g_signal_connect(tool.backTb, "clicked"
-        ,G_CALLBACK(c_go_back), webk.tabsNb);
+        ,G_CALLBACK(c_go_back), &call);
     g_signal_connect(tool.forwardTb, "clicked"
-        ,G_CALLBACK(c_go_forward), webk.tabsNb);
+        ,G_CALLBACK(c_go_forward), &call);
     g_signal_connect(tool.reloadTb, "clicked"
         ,G_CALLBACK(c_refresh), webk.tabsNb);
     g_signal_connect(webk.tabsNb, "switch-page"
