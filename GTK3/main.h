@@ -43,6 +43,7 @@ struct menu_st
     GtkWidget * setwMi;
     GtkWidget * cTabMi;
     GtkWidget * nTabMi;
+    GtkWidget * nWinMi;
     GtkWidget * quitMi;
 };
 

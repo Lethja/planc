@@ -870,7 +870,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
     menu->editMenu = gtk_menu_new();
     menu->viewMenu = gtk_menu_new();
     menu->viewTabMenu = gtk_menu_new();
-    /*menu->helpMenu = gtk_menu_new();*/
+    menu->helpMenu = gtk_menu_new();
 
     menu->fileMh = gtk_menu_item_new_with_mnemonic("_File");
     menu->editMh = gtk_menu_item_new_with_mnemonic("_Edit");
@@ -885,6 +885,7 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 	menu->tabM = gtk_radio_menu_item_new_with_mnemonic_from_widget
 		((GtkRadioMenuItem *)menu->tabH, "_Menu");
     /*menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");*/
+    menu->nWinMi = gtk_menu_item_new_with_mnemonic("New _Window");
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
     menu->cTabMi = gtk_menu_item_new_with_mnemonic("_Close Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Find");
@@ -902,14 +903,13 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu)
 		,menu->viewTabMh);
-	/*gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tab1);
-	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu)
-		,gtk_separator_menu_item_new());*/
+		
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabH);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabV);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabM);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->editMenu), menu->findMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->editMenu), menu->setwMi);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->nWinMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->nTabMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu)
 		,gtk_separator_menu_item_new());
@@ -918,8 +918,6 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->editMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->viewMh);
-    /*gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMh)
-		,menu->viewTabMh);*/
 
 	gtk_widget_add_accelerator(menu->cTabMi, "activate", accel_group
 		,GDK_KEY_W, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -929,6 +927,9 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 
     gtk_widget_add_accelerator(menu->nTabMi, "activate", accel_group
 		,GDK_KEY_T, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+		
+	gtk_widget_add_accelerator(menu->nWinMi, "activate", accel_group
+		,GDK_KEY_N, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
     g_signal_connect(G_OBJECT(menu->cTabMi), "activate"
 		,G_CALLBACK(c_notebook_close_current), G_call);
@@ -962,10 +963,6 @@ void InitMenubar(struct menu_st * menu, GtkAccelGroup * accel_group)
 				((GtkCheckMenuItem *)menu->tabH,TRUE);
 		break;
 	}
-	/*gboolean b = g_settings_get_boolean(G_SETTINGS,"tab-autohide");
-	if(b)
-		gtk_check_menu_item_set_active
-			((GtkCheckMenuItem *)menu->tab1,TRUE);*/
 }
 
 void InitNotetab(struct webt_st * webv)
