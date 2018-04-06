@@ -61,8 +61,51 @@ void update_tab(GtkNotebook * nb, WebKitWebView * ch)
 
 void c_free_docp(gpointer data, GClosure *closure)
 {
-     free(data);
+	free(data);
 }
+
+/*gboolean c_onpress_tabsMi(GtkMenuItem * mi, GdkEventKey * e
+	,struct dpco_st * dp)
+{
+	switch(e->keyval)
+	{
+		case GDK_KEY_BackSpace:
+		case GDK_KEY_Delete:
+		if(gtk_notebook_get_n_pages(dp->call->webv->tabsNb) > 1)
+		{
+			gtk_notebook_remove_page(dp->call->webv->tabsNb
+				,gtk_notebook_page_num(dp->call->webv->tabsNb
+				,dp->other));
+			gtk_widget_set_sensitive(GTK_WIDGET(mi),FALSE);
+			return TRUE;
+		}
+		break;
+		case GDK_KEY_Return:
+		case GDK_KEY_space:
+			gtk_notebook_set_current_page(dp->call->webv->tabsNb
+			,gtk_notebook_page_num(dp->call->webv->tabsNb
+			,dp->other));
+			return FALSE;
+	}
+}
+
+gboolean c_onpress_tabMenu(GtkMenu * m, GdkEventKey * e
+	,void * v)
+{
+	switch(e->keyval)
+	{
+		case GDK_KEY_BackSpace:
+		case GDK_KEY_Delete:
+		case GDK_KEY_Return:
+		case GDK_KEY_space:
+		{
+			g_signal_emit_by_name(gtk_menu_get_active(m)
+				,"key-press-event",e);
+			return TRUE;
+		}
+	}
+	return FALSE;
+}*/
 
 gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
 	,struct dpco_st * dp)
@@ -107,8 +150,11 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 		struct dpco_st * dp = malloc(sizeof(struct dpco_st));
 		dp->call = c;
 		dp->other= gtk_notebook_get_nth_page(c->webv->tabsNb,i);
+		gtk_widget_add_events(n,GDK_KEY_PRESS_MASK);
 		g_signal_connect_data(n,"button-release-event"
 			,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
+		/*g_signal_connect(n,"key-press-event"
+			,G_CALLBACK(c_onpress_tabsMi), dp);*/
 		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),n);
 	}
 	gtk_widget_show_all((GtkWidget *)mi);
@@ -123,12 +169,15 @@ void t_tabs_menu(struct call_st * c, gboolean b)
 			,c->menu->tabsMh,3);
 		gtk_widget_show_all(c->menu->menu);
 		c->menu->tabsMenu = gtk_menu_new();
+		gtk_widget_add_events(c->menu->tabsMenu,GDK_KEY_PRESS_MASK);
 		gtk_menu_item_set_submenu((GtkMenuItem *) c->menu->tabsMh
 			,c->menu->tabsMenu);
 		g_signal_connect(c->menu->tabsMh, "select"
 			,G_CALLBACK(c_onclick_tabsMh), c);
 		g_signal_connect_after(c->menu->tabsMh,"deselect"
 			,G_CALLBACK(c_onrelease_tabsMh),c);
+		/*g_signal_connect(c->menu->tabsMenu, "key-press-event"
+			,G_CALLBACK(c_onpress_tabMenu), c);*/
 	}
 	else
 	{
