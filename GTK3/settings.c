@@ -3,6 +3,50 @@
 
 GtkWindow * G_WIN_SETTINGS = NULL;
 
+void c_notebook_tabs_autohide(GtkToggleButton * cbmi
+	,struct call_st * c)
+{
+	if(gtk_toggle_button_get_active(cbmi))
+	{
+		if(gtk_notebook_get_n_pages(c->webv->tabsNb) == 1)
+			gtk_notebook_set_show_tabs(c->webv->tabsNb,FALSE);
+		else
+			gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
+	}
+	else if(!gtk_notebook_get_show_tabs(c->webv->tabsNb))
+		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
+}
+
+void * c_settings_jv(GtkToggleButton * w, struct call_st * c)
+{
+	webkit_settings_set_enable_java(c->webv->webs
+		,gtk_toggle_button_get_active(w));
+}
+
+void * c_settings_js(GtkToggleButton * w, struct call_st * c)
+{
+	webkit_settings_set_enable_javascript(c->webv->webs
+		,gtk_toggle_button_get_active(w));
+}
+
+void * c_settings_mse(GtkToggleButton * w, struct call_st * c)
+{
+	webkit_settings_set_enable_mediasource(c->webv->webs
+		,gtk_toggle_button_get_active(w));
+}
+
+void * c_settings_in(GtkToggleButton * w, struct call_st * c)
+{
+	webkit_settings_set_enable_plugins(c->webv->webs
+		,gtk_toggle_button_get_active(w));
+}
+
+void * c_settings_ch(GtkToggleButton * w, struct call_st * c)
+{
+	webkit_settings_set_enable_page_cache(c->webv->webs
+		,gtk_toggle_button_get_active(w));
+}
+
 GtkWidget * InitComboBoxLabel(const gchar * l, GtkWidget * c)
 {
 	GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -69,9 +113,25 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
+
 	//Connect events
 	g_signal_connect(ta, "toggled"
 		,G_CALLBACK(c_notebook_tabs_autohide), c);
+
+	g_signal_connect(ms, "toggled"
+		,G_CALLBACK(c_settings_mse), c);
+
+	g_signal_connect(jv, "toggled"
+		,G_CALLBACK(c_settings_jv), c);
+
+	g_signal_connect(js, "toggled"
+		,G_CALLBACK(c_settings_js), c);
+
+	g_signal_connect(in, "toggled"
+		,G_CALLBACK(c_settings_in), c);
+
+	g_signal_connect(ch, "toggled"
+		,G_CALLBACK(c_settings_ch), c);
 
 	//Parent
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);

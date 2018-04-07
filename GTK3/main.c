@@ -407,20 +407,6 @@ void c_notebook_close_current(GtkWidget * w, struct call_st * c)
 			(c->webv->tabsNb));
 }
 
-void c_notebook_tabs_autohide(GtkToggleButton * cbmi
-	,struct call_st * c)
-{
-	if(gtk_toggle_button_get_active(cbmi))
-	{
-		if(gtk_notebook_get_n_pages(c->webv->tabsNb) == 1)
-			gtk_notebook_set_show_tabs(c->webv->tabsNb,FALSE);
-		else
-			gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
-	}
-	else if(!gtk_notebook_get_show_tabs(c->webv->tabsNb))
-		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
-}
-
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	,guint n, struct call_st * c)
 {
