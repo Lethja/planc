@@ -115,6 +115,8 @@ static void c_destroy_window(GtkWidget* widget, struct call_st * c);
 gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
 	,struct call_st * call);
 
+void c_destroy_window_menu(GtkWidget * widget, struct call_st * c);
+
 static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w

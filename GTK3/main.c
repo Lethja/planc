@@ -1324,10 +1324,9 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     webkit_web_view_set_settings(wv,c->webv->webs);
 }
 
-gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
-	,struct call_st * call)
+gboolean closePrompt(struct call_st * call)
 {
-	guint g = gtk_notebook_get_n_pages(call->webv->tabsNb);
+	gint g = gtk_notebook_get_n_pages(call->webv->tabsNb);
 	if(g > 1)
 	{
 		GtkWidget * dialog = gtk_message_dialog_new
@@ -1344,6 +1343,18 @@ gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
 			return TRUE;
 	}
 	return FALSE;
+}
+
+gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
+	,struct call_st * call)
+{
+	return closePrompt(call);
+}
+
+void c_destroy_window_menu(GtkWidget * widget, struct call_st * c)
+{
+	if(!closePrompt(c))
+		c_destroy_window(widget,c);
 }
 
 static void c_destroy_window(GtkWidget* widget, struct call_st * c)
