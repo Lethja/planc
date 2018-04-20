@@ -118,6 +118,7 @@ gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
                 ,gtk_notebook_page_num(dp->call->webv->tabsNb
                 ,dp->other));
 			gtk_widget_set_sensitive(GTK_WIDGET(mi),FALSE);
+			webkit_web_context_clear_cache(dp->call->webv->webc);
 			return TRUE;
 		}
     }
@@ -394,6 +395,7 @@ static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
             gtk_notebook_remove_page(dp->call->webv->tabsNb
                 ,gtk_notebook_page_num(dp->call->webv->tabsNb
 				,dp->other));
+		webkit_web_context_clear_cache(dp->call->webv->webc);
 		return TRUE;
     }
     return FALSE;
@@ -405,6 +407,7 @@ void c_notebook_close_current(GtkWidget * w, struct call_st * c)
 		gtk_notebook_remove_page
 			(c->webv->tabsNb,gtk_notebook_get_current_page
 			(c->webv->tabsNb));
+	webkit_web_context_clear_cache(c->webv->webc);
 }
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
@@ -648,6 +651,20 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
         case GDK_KEY_F6:
             gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
         break;
+        case GDK_KEY_F12:
+			{
+				gboolean b;
+				g_object_get(c->webv->webs
+					,"enable-developer-extras",&b,NULL);
+				if(b)
+				{
+					WebKitWebInspector * wi
+						= webkit_web_view_get_inspector
+						(WK_CURRENT_TAB(c->webv->tabsNb));
+					webkit_web_inspector_show(wi);
+				}
+			}
+		break;
         }
     }
 }
@@ -1035,19 +1052,22 @@ void InitNotetab(struct webt_st * webv)
 
 void InitWebview(struct call_st * c)
 {
-    char * cd;
-    char * dd;
-    char * cs;
+    char * datadir;
+    char * cachedir;
+    char * cookiedir;
 
-    cd = g_build_filename(g_get_user_data_dir(),g_get_prgname(),NULL);
-    dd = g_build_filename(g_get_user_cache_dir(),g_get_prgname(),NULL);
-    cs = g_build_filename(g_get_user_data_dir(),g_get_prgname()
+    datadir = g_build_filename(g_get_user_data_dir(),g_get_prgname()
+		,NULL);
+    cachedir = g_build_filename(g_get_user_cache_dir(),g_get_prgname()
+		,NULL);
+    cookiedir = g_build_filename(g_get_user_data_dir(),g_get_prgname()
         ,"cookies",NULL);
     WebKitWebsiteDataManager * d = webkit_website_data_manager_new
-        ("base-data-directory", dd, "base-cache-directory", cd, NULL);
+        ("base-data-directory", cachedir, "base-cache-directory"
+        ,datadir, NULL);
 
-    g_free(cd);
-    g_free(dd);
+    g_free(datadir);
+    g_free(cachedir);
 
     c->webv->webc = webkit_web_context_new_with_website_data_manager(d);
 
@@ -1058,8 +1078,21 @@ void InitWebview(struct call_st * c)
 		webkit_web_context_set_process_model(c->webv->webc
 			,WEBKIT_PROCESS_MODEL_SHARED_SECONDARY_PROCESS);
 
-    webkit_web_context_set_cache_model(c->webv->webc
-        ,WEBKIT_CACHE_MODEL_WEB_BROWSER);
+	switch(g_settings_get_int(G_SETTINGS,"webkit-mcm"))
+	{
+		case 0:
+			webkit_web_context_set_cache_model(c->webv->webc
+				,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
+		break;
+		default:
+			webkit_web_context_set_cache_model(c->webv->webc
+				,WEBKIT_CACHE_MODEL_DOCUMENT_BROWSER);
+		break;
+		case 2:
+			webkit_web_context_set_cache_model(c->webv->webc
+				,WEBKIT_CACHE_MODEL_WEB_BROWSER);
+		break;
+	}
 
     webkit_web_context_set_spell_checking_enabled(c->webv->webc,TRUE);
     webkit_web_context_set_spell_checking_languages(c->webv->webc
@@ -1068,12 +1101,12 @@ void InitWebview(struct call_st * c)
     WebKitCookieManager * cm
         = webkit_web_context_get_cookie_manager(c->webv->webc);
 
-    webkit_cookie_manager_set_persistent_storage(cm, cs
+    webkit_cookie_manager_set_persistent_storage(cm, cookiedir
         ,WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE);
     webkit_cookie_manager_set_accept_policy(cm
         ,WEBKIT_COOKIE_POLICY_ACCEPT_NO_THIRD_PARTY);
 
-    g_free(cs);
+    g_free(cookiedir);
 
     c->webv->webs = webkit_settings_new();
 
@@ -1095,6 +1128,9 @@ void InitWebview(struct call_st * c)
 	webkit_settings_set_enable_encrypted_media(c->webv->webs
 		,g_settings_get_boolean(G_SETTINGS,"webkit-eme"));
 #endif
+
+	g_object_set (G_OBJECT(c->webv->webs), "enable-developer-extras"
+		,g_settings_get_boolean(G_SETTINGS,"webkit-dev"), NULL);
 
     WebKitWebView * wv = WEBKIT_WEB_VIEW
         (webkit_web_view_new_with_context(c->webv->webc));

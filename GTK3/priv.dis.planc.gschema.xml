@@ -102,6 +102,14 @@
 				Disabled by default for resource management.
 			</description>
 		</key>
+		<key name='webkit-mcm' type='i'>
+			<default>1</default>
+			<range min="0" max="2"/>
+			<summary>Memory Cache Model</summary>
+			<description>
+				How should webkit handle caching content
+			</description>
+		</key>
 		<key name='webkit-plugins' type='b'>
 			<default>false</default>
 			<summary>Third Party Plugins</summary>
@@ -109,6 +117,13 @@
 				Is webkit allowed to run third party plugins.
 				Plugins are small programs that are embedded into webpages to provide functionality that can't (or could not when the page was developed) be achieved though standard web technoligies.
 				Disabled by default for security.
+			</description>
+		</key>
+		<key name='webkit-dev' type='b'>
+			<default>false</default>
+			<summary>Webkit Developer Options</summary>
+			<description>
+				Enable Webkit Inspector
 			</description>
 		</key>
 		<key name="planc-startpage" type="s">

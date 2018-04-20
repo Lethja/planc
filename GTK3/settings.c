@@ -47,6 +47,34 @@ void * c_settings_ch(GtkToggleButton * w, struct call_st * c)
 		,gtk_toggle_button_get_active(w));
 }
 
+void * c_settings_dv(GtkToggleButton * w, struct call_st * c)
+{
+	g_object_set(G_OBJECT(c->webv->webs), "enable-developer-extras"
+		,gtk_toggle_button_get_active(w), NULL);
+}
+
+void * c_settings_cm(GtkComboBox * w, struct call_st * c)
+{
+	switch(gtk_combo_box_get_active(w))
+	{
+		case 0:
+			webkit_web_context_set_cache_model(c->webv->webc
+				,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
+			g_settings_set_int(G_SETTINGS,"webkit-mcm",0);
+		break;
+		default:
+			webkit_web_context_set_cache_model(c->webv->webc
+				,WEBKIT_CACHE_MODEL_DOCUMENT_BROWSER);
+			g_settings_set_int(G_SETTINGS,"webkit-mcm",1);
+		break;
+		case 2:
+			webkit_web_context_set_cache_model(c->webv->webc
+				,WEBKIT_CACHE_MODEL_WEB_BROWSER);
+			g_settings_set_int(G_SETTINGS,"webkit-mcm",2);
+		break;
+	}
+}
+
 GtkWidget * InitComboBoxLabel(const gchar * l, GtkWidget * c)
 {
 	GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -78,13 +106,25 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		,"Vertical");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
 		,"Menu");
-
+	
+	GtkWidget * mcmBox = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
+		,"None");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
+		,"Low");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
+		,"High");
+	
+	GtkWidget * dv = gtk_check_button_new_with_label
+		("Enable Developer Options");
     GtkWidget * ch = gtk_check_button_new_with_label
 		("Enable Page Cache");
     GtkWidget * ta = gtk_check_button_new_with_label
 		("Autohide tab bar in single tab windows");
 	GtkWidget * tt = (GtkWidget *) InitComboBoxLabel
 		("Default Tab Layout",tabBox);
+	GtkWidget * cm = (GtkWidget *) InitComboBoxLabel
+		("Memory Cache Model",mcmBox);
 	GtkWidget * js = gtk_check_button_new_with_label
 		("Enable JavaScript");
 	GtkWidget * jv = gtk_check_button_new_with_label
@@ -111,10 +151,15 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-ppt",pt,"active",
 		 G_SETTINGS_BIND_DEFAULT);
+	 g_settings_bind (G_SETTINGS,"webkit-dev",dv,"active",
+		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
-
+	
 	//Connect events
+	g_signal_connect(mcmBox, "changed"
+		,G_CALLBACK(c_settings_cm), c);
+		
 	g_signal_connect(ta, "toggled"
 		,G_CALLBACK(c_notebook_tabs_autohide), c);
 
@@ -132,8 +177,12 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 
 	g_signal_connect(ch, "toggled"
 		,G_CALLBACK(c_settings_ch), c);
-
+	
+	g_signal_connect(dv, "toggled"
+		,G_CALLBACK(c_settings_dv), c);
+		
 	//Parent
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dv),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(jv),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(js),FALSE,FALSE,0);
@@ -141,7 +190,22 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ms),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ch),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(pt),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(cm),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tt),FALSE,FALSE,0);
+	
+	switch(webkit_web_context_get_cache_model(c->webv->webc))
+	{
+		case WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER:
+			gtk_combo_box_set_active((GtkComboBox *) mcmBox,0);
+		break;
+		default:
+			gtk_combo_box_set_active((GtkComboBox *) mcmBox,1);
+		break;
+		case WEBKIT_CACHE_MODEL_WEB_BROWSER:
+			gtk_combo_box_set_active((GtkComboBox *) mcmBox,2);
+		break;
+	}
+	
 	gtk_widget_show_all((GtkWidget *)r);
 	return r;
 }
