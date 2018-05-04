@@ -1,5 +1,6 @@
 #include "main.h"
 #include "settings.h"
+#include "database.h"
 
 GtkApplication * G_APP = NULL;
 GSettings * G_SETTINGS = NULL;
@@ -761,6 +762,9 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
         case WEBKIT_LOAD_FINISHED:
             gtk_image_set_from_icon_name(call->tool->reloadIo
                 ,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
+			if(!webkit_web_view_is_ephemeral(webv))
+				sql_history_write(webkit_web_view_get_uri(webv)
+					,webkit_web_view_get_title(webv));
         break;
     }
 
