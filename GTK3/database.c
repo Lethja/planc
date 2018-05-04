@@ -65,6 +65,8 @@ extern void sql_history_write(const char * url, const char * title)
 
 extern void * sql_history_search(char * c)
 {
+	sqlite3 *db;
+	int rc;
 	rc = sqlite3_open("history.db", &db);
 	if( rc )
 	{
@@ -76,6 +78,8 @@ extern void * sql_history_search(char * c)
 
 extern void * sql_history_read()
 {
+	sqlite3 *db;
+	int rc;
 	rc = sqlite3_open("history.db", &db);
 	if( rc )
 	{
