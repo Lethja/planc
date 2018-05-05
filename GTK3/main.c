@@ -109,6 +109,12 @@ gboolean c_onpress_tabMenu(GtkMenu * m, GdkEventKey * e
 	return FALSE;
 }*/
 
+void * c_select_tabsMi(GtkWidget * w, struct dpco_st * dp)
+{
+	gtk_notebook_set_current_page(dp->call->webv->tabsNb
+		,gtk_notebook_page_num(dp->call->webv->tabsNb,dp->other));
+}
+
 gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
 	,struct dpco_st * dp)
 {
@@ -156,8 +162,8 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 		gtk_widget_add_events(n,GDK_KEY_PRESS_MASK);
 		g_signal_connect_data(n,"button-release-event"
 			,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
-		/*g_signal_connect(n,"key-press-event"
-			,G_CALLBACK(c_onpress_tabsMi), dp);*/
+		g_signal_connect(n,"select"
+			,G_CALLBACK(c_select_tabsMi), dp);
 		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),n);
 	}
 	gtk_widget_show_all((GtkWidget *)mi);
