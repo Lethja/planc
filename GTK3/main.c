@@ -1,6 +1,7 @@
 #include "main.h"
 #include "settings.h"
 #include "database.h"
+#include "history.h"
 
 GtkApplication * G_APP = NULL;
 GSettings * G_SETTINGS = NULL;
@@ -624,6 +625,11 @@ static void c_open_settings(GtkWidget * w, struct call_st * c)
 	InitSettingsWindow(c);
 }
 
+static void c_open_history(GtkWidget * w, struct call_st * c)
+{
+	InitHistoryWindow(c);
+}
+
 static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
 {
     guint k;
@@ -848,6 +854,42 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
     free(newtab);
 }
 
+extern void * new_tab_ext(char * url, struct call_st * c)
+{
+	WebKitWebView * wv;
+	if(g_strcmp0
+		(webkit_web_view_get_uri(WK_CURRENT_TAB(c->webv->tabsNb))
+		,"about:blank"))
+		wv = WEBKIT_WEB_VIEW
+        (webkit_web_view_new_with_context(c->webv->webc));
+	else //Blank page, use this page instead of new tab
+	{
+		wv = WK_CURRENT_TAB(c->webv->tabsNb);
+		gchar * u = prepAddress(url);
+		if(u)
+		{
+			webkit_web_view_load_uri(wv,u);
+			free(u);
+			return wv;
+		}
+	}
+	gchar * u = prepAddress(url);
+	if(u)
+	{
+		webkit_web_view_load_uri(wv,u);
+		free(u);
+	}
+	else return NULL;
+	
+	struct newt_st * newtab = malloc(sizeof(struct newt_st));
+    newtab->webv = wv;
+    newtab->call = c;
+    g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
+        ,newtab);
+    g_signal_emit_by_name(wv,"ready-to-show");
+    return wv;
+}
+
 static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
 {
     WebKitWebView * nt
@@ -956,6 +998,7 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
     menu->cTabMi = gtk_menu_item_new_with_mnemonic("_Close Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Find");
     menu->setwMi = gtk_menu_item_new_with_mnemonic("_Settings");
+    menu->histMi = gtk_menu_item_new_with_mnemonic("_History");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->fileMh)
@@ -973,6 +1016,7 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabH);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabV);
 	gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabM);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu), menu->histMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->editMenu), menu->findMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->editMenu), menu->setwMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->fileMenu), menu->nWinMi);
@@ -997,6 +1041,9 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 	gtk_widget_add_accelerator(menu->nWinMi, "activate", accel_group
 		,GDK_KEY_N, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
+	gtk_widget_add_accelerator(menu->histMi, "activate", accel_group
+		,GDK_KEY_H, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+
     g_signal_connect(G_OBJECT(menu->cTabMi), "activate"
 		,G_CALLBACK(c_notebook_close_current), c);
 
@@ -1008,6 +1055,9 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 
     g_signal_connect(G_OBJECT(menu->nTabMi), "activate"
 		,G_CALLBACK(c_new_tab), c);
+
+	g_signal_connect(G_OBJECT(menu->histMi), "activate"
+		,G_CALLBACK(c_open_history), c);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
 		,G_CALLBACK(c_destroy_window_request), c);

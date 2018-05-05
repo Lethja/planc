@@ -3,6 +3,7 @@
 #include <string.h>
 #include <sqlite3.h>
 #include <glib.h>
+#include "history.h"
 
 static const char * createHistory = "PRAGMA synchronous=OFF;" \
 		"CREATE TABLE IF NOT EXISTS `HISTORY`("  \
@@ -13,6 +14,12 @@ static const char * insert = "INSERT OR REPLACE INTO `HISTORY` " \
 		"(`ADDRESS`,`TITLE`,`VISITED`)" \
 		"VALUES (?1,?2,strftime('%s','now'));";
 
+#define HISTORYDIR(historydir) char * (historydir) \
+= g_build_filename(g_get_user_data_dir() \
+,g_get_prgname(),"history",NULL)
+
+static const char * retrieve = "SELECT * FROM `HISTORY`";
+
 extern void sql_history_write(const char * url, const char * title)
 {
 	sqlite3 *db;
@@ -21,9 +28,9 @@ extern void sql_history_write(const char * url, const char * title)
 	char *sql;
 	if(!url)
 		return;
-	/* Open database */
-	rc = sqlite3_open("history.db", &db);
-
+	HISTORYDIR(historydir);
+	rc = sqlite3_open(historydir, &db);
+	g_free(historydir);
 	if( rc )
 	{
 		printf("Error opening history database: %s\n"
@@ -43,12 +50,14 @@ extern void sql_history_write(const char * url, const char * title)
 		sqlite3_close(db);
 		return;
 	}
-	rc = sqlite3_bind_text(stmt,1,url,-1,SQLITE_STATIC);	if( rc != SQLITE_OK )
+	rc = sqlite3_bind_text(stmt,1,url,-1,SQLITE_STATIC);
+	if( rc != SQLITE_OK )
 	{
 		fprintf(stderr, "Error writing to history database1: %s\n"
 			,sqlite3_errstr(rc));
 	}
-	rc = sqlite3_bind_text(stmt,2,title,-1,SQLITE_STATIC);	if( rc != SQLITE_OK )
+	rc = sqlite3_bind_text(stmt,2,title,-1,SQLITE_STATIC);
+	if( rc != SQLITE_OK )
 	{
 		fprintf(stderr, "Error writing to history database2: %s\n"
 			,sqlite3_errstr(rc));
@@ -67,7 +76,9 @@ extern void * sql_history_search(char * c)
 {
 	sqlite3 *db;
 	int rc;
-	rc = sqlite3_open("history.db", &db);
+	HISTORYDIR(historydir);
+	rc = sqlite3_open(historydir, &db);
+	g_free(historydir);
 	if( rc )
 	{
 		printf("Error opening history database: %s\n"
@@ -76,15 +87,19 @@ extern void * sql_history_search(char * c)
 	}
 }
 
-extern void * sql_history_read()
+extern void * sql_history_read_to_tree(void * store)
 {
 	sqlite3 *db;
 	int rc;
-	rc = sqlite3_open("history.db", &db);
+	HISTORYDIR(historydir);
+	rc = sqlite3_open(historydir, &db);
+	g_free(historydir);
 	if( rc )
 	{
 		printf("Error opening history database: %s\n"
 			,sqlite3_errmsg(db));
 		return NULL;
 	}
+	sqlite3_exec(db,retrieve,treeIter,store,NULL);
+	sqlite3_close(db);
 }

@@ -44,6 +44,7 @@ struct menu_st
     GtkWidget * nTabMi;
     GtkWidget * nWinMi;
     GtkWidget * quitMi;
+    GtkWidget * histMi;
 };
 
 struct tool_st
@@ -126,3 +127,5 @@ void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c);
 
 static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na ,struct call_st * c);
+
+extern void * new_tab_ext(char * url, struct call_st * c);
