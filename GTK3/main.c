@@ -511,6 +511,13 @@ static void c_toggleSearch(GtkWidget * w, struct call_st * c)
     }
 }
 
+static int c_toggleSearchEvent(GtkWidget * w, GdkEvent * e
+	,struct call_st * c)
+{
+	c_toggleSearch(w,c);
+	return FALSE;
+}
+
 static void search_page(GtkEditable * w, GtkNotebook * n)
 {
     WebKitFindController * f
@@ -886,8 +893,8 @@ extern void * new_tab_ext(char * url, struct call_st * c)
 		free(u);
 	}
 	else return NULL;
-	
-	struct newt_st * newtab = malloc(sizeof(struct newt_st));
+
+    struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = wv;
     newtab->call = c;
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
@@ -1266,6 +1273,8 @@ void InitFindBar(struct find_st * f, GtkNotebook * w
         ,G_CALLBACK(c_search_nxt), w);
 	g_signal_connect(f->closeTb, "clicked"
         ,G_CALLBACK(c_toggleSearch), call);
+	g_signal_connect(f->findEn, "focus-out-event"
+		,G_CALLBACK(c_toggleSearchEvent), call);
     g_signal_connect_after(f->findEn, "insert-text"
         ,G_CALLBACK(c_search_ins), w);
     g_signal_connect_after(f->findEn, "delete-text"
