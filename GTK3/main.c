@@ -66,49 +66,6 @@ void c_free_docp(gpointer data, GClosure *closure)
 	free(data);
 }
 
-/*gboolean c_onpress_tabsMi(GtkMenuItem * mi, GdkEventKey * e
-	,struct dpco_st * dp)
-{
-	switch(e->keyval)
-	{
-		case GDK_KEY_BackSpace:
-		case GDK_KEY_Delete:
-		if(gtk_notebook_get_n_pages(dp->call->webv->tabsNb) > 1)
-		{
-			gtk_notebook_remove_page(dp->call->webv->tabsNb
-				,gtk_notebook_page_num(dp->call->webv->tabsNb
-				,dp->other));
-			gtk_widget_set_sensitive(GTK_WIDGET(mi),FALSE);
-			return TRUE;
-		}
-		break;
-		case GDK_KEY_Return:
-		case GDK_KEY_space:
-			gtk_notebook_set_current_page(dp->call->webv->tabsNb
-			,gtk_notebook_page_num(dp->call->webv->tabsNb
-			,dp->other));
-			return FALSE;
-	}
-}
-
-gboolean c_onpress_tabMenu(GtkMenu * m, GdkEventKey * e
-	,void * v)
-{
-	switch(e->keyval)
-	{
-		case GDK_KEY_BackSpace:
-		case GDK_KEY_Delete:
-		case GDK_KEY_Return:
-		case GDK_KEY_space:
-		{
-			g_signal_emit_by_name(gtk_menu_get_active(m)
-				,"key-press-event",e);
-			return TRUE;
-		}
-	}
-	return FALSE;
-}*/
-
 void * c_select_tabsMi(GtkWidget * w, struct dpco_st * dp)
 {
 	gtk_notebook_set_current_page(dp->call->webv->tabsNb
@@ -145,6 +102,16 @@ void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c)
 	}
 }
 
+void c_onescape_tabsmenu(GtkMenuShell * sh, struct dpco_st * dp)
+{
+	if(gtk_widget_get_sensitive(GTK_WIDGET(dp->other)))
+	{
+		g_signal_emit_by_name(GTK_WIDGET(dp->other),"select");
+	}
+	g_signal_handlers_disconnect_matched(sh,G_SIGNAL_MATCH_FUNC
+		,0,0,NULL,c_onescape_tabsmenu,dp);
+}
+
 void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 {
 	//Make a menu of all tabs on the fly then display it
@@ -162,6 +129,11 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 			,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
 		g_signal_connect(ct,"select"
 			,G_CALLBACK(c_select_tabsMi), dp);
+		struct dpco_st * ctdp = malloc(sizeof(struct dpco_st));
+		ctdp->call = c;
+		ctdp->other = ct;
+		g_signal_connect_data(c->menu->tabsMenu,"cancel"
+			,G_CALLBACK(c_onescape_tabsmenu), ctdp, c_free_docp,0);
 		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),ct);
 	}
 
@@ -213,8 +185,6 @@ void t_tabs_menu(struct call_st * c, gboolean b)
 			,G_CALLBACK(c_onclick_tabsMh), c);
 		g_signal_connect_after(c->menu->tabsMh,"deselect"
 			,G_CALLBACK(c_onrelease_tabsMh),c);
-		/*g_signal_connect(c->menu->tabsMenu, "key-press-event"
-			,G_CALLBACK(c_onpress_tabMenu), c);*/
 	}
 	else
 	{
@@ -316,7 +286,6 @@ void c_download_destination_created(WebKitDownload * d, gchar * fn
 	gtk_progress_bar_set_show_text((GtkProgressBar *)lab,TRUE);
 	gtk_progress_bar_set_pulse_step((GtkProgressBar *)lab,0.001);
 	gtk_progress_bar_set_text((GtkProgressBar *)lab,"0");
-    //gtk_container_add((GtkContainer *)vbox,(GtkWidget *) lab);
     gtk_container_add((GtkContainer *)r, vbox);
     g_signal_connect(d,"received-data"
 		,G_CALLBACK(c_download_progress),lab);
