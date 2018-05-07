@@ -8,9 +8,14 @@ GSettings * G_SETTINGS = NULL;
 
 char * prepAddress(const gchar * c)
 {
-	if(strstr(c,"about:"))
-		return NULL;
-    char * p = strstr(c,"://");
+	char * p;
+	if(strstr(c,"about:") == c)
+	{
+		p = malloc(strlen("about:blank")+1);
+		strncpy(p,"about:blank",strlen("about:blank")+1);
+		return p;
+	}
+    p = strstr(c,"://");
     if(!p)
     {
         size_t s = strlen("http://")+strlen(c)+1;
