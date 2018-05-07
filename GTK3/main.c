@@ -148,23 +148,51 @@ void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c)
 void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 {
 	//Make a menu of all tabs on the fly then display it
-	for(gint i = 0; i < gtk_notebook_get_n_pages(c->webv->tabsNb); i++)
 	{
 		GtkWidget * l = gtk_bin_get_child(GTK_BIN
 			(gtk_notebook_get_tab_label(c->webv->tabsNb
-			,gtk_notebook_get_nth_page(c->webv->tabsNb,i))));
-		GtkWidget * n = gtk_menu_item_new();
-		gtk_menu_item_set_label((GtkMenuItem *)n
+			,WK_CURRENT_TAB_WIDGET(c->webv->tabsNb))));
+		GtkWidget * ct = gtk_menu_item_new();
+		gtk_menu_item_set_label((GtkMenuItem *)ct
 			,gtk_label_get_text((GtkLabel* )l));
 		struct dpco_st * dp = malloc(sizeof(struct dpco_st));
 		dp->call = c;
-		dp->other= gtk_notebook_get_nth_page(c->webv->tabsNb,i);
-		gtk_widget_add_events(n,GDK_KEY_PRESS_MASK);
-		g_signal_connect_data(n,"button-release-event"
+		dp->other = WK_CURRENT_TAB(c->webv->tabsNb);
+		g_signal_connect_data(ct,"button-release-event"
 			,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
-		g_signal_connect(n,"select"
+		g_signal_connect(ct,"select"
 			,G_CALLBACK(c_select_tabsMi), dp);
-		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),n);
+		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),ct);
+	}
+
+	if(gtk_notebook_get_n_pages(c->webv->tabsNb) != 1)
+	{
+		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu)
+			,gtk_separator_menu_item_new());
+
+		for(gint i = 0; i < gtk_notebook_get_n_pages(c->webv->tabsNb)
+			;i++)
+		{
+			if(gtk_notebook_get_nth_page(c->webv->tabsNb,i)
+				!= WK_CURRENT_TAB_WIDGET(c->webv->tabsNb))
+			{
+				GtkWidget * l = gtk_bin_get_child(GTK_BIN
+					(gtk_notebook_get_tab_label(c->webv->tabsNb
+					,gtk_notebook_get_nth_page(c->webv->tabsNb,i))));
+				GtkWidget * n = gtk_menu_item_new();
+				gtk_menu_item_set_label((GtkMenuItem *)n
+					,gtk_label_get_text((GtkLabel* )l));
+				struct dpco_st * dp = malloc(sizeof(struct dpco_st));
+				dp->call = c;
+				dp->other= gtk_notebook_get_nth_page(c->webv->tabsNb,i);
+				g_signal_connect_data(n,"button-release-event"
+					,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
+				g_signal_connect(n,"select"
+					,G_CALLBACK(c_select_tabsMi), dp);
+				gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu)
+					,n);
+			}
+		}
 	}
 	gtk_widget_show_all((GtkWidget *)mi);
 }
