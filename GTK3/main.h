@@ -6,6 +6,7 @@
 #include <glib.h>
 #include <glib/gi18n.h>
 #include <gmodule.h>
+#include <ctype.h>
 
 #define WK_CURRENT_TAB(notebook) \
 (WebKitWebView *) gtk_notebook_get_nth_page(notebook \

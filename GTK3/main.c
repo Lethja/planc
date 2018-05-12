@@ -9,12 +9,29 @@ GSettings * G_SETTINGS = NULL;
 char * prepAddress(const gchar * c)
 {
 	char * p;
+	//Return if about:blank
 	if(strstr(c,"about:") == c)
 	{
 		p = malloc(strlen("about:blank")+1);
 		strncpy(p,"about:blank",strlen("about:blank")+1);
 		return p;
 	}
+	//Check if speed dial entry
+	{
+		size_t i = 0;
+		for(; i < strlen(c); i++)
+		{
+			if(!isdigit(c[i]))
+				break;
+		}
+		if(i == strlen(c))
+		{
+			char * x = sql_speed_dial_get(atoi(c));
+			if(x)
+				c = (gchar *) x;
+		}
+	}
+	//Check if protocol portion of the url exists add it if it dosen't
     p = strstr(c,"://");
     if(!p)
     {
@@ -97,6 +114,11 @@ gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
 	return FALSE;
 }
 
+void c_destroy_tabsMi(GtkMenuItem * mi, struct dpco_st * dp)
+{
+	free(dp);
+}
+
 void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c)
 {
 	GList * list = gtk_container_get_children(
@@ -105,16 +127,6 @@ void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c)
 	{
 		gtk_widget_destroy(l->data);
 	}
-}
-
-void c_onescape_tabsmenu(GtkMenuShell * sh, struct dpco_st * dp)
-{
-	if(gtk_widget_get_sensitive(GTK_WIDGET(dp->other)))
-	{
-		g_signal_emit_by_name(GTK_WIDGET(dp->other),"select");
-	}
-	g_signal_handlers_disconnect_matched(sh,G_SIGNAL_MATCH_FUNC
-		,0,0,NULL,c_onescape_tabsmenu,dp);
 }
 
 void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
@@ -130,15 +142,13 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 		struct dpco_st * dp = malloc(sizeof(struct dpco_st));
 		dp->call = c;
 		dp->other = WK_CURRENT_TAB(c->webv->tabsNb);
-		g_signal_connect_data(ct,"button-release-event"
-			,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
+		g_signal_connect(ct,"button-release-event"
+			,G_CALLBACK(c_onclick_tabsMi), dp);
 		g_signal_connect(ct,"select"
 			,G_CALLBACK(c_select_tabsMi), dp);
-		struct dpco_st * ctdp = malloc(sizeof(struct dpco_st));
-		ctdp->call = c;
-		ctdp->other = ct;
-		g_signal_connect_data(c->menu->tabsMenu,"cancel"
-			,G_CALLBACK(c_onescape_tabsmenu), ctdp, c_free_docp,0);
+		g_signal_connect(ct,"destroy"
+			,G_CALLBACK(c_destroy_tabsMi), dp);
+
 		gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),ct);
 	}
 
@@ -162,10 +172,12 @@ void c_onclick_tabsMh(GtkMenuItem * mi, struct call_st * c)
 				struct dpco_st * dp = malloc(sizeof(struct dpco_st));
 				dp->call = c;
 				dp->other= gtk_notebook_get_nth_page(c->webv->tabsNb,i);
-				g_signal_connect_data(n,"button-release-event"
-					,G_CALLBACK(c_onclick_tabsMi), dp, c_free_docp,0);
+				g_signal_connect(n,"button-release-event"
+					,G_CALLBACK(c_onclick_tabsMi), dp);
 				g_signal_connect(n,"select"
 					,G_CALLBACK(c_select_tabsMi), dp);
+				g_signal_connect(n,"destroy"
+					,G_CALLBACK(c_destroy_tabsMi), dp);
 				gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu)
 					,n);
 			}
@@ -1000,14 +1012,13 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
     menu->viewMh = gtk_menu_item_new_with_mnemonic("_View");
     menu->tabsMh = NULL;
     menu->viewTabMh = gtk_menu_item_new_with_mnemonic("_Tabs");
-    //menu->tab1 = gtk_check_menu_item_new_with_mnemonic("_Autohide");
     menu->tabH = gtk_radio_menu_item_new_with_mnemonic(NULL
 		,"_Horizontal");
     menu->tabV = gtk_radio_menu_item_new_with_mnemonic_from_widget
 		((GtkRadioMenuItem *)menu->tabH, "_Vertical");
 	menu->tabM = gtk_radio_menu_item_new_with_mnemonic_from_widget
 		((GtkRadioMenuItem *)menu->tabH, "_Menu");
-    /*menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");*/
+    menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");
     menu->nWinMi = gtk_menu_item_new_with_mnemonic("New _Window");
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
     menu->cTabMi = gtk_menu_item_new_with_mnemonic("_Close Tab");

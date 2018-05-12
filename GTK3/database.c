@@ -10,9 +10,21 @@ static const char * createHistory = "PRAGMA synchronous=OFF;" \
 		"ADDRESS TEXT, TITLE TEXT," \
 		"VISITED INTERGER, UNIQUE (`ADDRESS`));";
 
+static const char * createDial = "PRAGMA synchronous=OFF;" \
+		"CREATE TABLE IF NOT EXISTS `DIAL`("  \
+		"DIAL INTERGER, URL TEXT," \
+		"UNIQUE (`DIAL`));";
+
 static const char * insert = "INSERT OR REPLACE INTO `HISTORY` " \
 		"(`ADDRESS`,`TITLE`,`VISITED`)" \
 		"VALUES (?1,?2,strftime('%s','now'));";
+
+static const char * selectSpeedDial = "SELECT * FROM `DIAL`" \
+		" WHERE `DIAL` is ?";
+
+#define DIALDIR(dialdir) char * (dialdir) \
+= g_build_filename(g_get_user_config_dir() \
+,g_get_prgname(),"dial",NULL)
 
 #define HISTORYDIR(historydir) char * (historydir) \
 = g_build_filename(g_get_user_data_dir() \
@@ -102,4 +114,36 @@ extern void * sql_history_read_to_tree(void * store)
 	}
 	sqlite3_exec(db,retrieve,treeIter,store,NULL);
 	sqlite3_close(db);
+}
+
+extern char * sql_speed_dial_get(size_t index)
+{
+	sqlite3 *db;
+	int rc;
+	DIALDIR(dialdir);
+	rc = sqlite3_open(dialdir, &db);
+	g_free(dialdir);
+
+	sqlite3_exec(db,createDial,NULL,NULL,NULL);
+
+	if( rc )
+	{
+		printf("Error opening dial database: %s\n"
+			,sqlite3_errmsg(db));
+		return NULL;
+	}
+	sqlite3_stmt * stmt;
+	rc = sqlite3_prepare_v2(db,selectSpeedDial,-1,&stmt,NULL);
+	rc = sqlite3_bind_int(stmt,1,index);
+	rc = sqlite3_step(stmt);
+	char * r = NULL;
+	if(rc == SQLITE_ROW)
+	{
+		unsigned const char * u = sqlite3_column_text(stmt,1);
+		r = malloc(strlen(u)+1);
+		strncpy(r,u,strlen(u)+1);
+	}
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return r;
 }
