@@ -1181,6 +1181,7 @@ int main(int argc, char* argv[])
 		,res->width*0.5,res->height*0.5);
 	free(res);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    gtk_window_maximize(GTK_WINDOW(window));
 
     GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
