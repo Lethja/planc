@@ -106,7 +106,7 @@ gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
                 ,gtk_notebook_page_num(dp->call->webv->tabsNb
                 ,dp->other));
 			gtk_widget_set_sensitive(GTK_WIDGET(mi),FALSE);
-			webkit_web_context_clear_cache(dp->call->webv->webc);
+			//webkit_web_context_clear_cache(dp->call->webv->webc);
 			return TRUE;
 		}
     }
@@ -260,7 +260,7 @@ static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
             gtk_notebook_remove_page(dp->call->webv->tabsNb
                 ,gtk_notebook_page_num(dp->call->webv->tabsNb
 				,dp->other));
-		webkit_web_context_clear_cache(dp->call->webv->webc);
+		//webkit_web_context_clear_cache(dp->call->webv->webc);
 		return TRUE;
     }
     return FALSE;
@@ -272,7 +272,7 @@ void c_notebook_close_current(GtkWidget * w, struct call_st * c)
 		gtk_notebook_remove_page
 			(c->webv->tabsNb,gtk_notebook_get_current_page
 			(c->webv->tabsNb));
-	webkit_web_context_clear_cache(c->webv->webc);
+	//webkit_web_context_clear_cache(c->webv->webc);
 }
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
