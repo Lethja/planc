@@ -30,7 +30,7 @@ AC_SYS_LARGEFILE
 LT_INIT
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([memmove memcpy strchr strrchr strstr strtol strtoul])
+AC_CHECK_FUNCS([memmove memcpy strchr strrchr strstr strtol strtoul strcasestr])
 
 PKG_CHECK_MODULES(GTK3, gtk+-3.0 >= 3.20)
 PKG_CHECK_MODULES(WK4, webkit2gtk-4.0 >= 2.18)
