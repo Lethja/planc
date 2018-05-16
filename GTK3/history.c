@@ -52,27 +52,35 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
 	,struct call_st * c)
 {
 	//Middle click
-    if (event->type == GDK_BUTTON_RELEASE  &&  event->button == 2)
+    if (event->type == GDK_BUTTON_RELEASE)  
     {
-		gint int_data;
-		gchar *str_data;
-		GtkTreePath * path;
-		
-		if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree)
-			,(gint) event->x, (gint) event->y
-			,&path, NULL, NULL, NULL))
+		if(event->button == 2)
 		{
-			GtkTreeIter iter;
-			GtkTreeModel *model = gtk_tree_view_get_model(tree);
-
-			if (gtk_tree_model_get_iter(model, &iter, path))
+			gint int_data;
+			gchar *str_data;
+			GtkTreePath * path;
+			
+			if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree)
+				,(gint) event->x, (gint) event->y
+				,&path, NULL, NULL, NULL))
 			{
-				gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
-					,&str_data, -1);
-				new_tab_ext(str_data,c);
+				GtkTreeIter iter;
+				GtkTreeModel *model = gtk_tree_view_get_model(tree);
+
+				if (gtk_tree_model_get_iter(model, &iter, path))
+				{
+					gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
+						,&str_data, -1);
+					new_tab_ext(str_data,c);
+				}
 			}
 		}
-    }
+		/*if(event->button == 3) //Right click
+		{
+			GtkTreeSelection * selection 
+				= gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+		}*/
+	}
     return false;
 }
 
