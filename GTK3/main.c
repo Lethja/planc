@@ -7,17 +7,23 @@
 GtkApplication * G_APP = NULL;
 GSettings * G_SETTINGS = NULL;
 
+/** Sanitize the address for webkit
+ * Returned value never null and always must be freed after use
+ * Will convert numbers to speed dial addresses if avaliable
+**/
 char * prepAddress(const gchar * c)
 {
 	char * p;
 	//Return if about:blank
-	if(strstr(c,"about:") == c)
+	if(strcmp(c,"") == 0 || strstr(c,"about:") == c)
 	{
 		p = malloc(strlen("about:blank")+1);
 		strncpy(p,"about:blank",strlen("about:blank")+1);
 		return p;
 	}
-	//Check if speed dial entry
+	/*Check if speed dial entry
+	 * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
+	*/
 	{
 		size_t i = 0;
 		for(; i < strlen(c); i++)
@@ -638,7 +644,9 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
         case WEBKIT_LOAD_FINISHED:
             gtk_image_set_from_icon_name(call->tool->reloadIo
                 ,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
-			if(!webkit_web_view_is_ephemeral(webv))
+			if(!webkit_web_view_is_ephemeral(webv)
+			&& strcmp("about:blank",webkit_web_view_get_uri(webv)) != 0
+			&& strcmp("",webkit_web_view_get_uri(webv)) != 0)
 				sql_history_write(webkit_web_view_get_uri(webv)
 					,webkit_web_view_get_title(webv));
         break;

@@ -154,7 +154,7 @@ extern void * InitHistoryWindow(void * v)
 		,G_CALLBACK(c_history_url), v);
 
 	gtk_tree_view_column_set_resizable(column, TRUE);
-	gtk_container_add (GTK_CONTAINER (scrollWin), tree);
+	gtk_container_add(GTK_CONTAINER (scrollWin), tree);
 	gtk_container_add(GTK_CONTAINER(window), Vbox);
     gtk_widget_show_all((GtkWidget *) window);
     return window;
