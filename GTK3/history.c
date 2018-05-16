@@ -43,8 +43,37 @@ void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
 	{
 		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
 			,&str_data, -1);
-		new_tab_ext(str_data,c);
+		webkit_web_view_load_uri(WK_CURRENT_TAB(c->webv->tabsNb)
+			,str_data);
 	}
+}
+
+gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
+	,struct call_st * c)
+{
+	//Middle click
+    if (event->type == GDK_BUTTON_RELEASE  &&  event->button == 2)
+    {
+		gint int_data;
+		gchar *str_data;
+		GtkTreePath * path;
+		
+		if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree)
+			,(gint) event->x, (gint) event->y
+			,&path, NULL, NULL, NULL))
+		{
+			GtkTreeIter iter;
+			GtkTreeModel *model = gtk_tree_view_get_model(tree);
+
+			if (gtk_tree_model_get_iter(model, &iter, path))
+			{
+				gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
+					,&str_data, -1);
+				new_tab_ext(str_data,c);
+			}
+		}
+    }
+    return false;
 }
 
 static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
@@ -152,6 +181,8 @@ extern void * InitHistoryWindow(void * v)
         ,G_CALLBACK(search_entry_change), filtered);
 	g_signal_connect(tree,"row-activated"
 		,G_CALLBACK(c_history_url), v);
+	g_signal_connect(tree,"button-release-event"
+		,G_CALLBACK(c_history_url_tab), v);
 
 	gtk_tree_view_column_set_resizable(column, TRUE);
 	gtk_container_add(GTK_CONTAINER (scrollWin), tree);
