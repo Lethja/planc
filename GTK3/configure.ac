@@ -22,6 +22,11 @@ m4_include([m4/ax_check_enable_debug.m4])
 AX_CHECK_ENABLE_DEBUG([no])
 
 # Checks for programs.
+
+if test -z $CFLAGS; then
+    CFLAGS='-O2'
+fi
+
 AC_PROG_CC_C99
 AC_PROG_RANLIB
 AC_SYS_LARGEFILE

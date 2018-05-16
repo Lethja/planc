@@ -52,14 +52,14 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
 	,struct call_st * c)
 {
 	//Middle click
-    if (event->type == GDK_BUTTON_RELEASE)  
+	if(event->type == GDK_BUTTON_RELEASE)
     {
 		if(event->button == 2)
 		{
 			gint int_data;
 			gchar *str_data;
 			GtkTreePath * path;
-			
+
 			if(gtk_tree_view_get_path_at_pos(GTK_TREE_VIEW(tree)
 				,(gint) event->x, (gint) event->y
 				,&path, NULL, NULL, NULL))
@@ -77,7 +77,7 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
 		}
 		/*if(event->button == 3) //Right click
 		{
-			GtkTreeSelection * selection 
+			GtkTreeSelection * selection
 				= gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
 		}*/
 	}
