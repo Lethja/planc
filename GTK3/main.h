@@ -20,6 +20,8 @@
 
 extern GtkApplication * G_APP;
 extern GSettings * G_SETTINGS;
+GtkWindow * G_HISTORY;
+GtkWindow * G_DOWNLOAD;
 
 struct menu_st
 {
@@ -103,6 +105,12 @@ struct newt_st
 {
     WebKitWebView * webv;
     struct call_st * call;
+};
+
+struct arg_st
+{
+	gchar **argv;
+	gint argc;
 };
 
 void c_free_docp(gpointer data, GClosure *closure);

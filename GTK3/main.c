@@ -4,8 +4,10 @@
 #include "download.h"
 #include "history.h"
 
-GtkApplication * G_APP = NULL;
-GSettings * G_SETTINGS = NULL;
+GtkApplication * G_APP	= NULL;
+GSettings * G_SETTINGS	= NULL;
+GtkWindow * G_HISTORY	= NULL;
+GtkWindow * G_DOWNLOAD	= NULL;
 
 /** Sanitize the address for webkit
  * Returned value never null and always must be freed after use
@@ -1160,23 +1162,20 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->gSet = g;
 }
 
-int main(int argc, char* argv[])
+static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
+	,void * v)
 {
-    struct menu_st menu;
+	struct menu_st menu;
     struct tool_st tool;
     struct webt_st webk;
     struct find_st find;
     struct sign_st sign;
     struct call_st call;
 
-    gtk_init(&argc, &argv);
-	G_APP = gtk_application_new("priv.dis.planc"
-		,G_APPLICATION_FLAGS_NONE);
-
 	G_SETTINGS = g_settings_new("priv.dis.planc");
 
-	gtk_window_set_default_icon_name("web-browser");
-    GtkWidget *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    GtkWidget * window = gtk_application_window_new
+		((GtkApplication *)app);
 
     GtkAccelGroup * accel_group = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
@@ -1240,7 +1239,11 @@ int main(int argc, char* argv[])
         ,G_CALLBACK(c_update_tabs_layout), &call);
 	g_signal_connect(G_OBJECT(call.menu->tabM), "activate"
         ,G_CALLBACK(c_update_tabs_layout), &call);
-
+    
+	gchar **argv;
+	gint argc;
+    argv = g_application_command_line_get_arguments (cmd, &argc);
+    
     if(argc > 1)
     {
         gchar * uri = prepAddress((const gchar *) argv[1]);
@@ -1266,14 +1269,46 @@ int main(int argc, char* argv[])
 			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
 				,"about:blank");
     }
-
-    gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
-
-    gtk_widget_show_all(window);
+        
+	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
+	gtk_widget_show_all(window);
     gtk_widget_hide(GTK_WIDGET(find.top));
-    gtk_main();
+    gtk_application_add_window((GtkApplication *) app
+		, (GtkWindow *) window);
+	gtk_main();
+}
 
-    return 0;
+static int c_app_cmd(GApplication * app, GApplicationCommandLine * cmd
+	,struct arg_st * arg)
+{
+	arg->argv = g_application_command_line_get_arguments(cmd
+		,&arg->argc);
+	return 1;
+}
+
+int main(int argc, char **argv)
+{
+	int status;
+	G_APP = gtk_application_new("priv.dis.planc"
+		,G_APPLICATION_HANDLES_COMMAND_LINE);
+		//,G_APPLICATION_FLAGS_NONE);
+		//,G_APPLICATION_HANDLES_OPEN);
+	gtk_window_set_default_icon_name("web-browser");
+	
+	/*struct arg_st * arg = malloc(sizeof(struct arg_st));
+	arg->argc = 0;
+	arg->argv = NULL;*/
+	
+	g_signal_connect(G_APP, "command-line", G_CALLBACK(c_app_act)
+		,NULL);
+	
+	/*g_signal_connect(G_APP, "activate", G_CALLBACK(c_app_act)
+		,arg);*/
+		
+	g_application_set_inactivity_timeout(G_APPLICATION(G_APP), 1000);
+	status = g_application_run(G_APPLICATION(G_APP), argc, argv);
+
+	return status;
 }
 
 void connect_signals (WebKitWebView * wv, struct call_st * c)
