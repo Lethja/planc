@@ -1165,12 +1165,12 @@ void InitCallback(struct call_st * c, struct find_st * f
 static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 	,void * v)
 {
-	struct menu_st menu;
-    struct tool_st tool;
-    struct webt_st webk;
-    struct find_st find;
-    struct sign_st sign;
-    struct call_st call;
+	struct menu_st * menu = malloc(sizeof(struct menu_st));
+    struct tool_st * tool = malloc(sizeof(struct tool_st));
+    struct webt_st * webk = malloc(sizeof(struct webt_st));
+    struct find_st * find = malloc(sizeof(struct find_st));
+    struct sign_st * sign = malloc(sizeof(struct sign_st));
+    struct call_st * call = malloc(sizeof(struct call_st));
 
 	G_SETTINGS = g_settings_new("priv.dis.planc");
 
@@ -1180,7 +1180,7 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
     GtkAccelGroup * accel_group = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
-    GdkRectangle *res = malloc(sizeof(GdkRectangle));
+    GdkRectangle * res = malloc(sizeof(GdkRectangle));
     gdk_monitor_get_geometry
 		(gdk_display_get_primary_monitor
 		(gdk_display_get_default()),res);
@@ -1193,52 +1193,51 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
     GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    InitMenubar(&menu, &call, accel_group);
-    InitToolbar(&tool, accel_group);
-    InitNotetab(&webk);
-    InitFindBar(&find, webk.tabsNb, &call);
-    InitCallback(&call,&find,&menu,&tool,&webk,&sign
-		,window,G_APP,G_SETTINGS);
-    InitWebview(&call);
+    InitMenubar(menu, call, accel_group);
+    InitToolbar(tool, accel_group);
+    InitNotetab(webk);
+    InitFindBar(find, webk->tabsNb, call);
+    InitCallback(call,find,menu,tool,webk,sign,window,G_APP,G_SETTINGS);
+    InitWebview(call);
 
-    gtk_box_pack_start(GTK_BOX(vbox), menu.menu, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), tool.top, FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(webk.tabsNb)
+    gtk_box_pack_start(GTK_BOX(vbox), menu->menu, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), tool->top, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(webk->tabsNb)
         , TRUE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), find.top, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), find->top, FALSE, FALSE, 0);
 
     g_signal_connect(window, "destroy"
-        ,G_CALLBACK(c_destroy_window), &call);
+        ,G_CALLBACK(c_destroy_window), call);
 	g_signal_connect(window, "delete-event"
-        ,G_CALLBACK(c_destroy_window_request), &call);
-    g_signal_connect(tool.addressEn, "activate"
-        ,G_CALLBACK(c_act), &call);
-    g_signal_connect(tool.backTb, "clicked"
-        ,G_CALLBACK(c_go_back), &call);
-    g_signal_connect(tool.forwardTb, "clicked"
-        ,G_CALLBACK(c_go_forward), &call);
-    g_signal_connect(tool.reloadTb, "clicked"
-        ,G_CALLBACK(c_refresh), webk.tabsNb);
-    g_signal_connect(webk.tabsNb, "switch-page"
-        ,G_CALLBACK(c_switch_tab), &call);
-    g_signal_connect(webk.webc, "download-started"
-        ,G_CALLBACK(c_download_start), &call);
-	g_signal_connect(webk.tabsNb, "page-added"
-		,G_CALLBACK(c_notebook_tabs_changed), &call);
-	sign.nb_changed = g_signal_connect(webk.tabsNb, "page-removed"
-		,G_CALLBACK(c_notebook_tabs_changed), &call);
-    g_signal_connect_after(tool.addressEn, "insert-text"
-        ,G_CALLBACK(c_addr_ins), &call);
-    g_signal_connect_after(tool.addressEn, "delete-text"
-        ,G_CALLBACK(c_addr_del), &call);
+        ,G_CALLBACK(c_destroy_window_request), call);
+    g_signal_connect(tool->addressEn, "activate"
+        ,G_CALLBACK(c_act), call);
+    g_signal_connect(tool->backTb, "clicked"
+        ,G_CALLBACK(c_go_back), call);
+    g_signal_connect(tool->forwardTb, "clicked"
+        ,G_CALLBACK(c_go_forward), call);
+    g_signal_connect(tool->reloadTb, "clicked"
+        ,G_CALLBACK(c_refresh), webk->tabsNb);
+    g_signal_connect(webk->tabsNb, "switch-page"
+        ,G_CALLBACK(c_switch_tab), call);
+    g_signal_connect(webk->webc, "download-started"
+        ,G_CALLBACK(c_download_start), call);
+	g_signal_connect(webk->tabsNb, "page-added"
+		,G_CALLBACK(c_notebook_tabs_changed), call);
+	sign->nb_changed = g_signal_connect(webk->tabsNb, "page-removed"
+		,G_CALLBACK(c_notebook_tabs_changed), call);
+    g_signal_connect_after(tool->addressEn, "insert-text"
+        ,G_CALLBACK(c_addr_ins), call);
+    g_signal_connect_after(tool->addressEn, "delete-text"
+        ,G_CALLBACK(c_addr_del), call);
     g_signal_connect_after(window, "key-release-event"
-        ,G_CALLBACK(c_accl_rels), &call);
-	g_signal_connect(G_OBJECT(call.menu->tabV), "activate"
-        ,G_CALLBACK(c_update_tabs_layout), &call);
-	g_signal_connect(G_OBJECT(call.menu->tabH), "activate"
-        ,G_CALLBACK(c_update_tabs_layout), &call);
-	g_signal_connect(G_OBJECT(call.menu->tabM), "activate"
-        ,G_CALLBACK(c_update_tabs_layout), &call);
+        ,G_CALLBACK(c_accl_rels), call);
+	g_signal_connect(G_OBJECT(call->menu->tabV), "activate"
+        ,G_CALLBACK(c_update_tabs_layout), call);
+	g_signal_connect(G_OBJECT(call->menu->tabH), "activate"
+        ,G_CALLBACK(c_update_tabs_layout), call);
+	g_signal_connect(G_OBJECT(call->menu->tabM), "activate"
+        ,G_CALLBACK(c_update_tabs_layout), call);
     
 	gchar **argv;
 	gint argc;
@@ -1249,11 +1248,11 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
         gchar * uri = prepAddress((const gchar *) argv[1]);
         if(uri)
         {
-			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb), uri);
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk->tabsNb), uri);
 			free(uri);
 		}
 		else
-			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk->tabsNb)
 				,"about:blank");
     }
     else
@@ -1262,20 +1261,17 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 			(G_SETTINGS,"planc-startpage"));
 		if(uri)
 		{
-			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb),uri);
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk->tabsNb),uri);
 			free(uri);
 		}
 		else
-			webkit_web_view_load_uri(WK_CURRENT_TAB(webk.tabsNb)
+			webkit_web_view_load_uri(WK_CURRENT_TAB(webk->tabsNb)
 				,"about:blank");
     }
         
-	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk.tabsNb));
+	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk->tabsNb));
 	gtk_widget_show_all(window);
-    gtk_widget_hide(GTK_WIDGET(find.top));
-    gtk_application_add_window((GtkApplication *) app
-		, (GtkWindow *) window);
-	gtk_main();
+    gtk_widget_hide(GTK_WIDGET(find->top));
 }
 
 static int c_app_cmd(GApplication * app, GApplicationCommandLine * cmd
@@ -1291,21 +1287,12 @@ int main(int argc, char **argv)
 	int status;
 	G_APP = gtk_application_new("priv.dis.planc"
 		,G_APPLICATION_HANDLES_COMMAND_LINE);
-		//,G_APPLICATION_FLAGS_NONE);
-		//,G_APPLICATION_HANDLES_OPEN);
 	gtk_window_set_default_icon_name("web-browser");
-	
-	/*struct arg_st * arg = malloc(sizeof(struct arg_st));
-	arg->argc = 0;
-	arg->argv = NULL;*/
 	
 	g_signal_connect(G_APP, "command-line", G_CALLBACK(c_app_act)
 		,NULL);
-	
-	/*g_signal_connect(G_APP, "activate", G_CALLBACK(c_app_act)
-		,arg);*/
 		
-	g_application_set_inactivity_timeout(G_APPLICATION(G_APP), 1000);
+	g_application_set_inactivity_timeout(G_APPLICATION(G_APP), 500);
 	status = g_application_run(G_APPLICATION(G_APP), argc, argv);
 
 	return status;
@@ -1365,5 +1352,10 @@ void c_destroy_window_menu(GtkWidget * widget, struct call_st * c)
 static void c_destroy_window(GtkWidget* widget, struct call_st * c)
 {
 	g_signal_handler_disconnect(c->webv->tabsNb,c->sign->nb_changed);
-    gtk_main_quit();
+	free(c->menu);
+	free(c->webv);
+	free(c->find);
+	free(c->sign);
+	free(c->tool);
+	free(c);
 }
