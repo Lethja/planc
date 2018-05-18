@@ -1238,11 +1238,11 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
         ,G_CALLBACK(c_update_tabs_layout), call);
 	g_signal_connect(G_OBJECT(call->menu->tabM), "activate"
         ,G_CALLBACK(c_update_tabs_layout), call);
-    
+
 	gchar **argv;
 	gint argc;
     argv = g_application_command_line_get_arguments (cmd, &argc);
-    
+
     if(argc > 1)
     {
         gchar * uri = prepAddress((const gchar *) argv[1]);
@@ -1250,6 +1250,13 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
         {
 			webkit_web_view_load_uri(WK_CURRENT_TAB(webk->tabsNb), uri);
 			free(uri);
+			if(argc > 2)
+			{
+				for(size_t s = 2; s != argc; s++)
+				{
+					new_tab_ext((gchar *) argv[s], call);
+				}
+			}
 		}
 		else
 			webkit_web_view_load_uri(WK_CURRENT_TAB(webk->tabsNb)
@@ -1268,7 +1275,7 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 			webkit_web_view_load_uri(WK_CURRENT_TAB(webk->tabsNb)
 				,"about:blank");
     }
-        
+
 	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk->tabsNb));
 	gtk_widget_show_all(window);
     gtk_widget_hide(GTK_WIDGET(find->top));
@@ -1288,10 +1295,10 @@ int main(int argc, char **argv)
 	G_APP = gtk_application_new("priv.dis.planc"
 		,G_APPLICATION_HANDLES_COMMAND_LINE);
 	gtk_window_set_default_icon_name("web-browser");
-	
+
 	g_signal_connect(G_APP, "command-line", G_CALLBACK(c_app_act)
 		,NULL);
-		
+
 	g_application_set_inactivity_timeout(G_APPLICATION(G_APP), 500);
 	status = g_application_run(G_APPLICATION(G_APP), argc, argv);
 
