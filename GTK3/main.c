@@ -770,6 +770,11 @@ extern void * new_tab_ext(char * url, struct call_st * c)
     return wv;
 }
 
+void c_new_win(GtkWidget * w, struct call_st * c)
+{
+	InitWindow(G_APPLICATION(G_APP), NULL, 0);
+}
+
 static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
 {
     WebKitWebView * nt
@@ -934,6 +939,9 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 
     g_signal_connect(G_OBJECT(menu->nTabMi), "activate"
 		,G_CALLBACK(c_new_tab), c);
+
+	g_signal_connect(G_OBJECT(menu->nWinMi), "activate"
+		,G_CALLBACK(c_new_win), c);
 
 	g_signal_connect(G_OBJECT(menu->histMi), "activate"
 		,G_CALLBACK(c_open_history), c);
@@ -1162,8 +1170,7 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->gSet = g;
 }
 
-static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
-	,void * v)
+void InitWindow(GApplication * app, gchar ** argv, int argc)
 {
 	struct menu_st * menu = malloc(sizeof(struct menu_st));
     struct tool_st * tool = malloc(sizeof(struct tool_st));
@@ -1239,11 +1246,7 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 	g_signal_connect(G_OBJECT(call->menu->tabM), "activate"
         ,G_CALLBACK(c_update_tabs_layout), call);
 
-	gchar **argv;
-	gint argc;
-    argv = g_application_command_line_get_arguments (cmd, &argc);
-
-    if(argc > 1)
+	if(argc > 1 && argv)
     {
         gchar * uri = prepAddress((const gchar *) argv[1]);
         if(uri)
@@ -1279,6 +1282,16 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(webk->tabsNb));
 	gtk_widget_show_all(window);
     gtk_widget_hide(GTK_WIDGET(find->top));
+}
+
+static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
+	,void * v)
+{
+	gchar **argv;
+	gint argc;
+    argv = g_application_command_line_get_arguments (cmd, &argc);
+
+    InitWindow(app, argv, argc);
 }
 
 static int c_app_cmd(GApplication * app, GApplicationCommandLine * cmd

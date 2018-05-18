@@ -134,6 +134,8 @@ void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 
 void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c);
 
+void InitWindow(GApplication * app, gchar ** argv, int argc);
+
 static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na ,struct call_st * c);
 
