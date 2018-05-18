@@ -2,7 +2,7 @@
 //#include "settings.h"
 #include "download.h"
 
-void c_download_finished(WebKitDownload * d, GtkWidget * w)
+static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 {
 	guint64 len = webkit_uri_response_get_content_length
 		(webkit_download_get_response(d));
@@ -26,7 +26,8 @@ void c_download_finished(WebKitDownload * d, GtkWidget * w)
 		,1.0);
 }
 
-void c_download_progress(WebKitDownload * d, guint pro, GtkWidget * w)
+static void c_download_progress(WebKitDownload * d, guint pro
+	,GtkWidget * w)
 {
 	guint64 len = webkit_uri_response_get_content_length
 		(webkit_download_get_response(d));
@@ -51,8 +52,8 @@ void c_download_progress(WebKitDownload * d, guint pro, GtkWidget * w)
 	free(l);
 }
 
-void c_download_destination_created(WebKitDownload * d, gchar * fn
-	,void * v)
+static void c_download_destination_created(WebKitDownload * d
+	,gchar * fn, void * v)
 {
 	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(r,280,40);
@@ -81,16 +82,16 @@ void c_download_destination_created(WebKitDownload * d, gchar * fn
 	gtk_widget_show_all((GtkWidget *)r);
 }
 
-gboolean c_download_name(WebKitDownload * d, gchar * fn, void * v)
+static gboolean c_download_name(WebKitDownload * d, gchar * fn
+	,struct call_st * v)
 {
-	struct call_st * c = v;
     GtkWidget *dialog;
     GtkFileChooser *chooser;
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
     gint res;
 
     dialog = gtk_file_chooser_dialog_new ("Save File"
-		,(GtkWindow *) c->twin,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
+		,(GtkWindow *) v->twin,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
         ,GTK_RESPONSE_CANCEL ,("_Save") ,GTK_RESPONSE_ACCEPT,NULL);
 
     chooser = GTK_FILE_CHOOSER (dialog);

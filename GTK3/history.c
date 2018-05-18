@@ -43,7 +43,7 @@ void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
 	{
 		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
 			,&str_data, -1);
-		webkit_web_view_load_uri(WK_CURRENT_TAB(c->webv->tabsNb)
+		webkit_web_view_load_uri(WK_CURRENT_TAB(c->tabs)
 			,str_data);
 	}
 }

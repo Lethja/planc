@@ -20,8 +20,10 @@
 
 extern GtkApplication * G_APP;
 extern GSettings * G_SETTINGS;
-GtkWindow * G_HISTORY;
-GtkWindow * G_DOWNLOAD;
+extern GtkWindow * G_HISTORY;
+extern GtkWindow * G_DOWNLOAD;
+extern WebKitSettings * G_WKC_SETTINGS;
+extern WebKitWebContext * G_WKC; //Global WebKit Context
 
 struct menu_st
 {
@@ -61,13 +63,6 @@ struct tool_st
     GtkImage * reloadIo;
 };
 
-struct webt_st
-{
-    GtkNotebook * tabsNb;
-    WebKitWebContext * webc;
-    WebKitSettings * webs;
-};
-
 struct find_st
 {
     GtkWidget * top;
@@ -85,12 +80,12 @@ struct sign_st
 
 struct call_st
 {
-    struct menu_st * menu;
-    struct tool_st * tool;
-    struct webt_st * webv;
-    struct find_st * find;
-    struct sign_st * sign;
-    GtkWidget * twin;
+    struct menu_st 	* menu;
+    struct tool_st 	* tool;
+    struct find_st 	* find;
+    struct sign_st 	* sign;
+    GtkNotebook 	* tabs;
+    GtkWidget 		* twin;
 };
 
 struct dpco_st //Dual Pointer (Call and Other)
@@ -103,12 +98,6 @@ struct newt_st
 {
     WebKitWebView * webv;
     struct call_st * call;
-};
-
-struct arg_st
-{
-	gchar **argv;
-	gint argc;
 };
 
 void c_free_docp(gpointer data, GClosure *closure);

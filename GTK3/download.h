@@ -4,4 +4,4 @@ extern void c_download_start(WebKitWebContext * wv
     ,WebKitDownload * dl, void * v);
 
 static gboolean c_download_name(WebKitDownload * d, gchar * fn
-	,void * v);
+	,struct call_st * v);

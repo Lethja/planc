@@ -8,48 +8,48 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 {
 	if(gtk_toggle_button_get_active(cbmi))
 	{
-		if(gtk_notebook_get_n_pages(c->webv->tabsNb) == 1)
-			gtk_notebook_set_show_tabs(c->webv->tabsNb,FALSE);
+		if(gtk_notebook_get_n_pages(c->tabs) == 1)
+			gtk_notebook_set_show_tabs(c->tabs,FALSE);
 		else
-			gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
+			gtk_notebook_set_show_tabs(c->tabs,TRUE);
 	}
-	else if(!gtk_notebook_get_show_tabs(c->webv->tabsNb))
-		gtk_notebook_set_show_tabs(c->webv->tabsNb,TRUE);
+	else if(!gtk_notebook_get_show_tabs(c->tabs))
+		gtk_notebook_set_show_tabs(c->tabs,TRUE);
 }
 
 void * c_settings_jv(GtkToggleButton * w, struct call_st * c)
 {
-	webkit_settings_set_enable_java(c->webv->webs
+	webkit_settings_set_enable_java(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
 void * c_settings_js(GtkToggleButton * w, struct call_st * c)
 {
-	webkit_settings_set_enable_javascript(c->webv->webs
+	webkit_settings_set_enable_javascript(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
 void * c_settings_mse(GtkToggleButton * w, struct call_st * c)
 {
-	webkit_settings_set_enable_mediasource(c->webv->webs
+	webkit_settings_set_enable_mediasource(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
 void * c_settings_in(GtkToggleButton * w, struct call_st * c)
 {
-	webkit_settings_set_enable_plugins(c->webv->webs
+	webkit_settings_set_enable_plugins(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
 void * c_settings_ch(GtkToggleButton * w, struct call_st * c)
 {
-	webkit_settings_set_enable_page_cache(c->webv->webs
+	webkit_settings_set_enable_page_cache(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
 void * c_settings_dv(GtkToggleButton * w, struct call_st * c)
 {
-	g_object_set(G_OBJECT(c->webv->webs), "enable-developer-extras"
+	g_object_set(G_OBJECT(G_WKC_SETTINGS), "enable-developer-extras"
 		,gtk_toggle_button_get_active(w), NULL);
 }
 
@@ -58,17 +58,17 @@ void * c_settings_cm(GtkComboBox * w, struct call_st * c)
 	switch(gtk_combo_box_get_active(w))
 	{
 		case 0:
-			webkit_web_context_set_cache_model(c->webv->webc
+			webkit_web_context_set_cache_model(G_WKC
 				,WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER);
 			g_settings_set_int(G_SETTINGS,"webkit-mcm",0);
 		break;
 		default:
-			webkit_web_context_set_cache_model(c->webv->webc
+			webkit_web_context_set_cache_model(G_WKC
 				,WEBKIT_CACHE_MODEL_DOCUMENT_BROWSER);
 			g_settings_set_int(G_SETTINGS,"webkit-mcm",1);
 		break;
 		case 2:
-			webkit_web_context_set_cache_model(c->webv->webc
+			webkit_web_context_set_cache_model(G_WKC
 				,WEBKIT_CACHE_MODEL_WEB_BROWSER);
 			g_settings_set_int(G_SETTINGS,"webkit-mcm",2);
 		break;
@@ -106,7 +106,7 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		,"Vertical");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
 		,"Menu");
-	
+
 	GtkWidget * mcmBox = gtk_combo_box_text_new();
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"None");
@@ -114,7 +114,7 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		,"Low");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"High");
-	
+
 	GtkWidget * dv = gtk_check_button_new_with_label
 		("Enable Developer Options");
     GtkWidget * ch = gtk_check_button_new_with_label
@@ -155,11 +155,11 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
-	
+
 	//Connect events
 	g_signal_connect(mcmBox, "changed"
 		,G_CALLBACK(c_settings_cm), c);
-		
+
 	g_signal_connect(ta, "toggled"
 		,G_CALLBACK(c_notebook_tabs_autohide), c);
 
@@ -177,10 +177,10 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 
 	g_signal_connect(ch, "toggled"
 		,G_CALLBACK(c_settings_ch), c);
-	
+
 	g_signal_connect(dv, "toggled"
 		,G_CALLBACK(c_settings_dv), c);
-		
+
 	//Parent
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dv),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);
@@ -192,8 +192,8 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(pt),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(cm),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tt),FALSE,FALSE,0);
-	
-	switch(webkit_web_context_get_cache_model(c->webv->webc))
+
+	switch(webkit_web_context_get_cache_model(G_WKC))
 	{
 		case WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER:
 			gtk_combo_box_set_active((GtkComboBox *) mcmBox,0);
@@ -205,7 +205,7 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 			gtk_combo_box_set_active((GtkComboBox *) mcmBox,2);
 		break;
 	}
-	
+
 	gtk_widget_show_all((GtkWidget *)r);
 	return r;
 }
