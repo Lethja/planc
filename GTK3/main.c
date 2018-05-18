@@ -1157,8 +1157,7 @@ void InitFindBar(struct find_st * f, GtkNotebook * w
 
 void InitCallback(struct call_st * c, struct find_st * f
     ,struct menu_st * m, struct tool_st * t, struct webt_st * w
-    ,struct sign_st * s, GtkWidget * x, GtkApplication * a
-    ,GSettings * g)
+    ,struct sign_st * s, GtkWidget * x)
 {
     c->menu = m;
     c->find = f;
@@ -1166,8 +1165,6 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->tool = t;
     c->webv = w;
     c->twin = x;
-    c->gApp = a;
-    c->gSet = g;
 }
 
 void InitWindow(GApplication * app, gchar ** argv, int argc)
@@ -1204,7 +1201,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
     InitToolbar(tool, accel_group);
     InitNotetab(webk);
     InitFindBar(find, webk->tabsNb, call);
-    InitCallback(call,find,menu,tool,webk,sign,window,G_APP,G_SETTINGS);
+    InitCallback(call,find,menu,tool,webk,sign,window);
     InitWebview(call);
 
     gtk_box_pack_start(GTK_BOX(vbox), menu->menu, FALSE, FALSE, 0);

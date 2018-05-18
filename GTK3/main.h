@@ -91,8 +91,6 @@ struct call_st
     struct find_st * find;
     struct sign_st * sign;
     GtkWidget * twin;
-    GtkApplication * gApp;
-    GSettings * gSet;
 };
 
 struct dpco_st //Dual Pointer (Call and Other)
