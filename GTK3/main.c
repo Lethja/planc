@@ -842,6 +842,9 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
     gtk_widget_set_sensitive(GTK_WIDGET(tool->forwardTb), FALSE);
     tool->addressTi = (GtkContainer *) gtk_tool_item_new();
     tool->addressEn = (GtkEntry *) gtk_entry_new();
+    gtk_widget_set_focus_on_click ((GtkWidget *) tool->addressEn, TRUE);
+    gtk_widget_add_events((GtkWidget *) tool->addressTi
+		,GDK_FOCUS_CHANGE_MASK);
     gtk_container_add(tool->addressTi, GTK_WIDGET(tool->addressEn));
     gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
         ,GTK_TOOL_ITEM(tool->addressTi), -1);
@@ -1171,8 +1174,29 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->find = f;
     c->sign = s;
     c->tool = t;
-    /*c->webv = w;*/
     c->twin = x;
+}
+
+static gboolean c_addr_unfocus(GtkWidget * e, void * v, void * w)
+{
+	gtk_editable_select_region((GtkEditable *) e, 0, 0);
+	return TRUE;
+}
+
+static gboolean c_addr_click(GtkWidget * w, GdkEventButton * e
+    ,void * v)
+{
+    if (e->button == 1)
+    {
+		if(!gtk_editable_get_selection_bounds((GtkEditable *) w, NULL
+			,NULL))
+		{
+			gtk_widget_grab_focus(w);
+			gtk_editable_select_region((GtkEditable *) w, 0, -1);
+			return TRUE;
+		}
+    }
+    return FALSE;
 }
 
 void InitWindow(GApplication * app, gchar ** argv, int argc)
@@ -1205,12 +1229,12 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
     GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
+    InitCallback(call,find,menu,tool,sign,window);
     InitMenubar(menu, call, accel_group);
     InitToolbar(tool, accel_group);
-    InitFindBar(find, call);
-    InitCallback(call,find,menu,tool,sign,window);
     call->tabs = InitNotetab();
     InitWebview(call);
+    InitFindBar(find, call);
 
     gtk_box_pack_start(GTK_BOX(vbox), menu->menu, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), tool->top, FALSE, FALSE, 0);
@@ -1224,6 +1248,10 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_destroy_window_request), call);
     g_signal_connect(tool->addressEn, "activate"
         ,G_CALLBACK(c_act), call);
+	g_signal_connect(tool->addressEn, "focus-out-event"
+        ,G_CALLBACK(c_addr_unfocus), NULL);
+	g_signal_connect(tool->addressEn, "button-release-event"
+        ,G_CALLBACK(c_addr_click), NULL);
     g_signal_connect(tool->backTb, "clicked"
         ,G_CALLBACK(c_go_back), call);
     g_signal_connect(tool->forwardTb, "clicked"
