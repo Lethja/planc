@@ -1221,22 +1221,21 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->twin = x;
 }
 
-static gboolean c_addr_unfocus(GtkWidget * e, void * v, void * w)
+static gboolean c_addr_unfocus(GtkEditable * e, void * v, void * w)
 {
-	gtk_editable_select_region((GtkEditable *) e, 0, 0);
-	return TRUE;
+	gtk_editable_select_region(e, 0, 0);
+	return FALSE;
 }
 
-static gboolean c_addr_click(GtkWidget * w, GdkEventButton * e
+static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
     ,void * v)
 {
     if (e->button == 1)
     {
-		if(!gtk_editable_get_selection_bounds((GtkEditable *) w, NULL
-			,NULL))
+		if(!gtk_editable_get_selection_bounds(w, NULL, NULL))
 		{
-			gtk_widget_grab_focus(w);
-			gtk_editable_select_region((GtkEditable *) w, 0, -1);
+			gtk_widget_grab_focus(GTK_WIDGET(w));
+			gtk_editable_select_region(w, 0, -1);
 			return TRUE;
 		}
     }
@@ -1245,9 +1244,9 @@ static gboolean c_addr_click(GtkWidget * w, GdkEventButton * e
 
 void InitWindow(GApplication * app, gchar ** argv, int argc)
 {
+	//There's probably a better way to do this with Glib
 	struct menu_st * menu = malloc(sizeof(struct menu_st));
     struct tool_st * tool = malloc(sizeof(struct tool_st));
-    /*struct webt_st * webk = malloc(sizeof(struct webt_st));*/
     struct find_st * find = malloc(sizeof(struct find_st));
     struct sign_st * sign = malloc(sizeof(struct sign_st));
     struct call_st * call = malloc(sizeof(struct call_st));
@@ -1255,7 +1254,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
 	G_SETTINGS = g_settings_new("priv.dis.planc");
 
     GtkWidget * window = gtk_application_window_new
-		((GtkApplication *)app);
+		((GtkApplication *) app);
 
     GtkAccelGroup * accel_group = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
