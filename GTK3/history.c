@@ -110,15 +110,25 @@ static gboolean hisstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	return FALSE;
 }
 
-extern void * InitHistoryWindow(void * v)
+static void c_destroy_window(GtkWindow * w, void * v)
 {
+	G_HISTORY = NULL;
+}
+
+extern void InitHistoryWindow(void * v)
+{
+	if(G_HISTORY)
+	{
+		gtk_window_present(G_HISTORY);
+		return;
+	}
 	G_search = NULL;
-    GtkWindow * window =
+    G_HISTORY =
 		(GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(window,600,400);
-    gtk_window_set_position(window,GTK_WIN_POS_CENTER);
-	gtk_window_set_icon_name(window,"accessories-text-editor");
-	gtk_window_set_title(window,"History - Plan C");
+    gtk_window_set_default_size(G_HISTORY,600,400);
+    gtk_window_set_position(G_HISTORY,GTK_WIN_POS_CENTER);
+	gtk_window_set_icon_name(G_HISTORY,"accessories-text-editor");
+	gtk_window_set_title(G_HISTORY,"History - Plan C");
 	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	GtkWidget * searchEntry = gtk_search_entry_new();
 	GtkWidget * scrollWin = gtk_scrolled_window_new (NULL, NULL);
@@ -185,6 +195,8 @@ extern void * InitHistoryWindow(void * v)
 
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 
+	g_signal_connect(G_HISTORY, "destroy"
+        ,G_CALLBACK(c_destroy_window), NULL);
 	g_signal_connect_after(searchEntry, "search-changed"
         ,G_CALLBACK(search_entry_change), filtered);
 	g_signal_connect(tree,"row-activated"
@@ -194,7 +206,7 @@ extern void * InitHistoryWindow(void * v)
 
 	gtk_tree_view_column_set_resizable(column, TRUE);
 	gtk_container_add(GTK_CONTAINER (scrollWin), tree);
-	gtk_container_add(GTK_CONTAINER(window), Vbox);
-    gtk_widget_show_all((GtkWidget *) window);
-    return window;
+	gtk_container_add(GTK_CONTAINER(G_HISTORY), Vbox);
+    gtk_widget_show_all((GtkWidget *) G_HISTORY);
+    return;
 }

@@ -777,6 +777,50 @@ void c_new_win(GtkWidget * w, void * v)
 	InitWindow(G_APPLICATION(G_APP), NULL, 0);
 }
 
+gboolean closePrompt(struct call_st * call)
+{
+	gint g = gtk_notebook_get_n_pages(call->tabs);
+	if(g > 1)
+	{
+		GtkWidget * dialog = gtk_message_dialog_new
+			((GtkWindow *) call->twin
+			,GTK_DIALOG_DESTROY_WITH_PARENT
+			,GTK_MESSAGE_QUESTION
+			,GTK_BUTTONS_YES_NO
+			,"Are you sure you want to close this window with %d tabs?"
+			,g);
+
+		g = gtk_dialog_run (GTK_DIALOG (dialog));
+		gtk_widget_destroy (dialog);
+		if(g == GTK_RESPONSE_NO)
+			return TRUE;
+	}
+	return FALSE;
+}
+
+gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
+	,struct call_st * call)
+{
+	return closePrompt(call);
+}
+
+static void c_destroy_window(GtkWidget* widget, struct call_st * c)
+{
+	g_signal_handler_disconnect(c->tabs,c->sign->nb_changed);
+	free(c->menu);
+	free(c->find);
+	free(c->sign);
+	free(c->tool);
+	free(c);
+}
+
+static void c_destroy_window_menu(GtkWidget * widget
+	,struct call_st * c)
+{
+	if(!closePrompt(c))
+		c_destroy_window(widget,c);
+}
+
 static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
 {
     WebKitWebView * nt
@@ -1359,47 +1403,4 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
         ,G_CALLBACK(c_leave_fullscreen), c);
     g_signal_connect(wv, "decide-policy", G_CALLBACK(c_policy), c);
     webkit_web_view_set_settings(wv,G_WKC_SETTINGS);
-}
-
-gboolean closePrompt(struct call_st * call)
-{
-	gint g = gtk_notebook_get_n_pages(call->tabs);
-	if(g > 1)
-	{
-		GtkWidget * dialog = gtk_message_dialog_new
-			((GtkWindow *) call->twin
-			,GTK_DIALOG_DESTROY_WITH_PARENT
-			,GTK_MESSAGE_QUESTION
-			,GTK_BUTTONS_YES_NO
-			,"Are you sure you want to close this window with %d tabs?"
-			,g);
-
-		g = gtk_dialog_run (GTK_DIALOG (dialog));
-		gtk_widget_destroy (dialog);
-		if(g == GTK_RESPONSE_NO)
-			return TRUE;
-	}
-	return FALSE;
-}
-
-gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
-	,struct call_st * call)
-{
-	return closePrompt(call);
-}
-
-void c_destroy_window_menu(GtkWidget * widget, struct call_st * c)
-{
-	if(!closePrompt(c))
-		c_destroy_window(widget,c);
-}
-
-static void c_destroy_window(GtkWidget* widget, struct call_st * c)
-{
-	g_signal_handler_disconnect(c->tabs,c->sign->nb_changed);
-	free(c->menu);
-	free(c->find);
-	free(c->sign);
-	free(c->tool);
-	free(c);
 }
