@@ -444,6 +444,14 @@ static char addrEntryState(GtkEditable * e, void * v)
     return addrEntryState_webView(e, WK_CURRENT_TAB(c->tabs),v);
 }
 
+static char addrWebviewState(WebKitWebView * wv, WebKitLoadEvent evt
+	,struct call_st * c)
+{
+	if(WK_CURRENT_TAB(c->tabs) == wv)
+		addrEntryState_webView((GtkEditable *) c->tool->addressEn
+			,wv, c);
+}
+
 static void c_addr_ins(GtkEditable * e, gchar* t, gint l, gpointer p
 	,void * v)
 {
@@ -729,7 +737,7 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
 		{
 			gtk_widget_grab_focus((GtkWidget *) newtab->webv);
 		}
-	}	
+	}
 
     connect_signals(newtab->webv,newtab->call);
     free(newtab);
@@ -856,7 +864,7 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     newtab->webv = nt;
     newtab->call = c;
 	newtab->show = FALSE;
-	
+
     webkit_web_view_load_request(nt
         ,webkit_navigation_action_get_request(na));
 
@@ -1244,7 +1252,7 @@ static gboolean c_addr_focus(GtkEditable * w, GdkEventButton * e
 static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	,void * v)
 {
-	if(e->button == 1 
+	if(e->button == 1
 	&& !gtk_editable_get_selection_bounds(w, NULL, NULL))
 	{
 		/*gtk_widget_grab_focus(GTK_WIDGET(w));*/
@@ -1421,6 +1429,8 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
         ,c);
     g_signal_connect(wv, "notify::title", G_CALLBACK(c_update_title)
         ,c);
+	g_signal_connect(wv, "notify::uri", G_CALLBACK(addrWebviewState)
+        ,c);
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
         ,c->tabs);
     g_signal_connect(wv, "enter-fullscreen"
@@ -1431,5 +1441,5 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     g_signal_connect(wv, "mouse-target-changed"
 		,G_CALLBACK(c_wv_hit), c);
     webkit_web_view_set_settings(wv,G_WKC_SETTINGS);
-    
+
 }
