@@ -71,7 +71,7 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
 				{
 					gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
 						,&str_data, -1);
-					new_tab_ext(str_data,c);
+					new_tab_ext(str_data,c,TRUE);
 				}
 			}
 		}

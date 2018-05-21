@@ -374,7 +374,7 @@ static void c_toggleSearch(GtkWidget * w, struct call_st * c)
     else
     {
         gtk_widget_show(c->find->top);
-        gtk_widget_grab_focus((GtkWidget *) c->find->findEn);
+        gtk_widget_grab_focus((GtkWidget *) c->find->findSb);
     }
 }
 
@@ -385,7 +385,7 @@ static int c_toggleSearchEvent(GtkWidget * w, GdkEvent * e
 	return FALSE;
 }
 
-static void search_page(GtkEditable * w, GtkNotebook * n)
+static void c_search_page(GtkEditable * w, GtkNotebook * n)
 {
     WebKitFindController * f
         = webkit_web_view_get_find_controller(WK_CURRENT_TAB(n));
@@ -411,18 +411,6 @@ static void c_search_prv(GtkButton * b, GtkNotebook * n)
     if(s)
         webkit_find_controller_search_previous
 			(webkit_web_view_get_find_controller(WK_CURRENT_TAB(n)));
-}
-
-static void c_search_ins(GtkEditable * e, gchar* t, gint l, gpointer p,
-    GtkNotebook * d)
-{
-    search_page(e,d);
-}
-
-static void c_search_del(GtkEditable* e, gint sp, gint ep
-    ,GtkNotebook * d)
-{
-    search_page(e,d);
 }
 
 static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
@@ -536,7 +524,10 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
             c_refresh(w,c->tabs);
         break;
         case GDK_KEY_F6:
-            gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
+			if(gtk_widget_is_focus((GtkWidget *) c->tool->addressEn))
+				gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(c->tabs));
+			else
+				gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
         break;
         case GDK_KEY_F12:
 			{
@@ -727,16 +718,24 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
     gtk_notebook_append_page((GtkNotebook *) newtab->call->tabs
         ,GTK_WIDGET(newtab->webv),ebox);
     gtk_widget_show_all(GTK_WIDGET(newtab->call->tabs));
-    gtk_notebook_set_current_page
-        ((GtkNotebook *) newtab->call->tabs
-        ,gtk_notebook_page_num
-        (newtab->call->tabs,(GtkWidget *) newtab->webv));
+    if(newtab->show)
+    {
+		gtk_notebook_set_current_page
+			((GtkNotebook *) newtab->call->tabs
+			,gtk_notebook_page_num
+			(newtab->call->tabs,(GtkWidget *) newtab->webv));
+		if(g_strcmp0
+		(webkit_web_view_get_uri(newtab->webv), "about:blank"))
+		{
+			gtk_widget_grab_focus((GtkWidget *) newtab->webv);
+		}
+	}	
 
     connect_signals(newtab->webv,newtab->call);
     free(newtab);
 }
 
-extern void * new_tab_ext(char * url, struct call_st * c)
+extern void * new_tab_ext(char * url, struct call_st * c, gboolean show)
 {
 	WebKitWebView * wv;
 	if(g_strcmp0
@@ -766,6 +765,7 @@ extern void * new_tab_ext(char * url, struct call_st * c)
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = wv;
     newtab->call = c;
+    newtab->show = show;
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
         ,newtab);
     g_signal_emit_by_name(wv,"ready-to-show");
@@ -839,6 +839,7 @@ static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->call = c;
+    newtab->show = TRUE;
     g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
         ,newtab);
     g_signal_emit_by_name(nt,"ready-to-show");
@@ -854,7 +855,8 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->call = c;
-
+	newtab->show = FALSE;
+	
     webkit_web_view_load_request(nt
         ,webkit_navigation_action_get_request(na));
 
@@ -1157,16 +1159,12 @@ void InitFindBar(struct find_st * f, struct call_st * call)
     f->top = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(f->top), GTK_TOOLBAR_ICONS);
 
-    f->findSb = (GtkSearchBar *)gtk_search_bar_new();
-    gtk_search_bar_set_show_close_button(f->findSb,TRUE);
-    f->findEn = (GtkEntry *) gtk_entry_new();
-    gtk_widget_set_hexpand ((GtkWidget *) f->findEn, TRUE);
+    f->findSb = (GtkSearchEntry *) gtk_search_entry_new();
+    gtk_widget_set_hexpand ((GtkWidget *) f->findSb, TRUE);
 
-    gtk_search_bar_connect_entry (GTK_SEARCH_BAR (f->findSb)
-        ,GTK_ENTRY (f->findEn));
     GtkContainer * c = (GtkContainer *) gtk_tool_item_new();
 
-    gtk_container_add(c, GTK_WIDGET(f->findEn));
+    gtk_container_add(c, GTK_WIDGET(f->findSb));
     gtk_tool_item_set_expand(GTK_TOOL_ITEM(c), TRUE);
     gtk_tool_item_set_homogeneous(GTK_TOOL_ITEM(c), TRUE);
     gtk_toolbar_insert(GTK_TOOLBAR(f->top), (GtkToolItem *) c, -1);
@@ -1202,12 +1200,10 @@ void InitFindBar(struct find_st * f, struct call_st * call)
         ,G_CALLBACK(c_search_nxt), call->tabs);
 	g_signal_connect(f->closeTb, "clicked"
         ,G_CALLBACK(c_toggleSearch), call);
-	g_signal_connect(f->findEn, "focus-out-event"
+	g_signal_connect(f->findSb, "focus-out-event"
 		,G_CALLBACK(c_toggleSearchEvent), call);
-    g_signal_connect_after(f->findEn, "insert-text"
-        ,G_CALLBACK(c_search_ins), call->tabs);
-    g_signal_connect_after(f->findEn, "delete-text"
-        ,G_CALLBACK(c_search_del), call->tabs);
+    g_signal_connect(f->findSb, "search-changed"
+        ,G_CALLBACK(c_search_page), call->tabs);
 }
 
 void InitCallback(struct call_st * c, struct find_st * f
@@ -1221,25 +1217,41 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->twin = x;
 }
 
-static gboolean c_addr_unfocus(GtkEditable * e, void * v, void * w)
+static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
+    ,void * v)
 {
-	gtk_editable_select_region(e, 0, 0);
+	if (e->type == GDK_FOCUS_CHANGE)
+    {
+		gtk_editable_select_region(w, 0, 0);
+	}
 	return FALSE;
 }
 
-static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
+static gboolean c_addr_focus(GtkEditable * w, GdkEventButton * e
     ,void * v)
 {
-    if (e->button == 1)
+    if (e->type == GDK_FOCUS_CHANGE)
     {
 		if(!gtk_editable_get_selection_bounds(w, NULL, NULL))
 		{
-			gtk_widget_grab_focus(GTK_WIDGET(w));
 			gtk_editable_select_region(w, 0, -1);
 			return TRUE;
 		}
     }
     return FALSE;
+}
+
+static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
+	,void * v)
+{
+	if(e->button == 1 
+	&& !gtk_editable_get_selection_bounds(w, NULL, NULL))
+	{
+		/*gtk_widget_grab_focus(GTK_WIDGET(w));*/
+		gtk_editable_select_region(w, 0, -1);
+		return TRUE;
+	}
+	return FALSE;
 }
 
 void InitWindow(GApplication * app, gchar ** argv, int argc)
@@ -1333,7 +1345,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
 			{
 				for(size_t s = 2; s != argc; s++)
 				{
-					new_tab_ext((gchar *) argv[s], call);
+					new_tab_ext((gchar *) argv[s], call, FALSE);
 				}
 			}
 		}
@@ -1370,6 +1382,21 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
     InitWindow(app, argv, argc);
 }
 
+static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
+	,guint m, struct call_st * c)
+{
+	if(webkit_hit_test_result_get_link_uri(h))
+	{
+		gtk_entry_set_text(c->tool->addressEn
+			,webkit_hit_test_result_get_link_uri(h));
+	}
+	else
+	{
+		gtk_entry_set_text(c->tool->addressEn
+			,webkit_web_view_get_uri(wv));
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int status;
@@ -1401,5 +1428,8 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     g_signal_connect(wv, "leave-fullscreen"
         ,G_CALLBACK(c_leave_fullscreen), c);
     g_signal_connect(wv, "decide-policy", G_CALLBACK(c_policy), c);
+    g_signal_connect(wv, "mouse-target-changed"
+		,G_CALLBACK(c_wv_hit), c);
     webkit_web_view_set_settings(wv,G_WKC_SETTINGS);
+    
 }

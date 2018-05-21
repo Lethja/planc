@@ -66,8 +66,7 @@ struct tool_st
 struct find_st
 {
     GtkWidget * top;
-    GtkSearchBar * findSb;
-    GtkEntry * findEn;
+    GtkSearchEntry * findSb;
     GtkToolButton * backTb;
     GtkToolButton * forwardTb;
     GtkToolButton * closeTb;
@@ -98,6 +97,7 @@ struct newt_st
 {
     WebKitWebView * webv;
     struct call_st * call;
+    gboolean show;
 };
 
 void c_free_docp(gpointer data, GClosure *closure);
@@ -119,4 +119,5 @@ void InitWindow(GApplication * app, gchar ** argv, int argc);
 static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na ,struct call_st * c);
 
-extern void * new_tab_ext(char * url, struct call_st * c);
+extern void * new_tab_ext(char * url, struct call_st * c
+	,gboolean show);
