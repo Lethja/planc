@@ -1,6 +1,7 @@
 #include "main.h"
 //#include "settings.h"
 #include "download.h"
+#include <sys/wait.h>
 
 static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 {
@@ -24,6 +25,23 @@ static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 	free(l);
 	gtk_progress_bar_set_fraction((GtkProgressBar *)w
 		,1.0);
+	const gchar * file = webkit_download_get_destination(d);
+	if(file)
+	{
+		gchar * dir = malloc(strlen(file)+1);
+		strncpy(dir,file,strlen(file)+1);
+		gchar * nullr = g_strrstr(dir,"/");
+		nullr[0] = '\0';
+
+		pid_t pid=fork();
+		if (pid==0) { /* child process */
+			execlp("xdg-open","xdg-open",dir,NULL);
+			exit(127); /* only if execv fails */
+		}
+		else { /* pid!=0; parent process */
+			waitpid(pid,0,0); /* wait for child to exit */
+		}
+	}
 }
 
 static void c_download_progress(WebKitDownload * d, guint pro
