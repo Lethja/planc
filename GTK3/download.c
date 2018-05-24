@@ -30,17 +30,18 @@ static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 	{
 		gchar * dir = malloc(strlen(file)+1);
 		strncpy(dir,file,strlen(file)+1);
-		gchar * nullr = g_strrstr(dir,"/");
+		gchar * nullr = strrchr(dir,'/');
 		nullr[0] = '\0';
 
 		pid_t pid=fork();
-		if (pid==0) { /* child process */
+		if (pid==0) { //This is the child process
 			execlp("xdg-open","xdg-open",dir,NULL);
 			exit(127); /* only if execv fails */
 		}
-		else { /* pid!=0; parent process */
-			waitpid(pid,0,0); /* wait for child to exit */
+		else { //This is the parent process
+			waitpid(pid,0,0); //wait for child before continuing
 		}
+		free(dir);
 	}
 }
 
@@ -120,11 +121,12 @@ static gboolean c_download_name(WebKitDownload * d, gchar * fn
     {
 		WebKitURIResponse * u = webkit_download_get_response(d);
 		SoupMessageHeaders * s = NULL;
-		char * f = NULL;
+
 		if(u)
 			s = webkit_uri_response_get_http_headers(u);
 		if(s)
 		{
+			char * f = NULL;
 			if(soup_message_headers_get_content_disposition(s,&f,NULL))
 			{
 				char * a = malloc(strlen(f)+1);
@@ -139,13 +141,12 @@ static gboolean c_download_name(WebKitDownload * d, gchar * fn
 					b[strlen(b)-1] = '\0';
 				gtk_file_chooser_set_current_name (chooser,b);
 				free(a);
+				free(f);
 			}
 		}
 		else
 			gtk_file_chooser_set_current_name(chooser
 				,"Untitled download");
-		if(f)
-			free(f);
 	}
     else
         gtk_file_chooser_set_current_name(chooser, fn);
