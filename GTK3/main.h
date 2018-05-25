@@ -108,17 +108,12 @@ void connect_signals (WebKitWebView * wv, struct call_st * c);
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 	,struct call_st * c);
 
-static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
-
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	,guint n, struct call_st * c);
 
 void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c);
 
 void InitWindow(GApplication * app, gchar ** argv, int argc);
-
-static WebKitWebView * c_new_tab_url(WebKitWebView * wv
-    ,WebKitNavigationAction * na ,struct call_st * c);
 
 extern void * new_tab_ext(char * url, struct call_st * c
 	,gboolean show);

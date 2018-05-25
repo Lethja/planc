@@ -17,43 +17,43 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 		gtk_notebook_set_show_tabs(c->tabs,TRUE);
 }
 
-void * c_settings_jv(GtkToggleButton * w, struct call_st * c)
+void c_settings_jv(GtkToggleButton * w, struct call_st * c)
 {
 	webkit_settings_set_enable_java(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void * c_settings_js(GtkToggleButton * w, struct call_st * c)
+void c_settings_js(GtkToggleButton * w, struct call_st * c)
 {
 	webkit_settings_set_enable_javascript(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void * c_settings_mse(GtkToggleButton * w, struct call_st * c)
+void c_settings_mse(GtkToggleButton * w, struct call_st * c)
 {
 	webkit_settings_set_enable_mediasource(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void * c_settings_in(GtkToggleButton * w, struct call_st * c)
+void c_settings_in(GtkToggleButton * w, struct call_st * c)
 {
 	webkit_settings_set_enable_plugins(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void * c_settings_ch(GtkToggleButton * w, struct call_st * c)
+void c_settings_ch(GtkToggleButton * w, struct call_st * c)
 {
 	webkit_settings_set_enable_page_cache(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void * c_settings_dv(GtkToggleButton * w, struct call_st * c)
+void c_settings_dv(GtkToggleButton * w, struct call_st * c)
 {
 	g_object_set(G_OBJECT(G_WKC_SETTINGS), "enable-developer-extras"
 		,gtk_toggle_button_get_active(w), NULL);
 }
 
-void * c_settings_cm(GtkComboBox * w, struct call_st * c)
+void c_settings_cm(GtkComboBox * w, struct call_st * c)
 {
 	switch(gtk_combo_box_get_active(w))
 	{

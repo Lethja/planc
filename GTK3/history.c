@@ -27,12 +27,12 @@ extern int treeIter(void * store, int count, char **data
 		,data[0],	TITLE_COLUMN, data[1]
 		,VISITED_COLUMN, data[2],-1);
 	}
+	return 0;
 }
 
 void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
 	,GtkTreeViewColumn *column, struct call_st * c)
 {
-	gint int_data;
 	gchar *str_data;
 
 	GtkTreeIter iter;
@@ -55,7 +55,6 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
     {
 		if(event->button == 2)
 		{
-			gint int_data;
 			gchar *str_data;
 			GtkTreePath * path;
 

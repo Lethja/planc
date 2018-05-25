@@ -173,7 +173,6 @@ static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
 {
     GtkWidget *dialog;
     GtkFileChooser *chooser;
-    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
     gint res;
 
     dialog = gtk_file_chooser_dialog_new ("Save File"

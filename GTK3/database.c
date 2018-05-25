@@ -54,7 +54,6 @@ extern void sql_history_write(const char * url, const char * title)
 	sqlite3 *db;
 	char *zErrMsg = 0;
 	int rc;
-	char *sql;
 	if(!url)
 		return;
 	HISTORYDIR(historydir);
@@ -87,13 +86,12 @@ extern void sql_history_write(const char * url, const char * title)
 	return;
 }
 
-extern void sql_download_write(const char * url, const char * title
+extern void sql_download_write(const char * page, const char * url
 	,const char * file)
 {
 	sqlite3 *db;
 	char * zErrMsg = 0;
 	int rc;
-	char *sql;
 	if(!url)
 		return;
 	DOWNLOADDIR(downloaddir);
@@ -118,8 +116,8 @@ extern void sql_download_write(const char * url, const char * title
 		sqlite3_close(db);
 		return;
 	}
-	rc = sqlite3_bind_text(stmt,1,url,-1,SQLITE_STATIC);
-	rc = sqlite3_bind_text(stmt,2,title,-1,SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt,1,page,-1,SQLITE_STATIC);
+	rc = sqlite3_bind_text(stmt,2,url,-1,SQLITE_STATIC);
 	rc = sqlite3_bind_text(stmt,3,file,-1,SQLITE_STATIC);
 	sqlite3_step(stmt);
     rc = sqlite3_finalize(stmt);
@@ -127,7 +125,7 @@ extern void sql_download_write(const char * url, const char * title
 	return;
 }
 
-extern void * sql_download_read_to_tree(void * store)
+extern void sql_download_read_to_tree(void * store)
 {
 	sqlite3 *db;
 	int rc;
@@ -138,13 +136,13 @@ extern void * sql_download_read_to_tree(void * store)
 	{
 		printf("Error opening download database: %s\n"
 			,sqlite3_errmsg(db));
-		return NULL;
+		return;
 	}
 	sqlite3_exec(db,retrieveDownload,treeIter,store,NULL);
 	sqlite3_close(db);
 }
 
-extern void * sql_history_read_to_tree(void * store)
+extern void sql_history_read_to_tree(void * store)
 {
 	sqlite3 *db;
 	int rc;
@@ -155,7 +153,7 @@ extern void * sql_history_read_to_tree(void * store)
 	{
 		printf("Error opening history database: %s\n"
 			,sqlite3_errmsg(db));
-		return NULL;
+		return;
 	}
 	sqlite3_exec(db,retrieveHistory,treeIter,store,NULL);
 	sqlite3_close(db);
@@ -184,7 +182,8 @@ extern char * sql_speed_dial_get(size_t index)
 	char * r = NULL;
 	if(rc == SQLITE_ROW)
 	{
-		unsigned const char * u = sqlite3_column_text(stmt,1);
+		const char * u = 
+			(const char *) sqlite3_column_text(stmt,1);
 		r = malloc(strlen(u)+1);
 		strncpy(r,u,strlen(u)+1);
 	}

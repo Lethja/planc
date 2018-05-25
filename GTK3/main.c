@@ -11,6 +11,11 @@ GtkWindow * G_DOWNLOAD			= NULL;
 WebKitSettings * G_WKC_SETTINGS	= NULL;
 WebKitWebContext * G_WKC		= NULL;
 
+static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
+
+static WebKitWebView * c_new_tab_url(WebKitWebView * wv
+    ,WebKitNavigationAction * na ,struct call_st * c);
+
 /** Sanitize the address for webkit
  * Returned value never null and always must be freed after use
  * Will convert numbers to speed dial addresses if avaliable
@@ -99,7 +104,7 @@ void c_free_docp(gpointer data, GClosure *closure)
 	free(data);
 }
 
-void * c_select_tabsMi(GtkWidget * w, struct dpco_st * dp)
+void c_select_tabsMi(GtkWidget * w, struct dpco_st * dp)
 {
 	gtk_notebook_set_current_page(dp->call->tabs
 		,gtk_notebook_page_num(dp->call->tabs,dp->other));
@@ -256,7 +261,9 @@ static gboolean c_notebook_scroll(GtkWidget * w, GdkEventScroll * e
 		case GDK_SCROLL_DOWN:
 		case GDK_SCROLL_RIGHT:
 			gtk_notebook_next_page(c->tabs);
+		default:
 		break;
+		
 	}
 	return FALSE;
 }
@@ -444,7 +451,7 @@ static char addrEntryState(GtkEditable * e, void * v)
     return addrEntryState_webView(e, WK_CURRENT_TAB(c->tabs),v);
 }
 
-static char addrWebviewState(WebKitWebView * wv, WebKitLoadEvent evt
+static void addrWebviewState(WebKitWebView * wv, WebKitLoadEvent evt
 	,struct call_st * c)
 {
 	if(WK_CURRENT_TAB(c->tabs) == wv)
@@ -827,12 +834,12 @@ static void c_destroy_window(GtkWidget* widget, struct call_st * c)
 	free(c);
 }
 
-static void c_destroy_window_menu(GtkWidget * widget
+/*static void c_destroy_window_menu(GtkWidget * widget
 	,struct call_st * c)
 {
 	if(!closePrompt(c))
 		c_destroy_window(widget,c);
-}
+}*/
 
 static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
 {
@@ -1248,7 +1255,7 @@ static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
 	return FALSE;
 }
 
-static gboolean c_addr_focus(GtkEditable * w, GdkEventButton * e
+/*static gboolean c_addr_focus(GtkEditable * w, GdkEventButton * e
     ,void * v)
 {
     if (e->type == GDK_FOCUS_CHANGE)
@@ -1260,7 +1267,7 @@ static gboolean c_addr_focus(GtkEditable * w, GdkEventButton * e
 		}
     }
     return FALSE;
-}
+}*/
 
 static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	,void * v)
@@ -1364,7 +1371,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
 			free(uri);
 			if(argc > 2)
 			{
-				for(size_t s = 2; s != argc; s++)
+				for(int s = 2; s != argc; s++)
 				{
 					new_tab_ext((gchar *) argv[s], call, FALSE);
 				}
