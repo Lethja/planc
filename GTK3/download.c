@@ -280,7 +280,7 @@ extern void InitDownloadWindow(void * v)
     gtk_window_set_default_size(G_DOWNLOAD,600,400);
     gtk_window_set_position(G_DOWNLOAD,GTK_WIN_POS_CENTER);
 	gtk_window_set_icon_name(G_DOWNLOAD,"preferences-system-network");
-	gtk_window_set_title(G_DOWNLOAD,"Download - Plan C");
+	gtk_window_set_title(G_DOWNLOAD,"Downloads - Plan C");
 	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	GtkWidget * searchEntry = gtk_search_entry_new();
 	GtkWidget * scrollWin = gtk_scrolled_window_new (NULL, NULL);
