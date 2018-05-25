@@ -1,7 +1,38 @@
+#define _GNU_SOURCE
 #include "main.h"
-//#include "settings.h"
 #include "download.h"
+#include "database.h"
 #include <sys/wait.h>
+
+static const gchar * G_search;
+
+enum
+{
+   PAGE_COLUMN,
+   URL_COLUMN,
+   FILE_COLUMN,
+   N_COLUMNS
+};
+
+static gboolean dlstrstr(GtkTreeModel * model, GtkTreeIter * iter
+	,void * v)
+{
+	const gchar * data = G_search;
+	if(!data || strcmp(data,"") == 0)
+		return TRUE;
+	gchar *str;
+	for(size_t x = 0; x < 2; x++)
+	{
+		gtk_tree_model_get(model, iter, x, &str, -1);
+		if(str && strcasestr(str,data))
+		{
+			g_free(str);
+			return TRUE;
+		}
+		g_free(str);
+	}
+	return FALSE;
+}
 
 static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 {
@@ -99,6 +130,11 @@ static void c_download_destination_created(WebKitDownload * d
         ,G_CALLBACK(c_download_finished),lab);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(lab),TRUE,TRUE,0);
 	gtk_widget_show_all((GtkWidget *)r);
+
+	sql_download_write
+		(webkit_web_view_get_uri(webkit_download_get_web_view(d))
+		,webkit_uri_request_get_uri(webkit_download_get_request(d))
+		,webkit_download_get_destination(d));
 }
 
 static gchar * getDisposition(WebKitURIResponse * u)
@@ -219,3 +255,110 @@ void c_download_start(WebKitWebContext * wv
     g_signal_connect(sa,"activate",G_CALLBACK(c_download_save_as),fn);
     return r;
 }*/
+
+static void c_destroy_window(GtkWindow * w, void * v)
+{
+	G_DOWNLOAD = NULL;
+}
+
+static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
+{
+	G_search = gtk_entry_get_text((GtkEntry *) e);
+	gtk_tree_model_filter_refilter(f);
+}
+
+extern void InitDownloadWindow(void * v)
+{
+	if(G_DOWNLOAD)
+	{
+		gtk_window_present(G_DOWNLOAD);
+		return;
+	}
+	G_search = NULL;
+    G_DOWNLOAD =
+		(GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_default_size(G_DOWNLOAD,600,400);
+    gtk_window_set_position(G_DOWNLOAD,GTK_WIN_POS_CENTER);
+	gtk_window_set_icon_name(G_DOWNLOAD,"preferences-system-network");
+	gtk_window_set_title(G_DOWNLOAD,"Download - Plan C");
+	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+	GtkWidget * searchEntry = gtk_search_entry_new();
+	GtkWidget * scrollWin = gtk_scrolled_window_new (NULL, NULL);
+	gtk_box_pack_start(GTK_BOX(Vbox),searchEntry,0,1,0);
+	gtk_box_pack_start(GTK_BOX(Vbox),scrollWin,1,1,0);
+	GtkTreeStore *store;
+	GtkWidget *tree;
+	GtkTreeViewColumn *column;
+	GtkCellRenderer *renderer;
+	GtkTreeModelSort * sort;
+	GtkTreeSortable *sortable;
+	GtkTreeModelFilter * filtered;
+
+	/* Create a model.  We are using the store model for now, though we
+	* could use any other GtkTreeModel */
+	store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
+		,G_TYPE_STRING, G_TYPE_STRING);
+
+	/* custom function to fill the model with data */
+	sql_download_read_to_tree(store);
+
+	/* Create the filter modal */
+	filtered = GTK_TREE_MODEL_FILTER
+		(gtk_tree_model_filter_new (GTK_TREE_MODEL (store), NULL));
+
+	gtk_tree_model_filter_set_visible_func(filtered,
+		(GtkTreeModelFilterVisibleFunc) dlstrstr, NULL, NULL);
+
+	sort = GTK_TREE_MODEL_SORT
+		(gtk_tree_model_sort_new_with_model(GTK_TREE_MODEL(filtered)));
+	sortable = GTK_TREE_SORTABLE(sort);
+
+	gtk_tree_sortable_set_sort_column_id(sortable, FILE_COLUMN
+		,GTK_SORT_DESCENDING);
+
+	/* Create a view */
+	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (sortable));
+
+	/* The view now holds a reference.  We can get rid of our own
+    * reference */
+	g_object_unref (G_OBJECT (store));
+
+	renderer = gtk_cell_renderer_text_new();
+
+	column = gtk_tree_view_column_new_with_attributes ("Download Page"
+		,renderer, "text", PAGE_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,0);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+	gtk_tree_view_column_set_fixed_width (column, 200);
+	gtk_tree_view_column_set_resizable(column, TRUE);
+	renderer = gtk_cell_renderer_text_new ();
+	column = gtk_tree_view_column_new_with_attributes ("URL"
+		,renderer, "text", URL_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,1);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+	gtk_tree_view_column_set_fixed_width (column, 300);
+	gtk_tree_view_column_set_resizable(column, TRUE);
+	renderer = gtk_cell_renderer_text_new ();
+	column = gtk_tree_view_column_new_with_attributes ("File"
+		,renderer, "text", FILE_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,2);
+	gtk_tree_view_column_set_fixed_width (column, 100);
+	gtk_tree_view_column_set_resizable(column, TRUE);
+
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+
+	g_signal_connect(G_DOWNLOAD, "destroy"
+        ,G_CALLBACK(c_destroy_window), NULL);
+	g_signal_connect_after(searchEntry, "search-changed"
+        ,G_CALLBACK(search_entry_change), filtered);
+	/*g_signal_connect(tree,"row-activated"
+		,G_CALLBACK(c_history_url), v);
+	g_signal_connect(tree,"button-release-event"
+		,G_CALLBACK(c_history_url_tab), v);*/
+
+	gtk_tree_view_column_set_resizable(column, TRUE);
+	gtk_container_add(GTK_CONTAINER (scrollWin), tree);
+	gtk_container_add(GTK_CONTAINER(G_DOWNLOAD), Vbox);
+    gtk_widget_show_all((GtkWidget *) G_DOWNLOAD);
+    return;
+}

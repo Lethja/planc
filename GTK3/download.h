@@ -5,3 +5,5 @@ extern void c_download_start(WebKitWebContext * wv
 
 static gboolean c_download_name(WebKitDownload * d, gchar * fn
 	,struct call_st * v);
+	
+extern void InitDownloadWindow(void * v);

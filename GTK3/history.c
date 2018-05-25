@@ -1,9 +1,8 @@
 #define _GNU_SOURCE
-#include <string.h>
-#include <gtk/gtk.h>
+#include "main.h"
 #include "history.h"
 #include "database.h"
-#include "main.h"
+
 
 enum
 {

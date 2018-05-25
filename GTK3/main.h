@@ -50,6 +50,7 @@ struct menu_st
     GtkWidget * nWinMi;
     GtkWidget * quitMi;
     GtkWidget * histMi;
+    GtkWidget * downMi;
 };
 
 struct tool_st
