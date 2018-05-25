@@ -33,10 +33,10 @@ static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 		gchar * nullr = strrchr(dir,'/');
 		nullr[0] = '\0';
 
-		pid_t pid=fork();
-		if (pid==0) { //This is the child process
+		pid_t pid = fork();
+		if (pid == 0) { //This is the child process
 			execlp("xdg-open","xdg-open",dir,NULL);
-			exit(127); /* only if execv fails */
+			exit(127); /* only if execlp fails */
 		}
 		else { //This is the parent process
 			waitpid(pid,0,0); //wait for child before continuing
@@ -101,7 +101,38 @@ static void c_download_destination_created(WebKitDownload * d
 	gtk_widget_show_all((GtkWidget *)r);
 }
 
-static gboolean c_download_name(WebKitDownload * d, gchar * fn
+static gchar * getDisposition(WebKitURIResponse * u)
+{
+	SoupMessageHeaders * s = NULL;
+
+	if(u)
+		s = webkit_uri_response_get_http_headers(u);
+	if(s)
+	{
+		char * f = NULL;
+		if(soup_message_headers_get_content_disposition(s,&f,NULL))
+		{
+			char * a = malloc(strlen(f)+1);
+			strncpy(a,f,strlen(f)+1);
+			char * b = strrchr (f, '=')+1;
+			char * c = strrchr (b, '/');
+			if(c)
+				b = c+1;
+			if (b[0] == '"' || b[0] == '\'')
+				b++;
+			if((b[strlen(b)-1] == '"') || (b[strlen(b)-1] == '\''))
+				b[strlen(b)-1] = '\0';
+			gchar * r = malloc(strlen(b)+1);
+			strncpy(r,b,strlen(b)+1);
+			free(a);
+			free(f);
+			return r;
+		}
+	}
+	return NULL;
+}
+
+static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
 	,struct call_st * v)
 {
     GtkWidget *dialog;
@@ -119,30 +150,11 @@ static gboolean c_download_name(WebKitDownload * d, gchar * fn
 
     if (fn == NULL || strcmp(fn,"") == 0)
     {
-		WebKitURIResponse * u = webkit_download_get_response(d);
-		SoupMessageHeaders * s = NULL;
-
-		if(u)
-			s = webkit_uri_response_get_http_headers(u);
-		if(s)
+		gchar * f = getDisposition(webkit_download_get_response(d));
+		if(f)
 		{
-			char * f = NULL;
-			if(soup_message_headers_get_content_disposition(s,&f,NULL))
-			{
-				char * a = malloc(strlen(f)+1);
-				strncpy(a,f,strlen(f)+1);
-				char * b = strrchr (f, '=')+1;
-				char * c = strrchr (b, '/');
-				if(c)
-					b = c+1;
-				if (b[0] == '"' || b[0] == '\'')
-					b++;
-				if((b[strlen(b)-1] == '"') || (b[strlen(b)-1] == '\''))
-					b[strlen(b)-1] = '\0';
-				gtk_file_chooser_set_current_name (chooser,b);
-				free(a);
-				free(f);
-			}
+			gtk_file_chooser_set_current_name(chooser,f);
+			free(f);
 		}
 		else
 			gtk_file_chooser_set_current_name(chooser
@@ -175,12 +187,13 @@ void c_download_start(WebKitWebContext * wv
 {
 	webkit_download_set_allow_overwrite(dl,TRUE);
     g_signal_connect(dl, "decide-destination"
-        ,G_CALLBACK(c_download_name), v);
+        ,G_CALLBACK(c_download_save_as), v);
 	g_signal_connect(dl, "created-destination"
         ,G_CALLBACK(c_download_destination_created), v);
 }
 
-/*GtkWindow * InitDownloadPrompt(gchar * fn)
+/*static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
+	,struct call_st * v)
 {
 	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(r,400,400);
