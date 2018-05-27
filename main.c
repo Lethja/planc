@@ -834,12 +834,11 @@ static void c_destroy_window(GtkWidget* widget, struct call_st * c)
 	free(c);
 }
 
-/*static void c_destroy_window_menu(GtkWidget * widget
+static void c_destroy_window_menu(GtkWidget * widget
 	,struct call_st * c)
 {
-	if(!closePrompt(c))
-		c_destroy_window(widget,c);
-}*/
+	gtk_window_close((GtkWidget *) c->twin);
+}
 
 static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
 {
@@ -1026,7 +1025,7 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 		,G_CALLBACK(c_open_download), c);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
-		,G_CALLBACK(c_destroy_window_request), c);
+		,G_CALLBACK(c_destroy_window_menu), c);
 
 	c->menu = menu;
 	gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
