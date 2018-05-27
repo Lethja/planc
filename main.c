@@ -837,14 +837,13 @@ static void c_destroy_window(GtkWidget* widget, struct call_st * c)
 static void c_destroy_window_menu(GtkWidget * widget
 	,struct call_st * c)
 {
-	gtk_window_close((GtkWidget *) c->twin);
+	gtk_window_close((GtkWindow *) c->twin);
 }
 
 static WebKitWebView * c_new_tab(GtkWidget * gw,struct call_st * c)
 {
     WebKitWebView * nt
-        = (WebKitWebView *) webkit_web_view_new_with_context
-        (G_WKC);
+        = (WebKitWebView *) webkit_web_view_new_with_context(G_WKC);
 	gchar * u = prepAddress(g_settings_get_string
 		(G_SETTINGS,"tab-newpage"));
 	if(u)
@@ -1256,20 +1255,6 @@ static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
 	}
 	return FALSE;
 }
-
-/*static gboolean c_addr_focus(GtkEditable * w, GdkEventButton * e
-    ,void * v)
-{
-    if (e->type == GDK_FOCUS_CHANGE)
-    {
-		if(!gtk_editable_get_selection_bounds(w, NULL, NULL))
-		{
-			gtk_editable_select_region(w, 0, -1);
-			return TRUE;
-		}
-    }
-    return FALSE;
-}*/
 
 static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	,void * v)
