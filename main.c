@@ -263,7 +263,7 @@ static gboolean c_notebook_scroll(GtkWidget * w, GdkEventScroll * e
 			gtk_notebook_next_page(c->tabs);
 		default:
 		break;
-		
+
 	}
 	return FALSE;
 }
@@ -1000,7 +1000,7 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 
 	gtk_widget_add_accelerator(menu->histMi, "activate", accel_group
 		,GDK_KEY_H, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
-	
+
 	gtk_widget_add_accelerator(menu->downMi, "activate", accel_group
 		,GDK_KEY_D, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
@@ -1021,10 +1021,10 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 
 	g_signal_connect(G_OBJECT(menu->histMi), "activate"
 		,G_CALLBACK(c_open_history), c);
-	
+
 	g_signal_connect(G_OBJECT(menu->downMi), "activate"
 		,G_CALLBACK(c_open_download), c);
-		
+
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
 		,G_CALLBACK(c_destroy_window_request), c);
 
@@ -1152,6 +1152,9 @@ static void InitWebContext()
 
 	g_object_set (G_OBJECT(G_WKC_SETTINGS), "enable-developer-extras"
 		,g_settings_get_boolean(G_SETTINGS,"webkit-dev"), NULL);
+
+	g_signal_connect(G_WKC, "download-started"
+        ,G_CALLBACK(c_download_start), NULL);
 }
 
 void InitWebview(struct call_st * c)
@@ -1343,8 +1346,6 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_refresh), call->tabs);
     g_signal_connect(call->tabs, "switch-page"
         ,G_CALLBACK(c_switch_tab), call);
-    g_signal_connect(G_WKC, "download-started"
-        ,G_CALLBACK(c_download_start), call);
 	g_signal_connect(call->tabs, "page-added"
 		,G_CALLBACK(c_notebook_tabs_changed), call);
 	sign->nb_changed = g_signal_connect(call->tabs, "page-removed"

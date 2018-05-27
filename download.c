@@ -174,9 +174,9 @@ static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
     GtkWidget *dialog;
     GtkFileChooser *chooser;
     gint res;
-
+    GtkWindow * w = gtk_application_get_active_window(G_APP);
     dialog = gtk_file_chooser_dialog_new ("Save File"
-		,(GtkWindow *) v->twin,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
+		,(GtkWindow *) w,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
         ,GTK_RESPONSE_CANCEL ,("_Save") ,GTK_RESPONSE_ACCEPT,NULL);
 
     chooser = GTK_FILE_CHOOSER (dialog);
@@ -222,9 +222,9 @@ void c_download_start(WebKitWebContext * wv
 {
 	webkit_download_set_allow_overwrite(dl,TRUE);
     g_signal_connect(dl, "decide-destination"
-        ,G_CALLBACK(c_download_save_as), v);
+        ,G_CALLBACK(c_download_save_as), NULL);
 	g_signal_connect(dl, "created-destination"
-        ,G_CALLBACK(c_download_destination_created), v);
+        ,G_CALLBACK(c_download_destination_created), NULL);
 }
 
 /*static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
