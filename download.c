@@ -5,6 +5,7 @@
 #include <sys/wait.h>
 
 static const gchar * G_search;
+static GtkTreeStore * G_store;
 
 enum
 {
@@ -34,6 +35,30 @@ static gboolean dlstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	return FALSE;
 }
 
+static void openFile(const gchar * file)
+{
+	pid_t pid = fork();
+	if (pid == 0)
+	{ //This is the child process
+		execlp("xdg-open","xdg-open",file,NULL);
+		exit(127); /* only if execlp fails */
+	}
+	else
+	{ //This is the parent process
+		waitpid(pid,0,0); //wait for child before continuing
+	}
+}
+
+static void openFileDirectory(const gchar * file)
+{
+	gchar * dir = malloc(strlen(file)+1);
+	strncpy(dir,file,strlen(file)+1);
+	gchar * nullr = strrchr(dir,'/');
+	nullr[0] = '\0';
+	openFile(dir); //XDG will see a directory path
+	free(dir);
+}
+
 static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 {
 	guint64 len = webkit_uri_response_get_content_length
@@ -59,20 +84,7 @@ static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 	const gchar * file = webkit_download_get_destination(d);
 	if(file)
 	{
-		gchar * dir = malloc(strlen(file)+1);
-		strncpy(dir,file,strlen(file)+1);
-		gchar * nullr = strrchr(dir,'/');
-		nullr[0] = '\0';
-
-		pid_t pid = fork();
-		if (pid == 0) { //This is the child process
-			execlp("xdg-open","xdg-open",dir,NULL);
-			exit(127); /* only if execlp fails */
-		}
-		else { //This is the parent process
-			waitpid(pid,0,0); //wait for child before continuing
-		}
-		free(dir);
+		openFileDirectory(file);
 	}
 }
 
@@ -227,6 +239,22 @@ void c_download_start(WebKitWebContext * wv
         ,G_CALLBACK(c_download_destination_created), NULL);
 }
 
+void c_download_dir(GtkTreeView * tree_view, GtkTreePath * path
+	,GtkTreeViewColumn *column, void * v)
+{
+	gchar *str_data;
+
+	GtkTreeIter iter;
+	GtkTreeModel *model = gtk_tree_view_get_model(tree_view);
+
+	if (gtk_tree_model_get_iter(model, &iter, path))
+	{
+		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 2
+			,&str_data, -1);
+		openFile(str_data);
+	}
+}
+
 /*static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 	,struct call_st * v)
 {
@@ -285,7 +313,6 @@ extern void InitDownloadWindow(void * v)
 	GtkWidget * scrollWin = gtk_scrolled_window_new (NULL, NULL);
 	gtk_box_pack_start(GTK_BOX(Vbox),searchEntry,0,1,0);
 	gtk_box_pack_start(GTK_BOX(Vbox),scrollWin,1,1,0);
-	GtkTreeStore *store;
 	GtkWidget *tree;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *renderer;
@@ -295,15 +322,15 @@ extern void InitDownloadWindow(void * v)
 
 	/* Create a model.  We are using the store model for now, though we
 	* could use any other GtkTreeModel */
-	store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
+	G_store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
 		,G_TYPE_STRING, G_TYPE_STRING);
 
 	/* custom function to fill the model with data */
-	sql_download_read_to_tree(store);
+	sql_download_read_to_tree(G_store);
 
 	/* Create the filter modal */
 	filtered = GTK_TREE_MODEL_FILTER
-		(gtk_tree_model_filter_new (GTK_TREE_MODEL (store), NULL));
+		(gtk_tree_model_filter_new (GTK_TREE_MODEL (G_store), NULL));
 
 	gtk_tree_model_filter_set_visible_func(filtered,
 		(GtkTreeModelFilterVisibleFunc) dlstrstr, NULL, NULL);
@@ -320,7 +347,7 @@ extern void InitDownloadWindow(void * v)
 
 	/* The view now holds a reference.  We can get rid of our own
     * reference */
-	g_object_unref (G_OBJECT (store));
+	g_object_unref (G_OBJECT (G_store));
 
 	renderer = gtk_cell_renderer_text_new();
 
@@ -350,9 +377,9 @@ extern void InitDownloadWindow(void * v)
         ,G_CALLBACK(c_destroy_window), NULL);
 	g_signal_connect_after(searchEntry, "search-changed"
         ,G_CALLBACK(search_entry_change), filtered);
-	/*g_signal_connect(tree,"row-activated"
-		,G_CALLBACK(c_history_url), v);
-	g_signal_connect(tree,"button-release-event"
+	g_signal_connect(tree,"row-activated"
+		,G_CALLBACK(c_download_dir), v);
+	/*g_signal_connect(tree,"button-release-event"
 		,G_CALLBACK(c_history_url_tab), v);*/
 
 	gtk_tree_view_column_set_resizable(column, TRUE);
