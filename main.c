@@ -868,8 +868,7 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na, struct call_st * c)
 {
     WebKitWebView * nt
-        = (WebKitWebView *) webkit_web_view_new_with_context
-		(G_WKC);
+        = (WebKitWebView *) webkit_web_view_new_with_context(G_WKC);
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->call = c;
@@ -1157,9 +1156,6 @@ static void InitWebContext()
 
 void InitWebview(struct call_st * c)
 {
-	if(!G_WKC)
-		InitWebContext();
-
     WebKitWebView * wv = WEBKIT_WEB_VIEW
         (webkit_web_view_new_with_context(G_WKC));
 
@@ -1277,8 +1273,6 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
     struct find_st * find = malloc(sizeof(struct find_st));
     struct sign_st * sign = malloc(sizeof(struct sign_st));
     struct call_st * call = malloc(sizeof(struct call_st));
-
-	G_SETTINGS = g_settings_new("priv.dis.planc");
 
     GtkWidget * window = gtk_application_window_new
 		((GtkApplication *) app);
@@ -1410,6 +1404,12 @@ static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
 	}
 }
 
+static void c_app_init(GtkApplication * app, void * v)
+{
+	G_SETTINGS = g_settings_new("priv.dis.planc");
+	InitWebContext();
+}
+
 int main(int argc, char **argv)
 {
 	int status;
@@ -1417,10 +1417,13 @@ int main(int argc, char **argv)
 		,G_APPLICATION_HANDLES_COMMAND_LINE);
 	gtk_window_set_default_icon_name("web-browser");
 
+	g_signal_connect(G_APP, "startup", G_CALLBACK(c_app_init)
+		,NULL);
+
 	g_signal_connect(G_APP, "command-line", G_CALLBACK(c_app_act)
 		,NULL);
 
-	g_application_set_inactivity_timeout(G_APPLICATION(G_APP), 500);
+	//g_application_set_inactivity_timeout(G_APPLICATION(G_APP), 500);
 	status = g_application_run(G_APPLICATION(G_APP), argc, argv);
 
 	return status;
@@ -1446,5 +1449,4 @@ void connect_signals (WebKitWebView * wv, struct call_st * c)
     g_signal_connect(wv, "mouse-target-changed"
 		,G_CALLBACK(c_wv_hit), c);
     webkit_web_view_set_settings(wv,G_WKC_SETTINGS);
-
 }

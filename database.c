@@ -125,7 +125,7 @@ extern void sql_download_write(const char * page, const char * url
 	return;
 }
 
-extern void sql_download_read_to_tree(void * store)
+extern void sql_download_read_to_tree(void * store, void * treeIter)
 {
 	sqlite3 *db;
 	int rc;
@@ -142,7 +142,7 @@ extern void sql_download_read_to_tree(void * store)
 	sqlite3_close(db);
 }
 
-extern void sql_history_read_to_tree(void * store)
+extern void sql_history_read_to_tree(void * store, void * treeIter)
 {
 	sqlite3 *db;
 	int rc;
@@ -182,7 +182,7 @@ extern char * sql_speed_dial_get(size_t index)
 	char * r = NULL;
 	if(rc == SQLITE_ROW)
 	{
-		const char * u = 
+		const char * u =
 			(const char *) sqlite3_column_text(stmt,1);
 		r = malloc(strlen(u)+1);
 		strncpy(r,u,strlen(u)+1);

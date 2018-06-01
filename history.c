@@ -14,7 +14,7 @@ enum
 
 static const gchar * G_search;
 
-extern int treeIter(void * store, int count, char **data
+static int treeIter(void * store, int count, char **data
 	,char **columns)
 {
 	GtkTreeIter iter;
@@ -146,7 +146,7 @@ extern void InitHistoryWindow(void * v)
 		,G_TYPE_STRING, G_TYPE_STRING);
 
 	/* custom function to fill the model with data */
-	sql_history_read_to_tree(store);
+	sql_history_read_to_tree(store, &treeIter);
 
 	/* Create the filter modal */
 	filtered = GTK_TREE_MODEL_FILTER

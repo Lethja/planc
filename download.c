@@ -9,11 +9,33 @@ static GtkTreeStore * G_store;
 
 enum
 {
-   PAGE_COLUMN,
-   URL_COLUMN,
-   FILE_COLUMN,
-   N_COLUMNS
+	NAME_COLUMN, //File Name
+	PAGE_COLUMN, //Download Page
+	STAT_COLUMN, //File size/progress
+	DURL_COLUMN, //Actual download URL
+	FILE_COLUMN, //Actual file URI
+	DATE_COLUMN, //Time of download start for ordering
+	LMOD_COLUMN, //Modification date for comparing
+	N_COLUMNS
 };
+
+static int treeIter(void * store, int count, char **data
+	,char **columns)
+{
+	GtkTreeIter iter;
+	if(count == 3)
+	{
+		gtk_tree_store_append (store, &iter, NULL);
+		/* Acquire an iterator */
+
+		gchar * file = getFileNameFromPath(data[2]);
+
+		gtk_tree_store_set (store, &iter,PAGE_COLUMN
+		,data[0],	DURL_COLUMN, data[1]
+		,FILE_COLUMN, data[2], NAME_COLUMN, file,-1);
+	}
+	return 0;
+}
 
 static gboolean dlstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	,void * v)
@@ -147,6 +169,29 @@ static void c_download_destination_created(WebKitDownload * d
 		(webkit_web_view_get_uri(webkit_download_get_web_view(d))
 		,webkit_uri_request_get_uri(webkit_download_get_request(d))
 		,webkit_download_get_destination(d));
+}
+
+gchar * getFileNameFromPath(const gchar * path)
+{
+	char * a = strrchr (path, '.');
+	char * b = strrchr (path, '/');
+	if(a > b+1)
+		return b+1;
+	return NULL;
+}
+
+gchar * getPathFromFileName(const gchar * path)
+{
+	char * a = strrchr(path, '/');
+	if(a)
+	{
+		size_t s = strlen(path) - strlen(a);
+		char * r = malloc(s+1);
+		strncpy(r,path,s);
+		r[s+1] = '\0';
+		return r;
+	}
+	return NULL;
 }
 
 static gchar * getDisposition(WebKitURIResponse * u)
@@ -323,10 +368,11 @@ extern void InitDownloadWindow(void * v)
 	/* Create a model.  We are using the store model for now, though we
 	* could use any other GtkTreeModel */
 	G_store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
-		,G_TYPE_STRING, G_TYPE_STRING);
+		,G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING
+		,G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
 	/* custom function to fill the model with data */
-	sql_download_read_to_tree(G_store);
+	sql_download_read_to_tree(G_store, &treeIter);
 
 	/* Create the filter modal */
 	filtered = GTK_TREE_MODEL_FILTER
@@ -349,29 +395,29 @@ extern void InitDownloadWindow(void * v)
     * reference */
 	g_object_unref (G_OBJECT (G_store));
 
-	renderer = gtk_cell_renderer_text_new();
-
-	column = gtk_tree_view_column_new_with_attributes ("Download Page"
-		,renderer, "text", PAGE_COLUMN, NULL);
-	gtk_tree_view_column_set_sort_column_id(column,0);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
-	gtk_tree_view_column_set_fixed_width (column, 200);
-	gtk_tree_view_column_set_resizable(column, TRUE);
-	renderer = gtk_cell_renderer_text_new ();
-	column = gtk_tree_view_column_new_with_attributes ("URL"
-		,renderer, "text", URL_COLUMN, NULL);
-	gtk_tree_view_column_set_sort_column_id(column,1);
-	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
-	gtk_tree_view_column_set_fixed_width (column, 300);
-	gtk_tree_view_column_set_resizable(column, TRUE);
 	renderer = gtk_cell_renderer_text_new ();
 	column = gtk_tree_view_column_new_with_attributes ("File"
-		,renderer, "text", FILE_COLUMN, NULL);
-	gtk_tree_view_column_set_sort_column_id(column,2);
+		,renderer, "text", NAME_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,0);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 	gtk_tree_view_column_set_fixed_width (column, 100);
 	gtk_tree_view_column_set_resizable(column, TRUE);
 
+	renderer = gtk_cell_renderer_text_new();
+	column = gtk_tree_view_column_new_with_attributes ("Download Page"
+		,renderer, "text", PAGE_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,1);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+	gtk_tree_view_column_set_fixed_width (column, 200);
+	gtk_tree_view_column_set_resizable(column, TRUE);
+
+	renderer = gtk_cell_renderer_text_new ();
+	column = gtk_tree_view_column_new_with_attributes ("URL"
+		,renderer, "text", DURL_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,2);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+	gtk_tree_view_column_set_fixed_width (column, 300);
+	gtk_tree_view_column_set_resizable(column, TRUE);
 
 	g_signal_connect(G_DOWNLOAD, "destroy"
         ,G_CALLBACK(c_destroy_window), NULL);
