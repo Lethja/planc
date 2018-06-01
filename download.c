@@ -32,7 +32,8 @@ static int treeIter(void * store, int count, char **data
 
 		gtk_tree_store_set (store, &iter,PAGE_COLUMN
 		,data[0],	DURL_COLUMN, data[1]
-		,FILE_COLUMN, data[2], NAME_COLUMN, file,-1);
+		,FILE_COLUMN, data[2], NAME_COLUMN, file
+		,-1);
 	}
 	return 0;
 }
@@ -294,7 +295,7 @@ void c_download_dir(GtkTreeView * tree_view, GtkTreePath * path
 
 	if (gtk_tree_model_get_iter(model, &iter, path))
 	{
-		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 2
+		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 4
 			,&str_data, -1);
 		openFile(str_data);
 	}
