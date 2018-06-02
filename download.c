@@ -288,12 +288,16 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
     {
 		f = getDisposition(webkit_download_get_response(d));
 		if(f)
-			g_strconcat(t,"Download request '", f, "' - Plan C", NULL);
+			t = g_strconcat("Download request '", f, "' - Plan C"
+				,NULL);
 		else
-			g_strconcat(t,"Download request - Plan C", NULL);
+			t = g_strconcat("Download request - Plan C", NULL);
 	}
     else
-        g_strconcat(t,"Download request '", fn, "' - Plan C", NULL);
+	{
+		t = g_strconcat("Download request '", fn, "' - Plan C", NULL);
+		f = fn;
+	}
 
 	GtkWidget * DownloadPrompt = gtk_dialog_new_with_buttons(t
 		,gtk_application_get_active_window(G_APP)
@@ -303,48 +307,79 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 		,_("_Cancel"),	GTK_RESPONSE_CANCEL
 		,NULL);
 
-	if(t)
-		g_free(t);
+	g_free(t);
 
-	gint res = gtk_dialog_run (GTK_DIALOG (DownloadPrompt));
+	gchar * absdir = g_build_filename(g_get_user_special_dir
+		(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+
+	GtkWidget * dbox = gtk_dialog_get_content_area
+		(GTK_DIALOG(DownloadPrompt));
+
+	gchar * str_name = g_strconcat("Name: ", f, NULL);
+	gchar * str_puri = g_strconcat("Page: "
+		,webkit_uri_request_get_uri(webkit_download_get_request(d))
+		,NULL);
+	gchar * str_adir;
+	if(g_file_test(absdir, G_FILE_TEST_EXISTS))
+	{
+		str_adir = g_strconcat("Save to: ", absdir
+			," (File exists)", NULL);
+		gtk_dialog_set_response_sensitive (GTK_DIALOG(DownloadPrompt)
+			,GTK_RESPONSE_OK, FALSE);
+	}
+	else
+		str_adir = g_strconcat("Save to: ", absdir, NULL);
+
+	GtkWidget * name = gtk_label_new(str_name);
+	GtkWidget * puri = gtk_label_new(str_puri);
+	GtkWidget * adir = gtk_label_new(str_adir);
+
+	g_free(str_name);
+	g_free(str_puri);
+	g_free(str_adir);
+
+	gtk_label_set_xalign((GtkLabel *) name, 0.0);
+	gtk_label_set_xalign((GtkLabel *) puri, 0.0);
+	gtk_label_set_xalign((GtkLabel *) adir, 0.0);
+
+	gtk_box_pack_start(GTK_BOX(dbox),name,0,1,0);
+	gtk_box_pack_start(GTK_BOX(dbox),puri,0,1,0);
+	gtk_box_pack_start(GTK_BOX(dbox),adir,0,1,0);
+
+	gtk_widget_show_all(dbox);
+
+	gint res = gtk_dialog_run(GTK_DIALOG(DownloadPrompt));
+	gboolean r;
     switch(res)
     {
 		case GTK_RESPONSE_OK:
 		{
-			gchar * absdir;
-			if(f)
-			{
-				absdir = g_build_filename(g_get_user_special_dir
-				(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
-				g_free(f);
-			}
-			else
-				absdir = g_build_filename(g_get_user_special_dir
-				(G_USER_DIRECTORY_DOWNLOAD), fn, NULL);
-
 			gchar * uri = g_filename_to_uri(absdir, NULL, NULL);
 			if(uri)
 			{
 				webkit_download_set_destination(d, uri);
 				gtk_widget_destroy(DownloadPrompt);
 				g_free(uri);
-				return TRUE;
+				r = TRUE;
 			}
 		}
+		break;
 
         case GTK_RESPONSE_APPLY:
         gtk_widget_destroy(DownloadPrompt);
-        if(f)
-			g_free(f);
-        return c_download_save_as(d, fn, v);
+        r = c_download_save_as(d, f, v);
+        break;
 
         default:
         webkit_download_cancel(d);
         gtk_widget_destroy(DownloadPrompt);
-        if(f)
-			g_free(f);
+        r = FALSE;
         break;
     }
+    g_free(absdir);
+    if(f && f != fn)
+		g_free(f);
+    return r;
 }
 
 void c_download_start(WebKitWebContext * wv
