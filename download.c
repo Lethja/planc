@@ -29,10 +29,14 @@ static int treeIter(void * store, int count, char **data
 		/* Acquire an iterator */
 
 		gchar * file = getFileNameFromPath(data[2]);
+		gchar * purl = data[0];
+		if(!purl || strcmp(purl,"") == 0)
+			purl = data[1];
 
 		gtk_tree_store_set (store, &iter,PAGE_COLUMN
-		,data[0],	DURL_COLUMN, data[1]
+		,purl,	DURL_COLUMN, data[1]
 		,FILE_COLUMN, data[2], NAME_COLUMN, file
+		,STAT_COLUMN, "Complete"
 		,-1);
 	}
 	return 0;
@@ -275,12 +279,80 @@ static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
     return FALSE;
 }
 
+static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
+	,struct call_st * v)
+{
+	gchar * t = NULL;
+	gchar * f = NULL;
+	if (fn == NULL || strcmp(fn,"") == 0)
+    {
+		f = getDisposition(webkit_download_get_response(d));
+		if(f)
+			g_strconcat(t,"Download request '", f, "' - Plan C", NULL);
+		else
+			g_strconcat(t,"Download request - Plan C", NULL);
+	}
+    else
+        g_strconcat(t,"Download request '", fn, "' - Plan C", NULL);
+
+	GtkWidget * DownloadPrompt = gtk_dialog_new_with_buttons(t
+		,gtk_application_get_active_window(G_APP)
+		,GTK_DIALOG_DESTROY_WITH_PARENT
+		,_("_Save"),	GTK_RESPONSE_OK
+		,_("Save _As"),	GTK_RESPONSE_APPLY
+		,_("_Cancel"),	GTK_RESPONSE_CANCEL
+		,NULL);
+
+	if(t)
+		g_free(t);
+
+	gint res = gtk_dialog_run (GTK_DIALOG (DownloadPrompt));
+    switch(res)
+    {
+		case GTK_RESPONSE_OK:
+		{
+			gchar * absdir;
+			if(f)
+			{
+				absdir = g_build_filename(g_get_user_special_dir
+				(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+				g_free(f);
+			}
+			else
+				absdir = g_build_filename(g_get_user_special_dir
+				(G_USER_DIRECTORY_DOWNLOAD), fn, NULL);
+
+			gchar * uri = g_filename_to_uri(absdir, NULL, NULL);
+			if(uri)
+			{
+				webkit_download_set_destination(d, uri);
+				gtk_widget_destroy(DownloadPrompt);
+				g_free(uri);
+				return TRUE;
+			}
+		}
+
+        case GTK_RESPONSE_APPLY:
+        gtk_widget_destroy(DownloadPrompt);
+        if(f)
+			g_free(f);
+        return c_download_save_as(d, fn, v);
+
+        default:
+        webkit_download_cancel(d);
+        gtk_widget_destroy(DownloadPrompt);
+        if(f)
+			g_free(f);
+        break;
+    }
+}
+
 void c_download_start(WebKitWebContext * wv
     ,WebKitDownload * dl, void * v)
 {
 	webkit_download_set_allow_overwrite(dl,TRUE);
     g_signal_connect(dl, "decide-destination"
-        ,G_CALLBACK(c_download_save_as), NULL);
+        ,G_CALLBACK(c_download_prompt), NULL);
 	g_signal_connect(dl, "created-destination"
         ,G_CALLBACK(c_download_destination_created), NULL);
 }
@@ -401,7 +473,7 @@ extern void InitDownloadWindow(void * v)
 		,renderer, "text", NAME_COLUMN, NULL);
 	gtk_tree_view_column_set_sort_column_id(column,0);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
-	gtk_tree_view_column_set_fixed_width (column, 100);
+	gtk_tree_view_column_set_fixed_width (column, 200);
 	gtk_tree_view_column_set_resizable(column, TRUE);
 
 	renderer = gtk_cell_renderer_text_new();
@@ -409,15 +481,15 @@ extern void InitDownloadWindow(void * v)
 		,renderer, "text", PAGE_COLUMN, NULL);
 	gtk_tree_view_column_set_sort_column_id(column,1);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
-	gtk_tree_view_column_set_fixed_width (column, 200);
+	gtk_tree_view_column_set_fixed_width (column, 300);
 	gtk_tree_view_column_set_resizable(column, TRUE);
 
 	renderer = gtk_cell_renderer_text_new ();
-	column = gtk_tree_view_column_new_with_attributes ("URL"
-		,renderer, "text", DURL_COLUMN, NULL);
+	column = gtk_tree_view_column_new_with_attributes ("Status"
+		,renderer, "text", STAT_COLUMN, NULL);
 	gtk_tree_view_column_set_sort_column_id(column,2);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
-	gtk_tree_view_column_set_fixed_width (column, 300);
+	gtk_tree_view_column_set_fixed_width (column, 100);
 	gtk_tree_view_column_set_resizable(column, TRUE);
 
 	g_signal_connect(G_DOWNLOAD, "destroy"
