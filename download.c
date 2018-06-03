@@ -42,6 +42,23 @@ static int treeIter(void * store, int count, char **data
 	return 0;
 }
 
+static GtkTreeIter * addDownloadEntry(const gchar * file
+	,const gchar * name, const gchar * durl, const gchar * purl
+	,const gchar * stat, void * v)
+{
+	InitDownloadWindow();
+	GtkTreeIter * r = malloc(sizeof(GtkTreeIter));
+	gtk_tree_store_append (G_store, r, NULL);
+
+	gtk_tree_store_set (G_store, r, PAGE_COLUMN
+		,purl, DURL_COLUMN, durl
+		,FILE_COLUMN, file, NAME_COLUMN, name
+		,STAT_COLUMN, "Downloading"
+		,-1);
+
+	return r;
+}
+
 static gboolean dlstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	,void * v)
 {
@@ -86,7 +103,7 @@ static void openFileDirectory(const gchar * file)
 	free(dir);
 }
 
-static void c_download_finished(WebKitDownload * d, GtkWidget * w)
+static void c_download_finished(WebKitDownload * d, GtkTreeIter * iter)
 {
 	guint64 len = webkit_uri_response_get_content_length
 		(webkit_download_get_response(d));
@@ -96,27 +113,29 @@ static void c_download_finished(WebKitDownload * d, GtkWidget * w)
 		l = g_strdup_printf
 			("Downloaded: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d),len,NULL);
-		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+		//gtk_progress_bar_set_text((GtkProgressBar *)w,l);
 	}
 	else
 	{
 		l = g_strdup_printf
 			("Downloaded: %" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d), NULL);
-		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+		//gtk_progress_bar_set_text((GtkProgressBar *)w,l);
 	}
+	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l, -1);
 	free(l);
-	gtk_progress_bar_set_fraction((GtkProgressBar *)w
+	free(iter);
+	/*gtk_progress_bar_set_fraction((GtkProgressBar *)w
 		,1.0);
 	const gchar * file = webkit_download_get_destination(d);
 	if(file)
 	{
 		openFileDirectory(file);
-	}
+	}*/
 }
 
 static void c_download_progress(WebKitDownload * d, guint pro
-	,GtkWidget * w)
+	,GtkTreeIter * iter)
 {
 	guint64 len = webkit_uri_response_get_content_length
 		(webkit_download_get_response(d));
@@ -126,25 +145,41 @@ static void c_download_progress(WebKitDownload * d, guint pro
 		l = g_strdup_printf
 			("Downloading: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d),len,NULL);
-		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+		/*gtk_progress_bar_set_text((GtkProgressBar *)w,l);
 		gtk_progress_bar_set_fraction((GtkProgressBar *)w
-			,webkit_download_get_estimated_progress(d));
+			,webkit_download_get_estimated_progress(d));*/
 	}
 	else
 	{
 		l = g_strdup_printf
 			("Downloading: %" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d), NULL);
-		gtk_progress_bar_set_text((GtkProgressBar *)w,l);
-		gtk_progress_bar_pulse((GtkProgressBar *)w);
+		/*gtk_progress_bar_set_text((GtkProgressBar *)w,l);
+		gtk_progress_bar_pulse((GtkProgressBar *)w);*/
 	}
+	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l, -1);
 	free(l);
 }
 
 static void c_download_destination_created(WebKitDownload * d
-	,gchar * fn, void * v)
+	,gchar * u, void * v)
 {
-	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gchar * n = getFileNameFromPath(u);
+	const gchar * p
+		= webkit_web_view_get_uri(webkit_download_get_web_view(d));
+	const gchar * a
+		= webkit_uri_request_get_uri(webkit_download_get_request(d));
+
+	if(!p || strcmp(p,"") == 0)
+		p = a;
+
+	GtkTreeIter * t = addDownloadEntry(u,n,a,p,"Downloading",v);
+	g_signal_connect(d,"received-data"
+		,G_CALLBACK(c_download_progress),t);
+	g_signal_connect(d, "finished"
+        ,G_CALLBACK(c_download_finished),t);
+
+	/*GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(r,280,40);
 	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
 	gtk_window_set_icon_name(r,"document-save");
@@ -168,7 +203,7 @@ static void c_download_destination_created(WebKitDownload * d
 	g_signal_connect(d, "finished"
         ,G_CALLBACK(c_download_finished),lab);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(lab),TRUE,TRUE,0);
-	gtk_widget_show_all((GtkWidget *)r);
+	gtk_widget_show_all((GtkWidget *)r);*/
 
 	sql_download_write
 		(webkit_web_view_get_uri(webkit_download_get_web_view(d))
@@ -324,7 +359,7 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 	{
 		str_adir = g_strconcat("Save to: ", absdir
 			," (File exists)", NULL);
-		gtk_dialog_set_response_sensitive (GTK_DIALOG(DownloadPrompt)
+		gtk_dialog_set_response_sensitive(GTK_DIALOG(DownloadPrompt)
 			,GTK_RESPONSE_OK, FALSE);
 	}
 	else
@@ -447,7 +482,7 @@ static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
 	gtk_tree_model_filter_refilter(f);
 }
 
-extern void InitDownloadWindow(void * v)
+extern void InitDownloadWindow()
 {
 	if(G_DOWNLOAD)
 	{
@@ -459,7 +494,7 @@ extern void InitDownloadWindow(void * v)
 		(GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_default_size(G_DOWNLOAD,600,400);
     gtk_window_set_position(G_DOWNLOAD,GTK_WIN_POS_CENTER);
-	gtk_window_set_icon_name(G_DOWNLOAD,"preferences-system-network");
+	gtk_window_set_icon_name(G_DOWNLOAD,"document-save");
 	gtk_window_set_title(G_DOWNLOAD,"Downloads - Plan C");
 	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	GtkWidget * searchEntry = gtk_search_entry_new();
@@ -532,7 +567,7 @@ extern void InitDownloadWindow(void * v)
 	g_signal_connect_after(searchEntry, "search-changed"
         ,G_CALLBACK(search_entry_change), filtered);
 	g_signal_connect(tree,"row-activated"
-		,G_CALLBACK(c_download_dir), v);
+		,G_CALLBACK(c_download_dir), NULL);
 	/*g_signal_connect(tree,"button-release-event"
 		,G_CALLBACK(c_history_url_tab), v);*/
 

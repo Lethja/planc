@@ -515,7 +515,7 @@ static void c_open_history(GtkWidget * w, struct call_st * c)
 
 static void c_open_download(GtkWidget * w, struct call_st * c)
 {
-	InitDownloadWindow(c);
+	InitDownloadWindow();
 }
 
 static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
@@ -724,7 +724,7 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
     gtk_label_set_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
-    gtk_label_set_justify((GtkLabel *)label,GTK_JUSTIFY_LEFT);
+    gtk_label_set_xalign((GtkLabel *)label, 0.0);
 
     gtk_widget_set_halign(label,GTK_ALIGN_START);
     gtk_widget_set_halign(ebox,GTK_ALIGN_START);
@@ -1174,6 +1174,7 @@ void InitWebview(struct call_st * c)
     gtk_label_set_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
+	gtk_label_set_xalign((GtkLabel *)label, 0.0);
     gtk_widget_show(GTK_WIDGET(label));
     gtk_notebook_append_page(c->tabs,GTK_WIDGET(wv),ebox);
     connect_signals(wv,c);
