@@ -55,7 +55,7 @@ AC_TYPE_UINT64_T
 # Checks for library functions.
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([floor inet_ntoa memmove strchr strrchr strstr strtol strtoul])
+AC_CHECK_FUNCS([floor round inet_ntoa memmove strchr strrchr strstr strtol strtoul])
 
 # Condictionals
 AC_OUTPUT

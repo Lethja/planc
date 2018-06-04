@@ -3,6 +3,7 @@
 #include "download.h"
 #include "database.h"
 #include <sys/wait.h>
+#include <math.h>
 
 static const gchar * G_search;
 static GtkTreeStore * G_store;
@@ -13,6 +14,7 @@ enum
 	PAGE_COLUMN, //Download Page
 	STAT_COLUMN, //File size/progress
 	DURL_COLUMN, //Actual download URL
+	PROG_COLUMN, //Int of progress for slider
 	FILE_COLUMN, //Actual file URI
 	DATE_COLUMN, //Time of download start for ordering
 	LMOD_COLUMN, //Modification date for comparing
@@ -26,8 +28,6 @@ static int treeIter(void * store, int count, char **data
 	if(count == 3)
 	{
 		gtk_tree_store_append (store, &iter, NULL);
-		/* Acquire an iterator */
-
 		gchar * file = getFileNameFromPath(data[2]);
 		gchar * purl = data[0];
 		if(!purl || strcmp(purl,"") == 0)
@@ -36,7 +36,7 @@ static int treeIter(void * store, int count, char **data
 		gtk_tree_store_set (store, &iter,PAGE_COLUMN
 		,purl,	DURL_COLUMN, data[1]
 		,FILE_COLUMN, data[2], NAME_COLUMN, file
-		,STAT_COLUMN, "Complete"
+		,STAT_COLUMN, "Complete", PROG_COLUMN, 100
 		,-1);
 	}
 	return 0;
@@ -53,7 +53,7 @@ static GtkTreeIter * addDownloadEntry(const gchar * file
 	gtk_tree_store_set (G_store, r, PAGE_COLUMN
 		,purl, DURL_COLUMN, durl
 		,FILE_COLUMN, file, NAME_COLUMN, name
-		,STAT_COLUMN, "Downloading"
+		,STAT_COLUMN, "Downloading", PROG_COLUMN, 0
 		,-1);
 
 	return r;
@@ -82,13 +82,13 @@ static gboolean dlstrstr(GtkTreeModel * model, GtkTreeIter * iter
 static void openFile(const gchar * file)
 {
 	pid_t pid = fork();
-	if (pid == 0)
-	{ //This is the child process
+	if(pid == 0) //This is the child process
+	{
 		execlp("xdg-open","xdg-open",file,NULL);
-		exit(127); /* only if execlp fails */
+		exit(127); // only if execlp fails
 	}
-	else
-	{ //This is the parent process
+	else //This is the parent process
+	{
 		waitpid(pid,0,0); //wait for child before continuing
 	}
 }
@@ -113,25 +113,17 @@ static void c_download_finished(WebKitDownload * d, GtkTreeIter * iter)
 		l = g_strdup_printf
 			("Downloaded: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d),len,NULL);
-		//gtk_progress_bar_set_text((GtkProgressBar *)w,l);
 	}
 	else
 	{
 		l = g_strdup_printf
 			("Downloaded: %" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d), NULL);
-		//gtk_progress_bar_set_text((GtkProgressBar *)w,l);
 	}
-	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l, -1);
+	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l
+		,PROG_COLUMN, 100, -1);
 	free(l);
 	free(iter);
-	/*gtk_progress_bar_set_fraction((GtkProgressBar *)w
-		,1.0);
-	const gchar * file = webkit_download_get_destination(d);
-	if(file)
-	{
-		openFileDirectory(file);
-	}*/
 }
 
 static void c_download_progress(WebKitDownload * d, guint pro
@@ -145,19 +137,16 @@ static void c_download_progress(WebKitDownload * d, guint pro
 		l = g_strdup_printf
 			("Downloading: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d),len,NULL);
-		/*gtk_progress_bar_set_text((GtkProgressBar *)w,l);
-		gtk_progress_bar_set_fraction((GtkProgressBar *)w
-			,webkit_download_get_estimated_progress(d));*/
 	}
 	else
 	{
 		l = g_strdup_printf
 			("Downloading: %" G_GUINT64_FORMAT
 			,webkit_download_get_received_data_length(d), NULL);
-		/*gtk_progress_bar_set_text((GtkProgressBar *)w,l);
-		gtk_progress_bar_pulse((GtkProgressBar *)w);*/
 	}
-	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l, -1);
+	gint i = round(webkit_download_get_estimated_progress(d) * 100);
+	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l, PROG_COLUMN, i
+		,-1);
 	free(l);
 }
 
@@ -170,6 +159,10 @@ static void c_download_destination_created(WebKitDownload * d
 	const gchar * a
 		= webkit_uri_request_get_uri(webkit_download_get_request(d));
 
+	//Write to database now to disk space if p == NULL || ""
+	sql_download_write(p, a, webkit_download_get_destination(d));
+
+	//Set download page (p) to download uri (a) if p == NULL || ""
 	if(!p || strcmp(p,"") == 0)
 		p = a;
 
@@ -178,37 +171,6 @@ static void c_download_destination_created(WebKitDownload * d
 		,G_CALLBACK(c_download_progress),t);
 	g_signal_connect(d, "finished"
         ,G_CALLBACK(c_download_finished),t);
-
-	/*GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(r,280,40);
-	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
-	gtk_window_set_icon_name(r,"document-save");
-	char * f = strrchr(fn,'/');
-	gchar * t = NULL;
-	if(f)
-		t = g_strdup_printf("%s - Plan C",f+1);
-	else
-		t = g_strdup_printf("%s - Plan C",fn);
-
-	gtk_window_set_title(r,t);
-	free(t);
-	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	GtkWidget * lab = gtk_progress_bar_new();
-	gtk_progress_bar_set_show_text((GtkProgressBar *)lab,TRUE);
-	gtk_progress_bar_set_pulse_step((GtkProgressBar *)lab,0.001);
-	gtk_progress_bar_set_text((GtkProgressBar *)lab,"0");
-    gtk_container_add((GtkContainer *)r, vbox);
-    g_signal_connect(d,"received-data"
-		,G_CALLBACK(c_download_progress),lab);
-	g_signal_connect(d, "finished"
-        ,G_CALLBACK(c_download_finished),lab);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(lab),TRUE,TRUE,0);
-	gtk_widget_show_all((GtkWidget *)r);*/
-
-	sql_download_write
-		(webkit_web_view_get_uri(webkit_download_get_web_view(d))
-		,webkit_uri_request_get_uri(webkit_download_get_request(d))
-		,webkit_download_get_destination(d));
 }
 
 gchar * getFileNameFromPath(const gchar * path)
@@ -312,6 +274,20 @@ static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
     }
     gtk_widget_destroy (dialog);
     return FALSE;
+}
+
+static void progress_cell_data_func(GtkTreeViewColumn * c
+	,GtkCellRenderer * renderer, GtkTreeModel * model
+	,GtkTreeIter * iter, gpointer p)
+{
+	gchar * stat;
+	gint * slider;
+
+	gtk_tree_model_get(model, iter, STAT_COLUMN, &stat
+		,PROG_COLUMN, &slider, -1);
+	
+	g_object_set(renderer, "value", slider, NULL);
+	g_object_set(renderer, "text", stat, NULL);
 }
 
 static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
@@ -437,39 +413,11 @@ void c_download_dir(GtkTreeView * tree_view, GtkTreePath * path
 
 	if (gtk_tree_model_get_iter(model, &iter, path))
 	{
-		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 4
+		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 5
 			,&str_data, -1);
 		openFile(str_data);
 	}
 }
-
-/*static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
-	,struct call_st * v)
-{
-	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(r,400,400);
-	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
-	gtk_window_set_icon_name(r,"preferences-system-network");
-	gtk_window_set_title(r,"Download - Plan C");
-	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add((GtkContainer *)r, vbox);
-    GtkWidget * sv = gtk_button_new_with_mnemonic("_Save");
-    GtkWidget * sa = gtk_button_new_with_mnemonic("Save _As");
-    GtkWidget * ca = gtk_button_new_with_mnemonic("_Cancel");
-    GtkWidget * ln;
-    if(fn)
-    {
-		gtk_label_new(fn);
-		g_signal_connect(sv,"activate",G_CALLBACK(c_download_save),fn);
-	}
-	else
-	{
-		gtk_label_new("Untitled file");
-
-	}
-    g_signal_connect(sa,"activate",G_CALLBACK(c_download_save_as),fn);
-    return r;
-}*/
 
 static void c_destroy_window(GtkWindow * w, void * v)
 {
@@ -512,7 +460,7 @@ extern void InitDownloadWindow()
 	* could use any other GtkTreeModel */
 	G_store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
 		,G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING
-		,G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+		,G_TYPE_INT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
 
 	/* custom function to fill the model with data */
 	sql_download_read_to_tree(G_store, &treeIter);
@@ -554,13 +502,15 @@ extern void InitDownloadWindow()
 	gtk_tree_view_column_set_fixed_width (column, 300);
 	gtk_tree_view_column_set_resizable(column, TRUE);
 
-	renderer = gtk_cell_renderer_text_new ();
+	renderer = gtk_cell_renderer_progress_new();
 	column = gtk_tree_view_column_new_with_attributes ("Status"
 		,renderer, "text", STAT_COLUMN, NULL);
 	gtk_tree_view_column_set_sort_column_id(column,2);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
 	gtk_tree_view_column_set_fixed_width (column, 100);
 	gtk_tree_view_column_set_resizable(column, TRUE);
+	gtk_tree_view_column_set_cell_data_func(column, renderer
+		,progress_cell_data_func, NULL, NULL);
 
 	g_signal_connect(G_DOWNLOAD, "destroy"
         ,G_CALLBACK(c_destroy_window), NULL);

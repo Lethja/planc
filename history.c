@@ -21,8 +21,6 @@ static int treeIter(void * store, int count, char **data
 	if(count == 3)
 	{
 		gtk_tree_store_append (store, &iter, NULL);
-		/* Acquire an iterator */
-
 		gtk_tree_store_set (store, &iter,ADDRESS_COLUMN
 		,data[0],	TITLE_COLUMN, data[1]
 		,VISITED_COLUMN, data[2],-1);
@@ -50,10 +48,9 @@ void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
 gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
 	,struct call_st * c)
 {
-	//Middle click
 	if(event->type == GDK_BUTTON_RELEASE)
     {
-		if(event->button == 2)
+		if(event->button == 2) //Middle click
 		{
 			gchar *str_data;
 			GtkTreePath * path;

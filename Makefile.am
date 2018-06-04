@@ -6,6 +6,6 @@ desktop_DATA = planc.desktop
 
 bin_PROGRAMS = planc
 planc_SOURCES = main.c settings.c database.c history.c main.h settings.h database.h history.h download.c download.h
-planc_CFLAGS= $(GTK3_CFLAGS) $(WK4_CFLAGS) $(SQ3_CFLAGS)
+planc_CFLAGS= $(GTK3_CFLAGS) $(WK4_CFLAGS) $(SQ3_CFLAGS) -lm
 planc_LDFLAGS= $(GTK3_LIBS) $(WK4_LIBS) $(SQ3_LIBS)
 EXTRA_DIST = $(desktop_DATA) $(gsettings_SCHEMAS)

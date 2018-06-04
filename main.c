@@ -23,7 +23,6 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
 char * prepAddress(const gchar * c)
 {
 	char * p;
-	//Return if about:blank
 	if(strcmp(c,"") == 0 || strstr(c,"about:") == c)
 	{
 		p = malloc(strlen("about:blank")+1);
@@ -121,7 +120,6 @@ gboolean c_onclick_tabsMi(GtkMenuItem * mi, GdkEventButton * e
                 ,gtk_notebook_page_num(dp->call->tabs
                 ,dp->other));
 			gtk_widget_set_sensitive(GTK_WIDGET(mi),FALSE);
-			//webkit_web_context_clear_cache(G_WKC);
 			return TRUE;
 		}
     }
@@ -250,17 +248,17 @@ void c_update_tabs_layout(GtkWidget * r, struct call_st * c)
 }
 
 static gboolean c_notebook_scroll(GtkWidget * w, GdkEventScroll * e
-	,struct call_st * c)
+	,void * v)
 {
 	switch(e->direction)
 	{
 		case GDK_SCROLL_UP:
 		case GDK_SCROLL_LEFT:
-			gtk_notebook_prev_page(c->tabs);
+			gtk_notebook_prev_page((GtkNotebook *) w);
 		break;
 		case GDK_SCROLL_DOWN:
 		case GDK_SCROLL_RIGHT:
-			gtk_notebook_next_page(c->tabs);
+			gtk_notebook_next_page((GtkNotebook *) w);
 		default:
 		break;
 
@@ -277,7 +275,6 @@ static gboolean c_notebook_click(GtkWidget * w, GdkEventButton * e
             gtk_notebook_remove_page(dp->call->tabs
                 ,gtk_notebook_page_num(dp->call->tabs
 				,dp->other));
-		//webkit_web_context_clear_cache(G_WKC);
 		return TRUE;
     }
     return FALSE;
@@ -289,7 +286,6 @@ void c_notebook_close_current(GtkWidget * w, struct call_st * c)
 		gtk_notebook_remove_page
 			(c->tabs,gtk_notebook_get_current_page
 			(c->tabs));
-	//webkit_web_context_clear_cache(G_WKC);
 }
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
@@ -570,7 +566,7 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, struct call_st * c)
 static void c_act(GtkWidget * widget, void * v)
 {
     struct call_st * call = (struct call_st *) v;
-    char * curi = NULL;// = prepAddress(uri);
+    char * curi = NULL;
     switch(addrEntryState((GtkEditable *) widget,v))
     {
         case 0: //Stop loading current page before requesting new uri
@@ -614,6 +610,24 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->forwardTb)
         ,webkit_web_view_can_go_forward(wv));
+}
+
+static gboolean c_update_favicon(WebKitWebView * wv, GParamSpec *pspec,
+	void * v)
+{
+    cairo_surface_t* surface;
+    GdkPixbuf * pixbuf;
+
+    /*if ((surface = webkit_web_view_get_favicon (view)) &&
+        (pixbuf = gdk_pixbuf_get_from_surface (
+            surface, 0, 0,
+            cairo_image_surface_get_width (surface),
+            cairo_image_surface_get_height (surface)))
+        ) {
+        gtk_window_set_icon (window, pixbuf);
+    }*/
+
+    return TRUE;
 }
 
 static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
@@ -712,8 +726,6 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
     g_signal_connect_data(ebox, "button-press-event"
         ,G_CALLBACK(c_notebook_click), dp, c_free_docp,0);
 	gtk_widget_add_events(ebox, GDK_SCROLL_MASK);
-	g_signal_connect(ebox, "scroll-event"
-		,G_CALLBACK(c_notebook_scroll), c);
     GtkWidget * label;
     if(str == NULL || strcmp(str,"") == 0)
         label = gtk_label_new("New Tab");
@@ -727,7 +739,7 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
     gtk_label_set_xalign((GtkLabel *)label, 0.0);
 
     gtk_widget_set_halign(label,GTK_ALIGN_START);
-    gtk_widget_set_halign(ebox,GTK_ALIGN_START);
+    gtk_widget_set_halign(ebox,GTK_ALIGN_FILL);
     gtk_widget_show(GTK_WIDGET(label));
     return ebox;
 }
@@ -1045,7 +1057,7 @@ void InitMenubar(struct menu_st * menu, struct call_st * c
 	}
 }
 
-static GtkNotebook * InitNotetab()
+static GtkNotebook * InitNotetab(void * v)
 {
     GtkNotebook * tabs = (GtkNotebook *) gtk_notebook_new();
     gtk_notebook_set_show_border(tabs,FALSE);
@@ -1065,6 +1077,9 @@ static GtkNotebook * InitNotetab()
 	if(b)
 		gtk_notebook_set_show_tabs(tabs,FALSE);
     gtk_notebook_set_scrollable(tabs,TRUE);
+	gtk_widget_add_events((GtkWidget *) tabs, GDK_SCROLL_MASK);
+    g_signal_connect(tabs, "scroll-event"
+		,G_CALLBACK(c_notebook_scroll), NULL);
     return tabs;
 }
 
@@ -1169,12 +1184,11 @@ void InitWebview(struct call_st * c)
     g_signal_connect_data(ebox, "button-press-event"
         ,G_CALLBACK(c_notebook_click), dp, c_free_docp,0);
 	gtk_widget_add_events(ebox, GDK_SCROLL_MASK);
-	g_signal_connect(ebox, "scroll-event"
-		,G_CALLBACK(c_notebook_scroll), c);
     gtk_label_set_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_max_width_chars((GtkLabel *)label,WK_TAB_CHAR_LEN);
     gtk_label_set_ellipsize((GtkLabel *)label,PANGO_ELLIPSIZE_END);
 	gtk_label_set_xalign((GtkLabel *)label, 0.0);
+	gtk_widget_set_halign(ebox,GTK_ALIGN_FILL);
     gtk_widget_show(GTK_WIDGET(label));
     gtk_notebook_append_page(c->tabs,GTK_WIDGET(wv),ebox);
     connect_signals(wv,c);
@@ -1263,6 +1277,10 @@ static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 		gtk_editable_select_region(w, 0, -1);
 		return TRUE;
 	}
+	if(e->button == 2) //Manually have to handle context menu
+	{
+
+	}
 	return FALSE;
 }
 
@@ -1297,7 +1315,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
     InitCallback(call,find,menu,tool,sign,window);
     InitMenubar(menu, call, accel_group);
     InitToolbar(tool, accel_group);
-    call->tabs = InitNotetab();
+    call->tabs = InitNotetab(call);
     InitWebview(call);
     InitFindBar(find, call);
 
@@ -1424,7 +1442,6 @@ int main(int argc, char **argv)
 	g_signal_connect(G_APP, "command-line", G_CALLBACK(c_app_act)
 		,NULL);
 
-	//g_application_set_inactivity_timeout(G_APPLICATION(G_APP), 500);
 	status = g_application_run(G_APPLICATION(G_APP), argc, argv);
 
 	return status;
