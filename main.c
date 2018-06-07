@@ -1083,6 +1083,11 @@ static GtkNotebook * InitNotetab(void * v)
     return tabs;
 }
 
+static void c_wk_ext_init(WebKitWebContext *context, gpointer user_data)
+{
+	webkit_web_context_set_web_extensions_directory(context, WKED);
+}
+
 static void InitWebContext()
 {
 	char * datadir;
@@ -1103,6 +1108,9 @@ static void InitWebContext()
     g_free(cachedir);
 
     G_WKC = webkit_web_context_new_with_website_data_manager(d);
+
+    g_signal_connect(G_WKC, "initialize-web-extensions"
+		,G_CALLBACK(c_wk_ext_init), NULL);
 
     if(g_settings_get_boolean(G_SETTINGS,"webkit-ppt"))
 		webkit_web_context_set_process_model(G_WKC
@@ -1270,16 +1278,13 @@ static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
 static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	,void * v)
 {
-	if(e->button == 1
-	&& !gtk_editable_get_selection_bounds(w, NULL, NULL))
+	if(e->button == 1)
 	{
-		/*gtk_widget_grab_focus(GTK_WIDGET(w));*/
-		gtk_editable_select_region(w, 0, -1);
-		return TRUE;
-	}
-	if(e->button == 2) //Manually have to handle context menu
-	{
-
+		if(e->type == GDK_2BUTTON_PRESS)
+		{
+			gtk_editable_select_region(w, 0, -1);
+			return TRUE;
+		}
 	}
 	return FALSE;
 }
@@ -1333,7 +1338,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_act), call);
 	g_signal_connect(tool->addressEn, "focus-out-event"
         ,G_CALLBACK(c_addr_unfocus), NULL);
-	g_signal_connect(tool->addressEn, "button-release-event"
+	g_signal_connect(tool->addressEn, "button-press-event"
         ,G_CALLBACK(c_addr_click), NULL);
     g_signal_connect(tool->backTb, "clicked"
         ,G_CALLBACK(c_go_back), call);
@@ -1411,15 +1416,26 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
 	,guint m, struct call_st * c)
 {
+	static gboolean w = FALSE; //Has address bar been modified by user
 	if(webkit_hit_test_result_get_link_uri(h))
 	{
-		gtk_entry_set_text(c->tool->addressEn
-			,webkit_hit_test_result_get_link_uri(h));
+		if(strcmp(gtk_entry_get_text(c->tool->addressEn)
+			,webkit_web_view_get_uri(wv)) == 0)
+		{
+			gtk_entry_set_text(c->tool->addressEn
+				,webkit_hit_test_result_get_link_uri(h));
+			w = FALSE;
+		}
+		else
+		{
+			w = TRUE;
+		}
 	}
 	else
 	{
-		gtk_entry_set_text(c->tool->addressEn
-			,webkit_web_view_get_uri(wv));
+		if(!w)
+			gtk_entry_set_text(c->tool->addressEn
+				,webkit_web_view_get_uri(wv));
 	}
 }
 
