@@ -62,6 +62,7 @@ struct tool_st
     GtkEntry * addressEn;
     GtkToolButton * reloadTb;
     GtkImage * reloadIo;
+    gboolean usrmod; //Has the user modified the address bar?
 };
 
 struct find_st

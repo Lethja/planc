@@ -417,13 +417,13 @@ static void c_search_prv(GtkButton * b, GtkNotebook * n)
 }
 
 static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
-    ,void * v)
+    ,struct call_st * c)
 {
-    struct call_st * c = v;
     if(webkit_web_view_is_loading(wv))
     {
         gtk_image_set_from_icon_name(c->tool->reloadIo
             ,"process-stop",GTK_ICON_SIZE_SMALL_TOOLBAR);
+		c->tool->usrmod = FALSE;
         return 0;
     }
     if(strcmp(gtk_entry_get_text((GtkEntry *) e)
@@ -431,20 +431,21 @@ static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
     {
         gtk_image_set_from_icon_name(c->tool->reloadIo
             ,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
+		c->tool->usrmod = FALSE;
         return 1;
     }
     else
     {
         gtk_image_set_from_icon_name(c->tool->reloadIo
             ,"go-last",GTK_ICON_SIZE_SMALL_TOOLBAR);
+		c->tool->usrmod = TRUE;
         return 2;
     }
 }
 
-static char addrEntryState(GtkEditable * e, void * v)
+static char addrEntryState(GtkEditable * e, struct call_st * c)
 {
-    struct call_st * c = v;
-    return addrEntryState_webView(e, WK_CURRENT_TAB(c->tabs),v);
+    return addrEntryState_webView(e, WK_CURRENT_TAB(c->tabs),c);
 }
 
 static void addrWebviewState(WebKitWebView * wv, WebKitLoadEvent evt
@@ -456,15 +457,15 @@ static void addrWebviewState(WebKitWebView * wv, WebKitLoadEvent evt
 }
 
 static void c_addr_ins(GtkEditable * e, gchar* t, gint l, gpointer p
-	,void * v)
+	,struct call_st * c)
 {
-    addrEntryState(e,v);
+    addrEntryState(e,c);
 }
 
 static void c_addr_del(GtkEditable* e, gint sp, gint ep
-    ,void * v)
+    ,struct call_st * c)
 {
-    addrEntryState(e,v);
+    addrEntryState(e,c);
 }
 
 static void c_refresh(GtkWidget * widget, void * v)
@@ -809,7 +810,7 @@ void c_new_win(GtkWidget * w, void * v)
 	InitWindow(G_APPLICATION(G_APP), NULL, 0);
 }
 
-gboolean closePrompt(struct call_st * call)
+static gboolean closePrompt(struct call_st * call)
 {
 	gint g = gtk_notebook_get_n_pages(call->tabs);
 	if(g > 1)
@@ -830,8 +831,8 @@ gboolean closePrompt(struct call_st * call)
 	return FALSE;
 }
 
-gboolean c_destroy_window_request(GtkWidget * widget, GdkEvent * e
-	,struct call_st * call)
+static gboolean c_destroy_window_request(GtkWidget * widget
+	,GdkEvent * e, struct call_st * call)
 {
 	return closePrompt(call);
 }
@@ -925,6 +926,7 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
         ,GTK_TOOL_ITEM(tool->addressTi), -1);
     gtk_tool_item_set_expand(GTK_TOOL_ITEM(tool->addressTi), TRUE);
     gtk_tool_item_set_homogeneous(GTK_TOOL_ITEM(tool->addressTi), TRUE);
+    tool->usrmod = FALSE;
 
     tool->reloadIo = (GtkImage *) gtk_image_new_from_icon_name
         ("view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
@@ -1416,26 +1418,21 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
 	,guint m, struct call_st * c)
 {
-	static gboolean w = FALSE; //Has address bar been modified by user
-	if(webkit_hit_test_result_get_link_uri(h))
+	if(c->tool->usrmod)
+		return;
+	if(webkit_hit_test_result_context_is_link(h))
 	{
-		if(strcmp(gtk_entry_get_text(c->tool->addressEn)
-			,webkit_web_view_get_uri(wv)) == 0)
+		if(webkit_hit_test_result_get_link_uri(h))
 		{
 			gtk_entry_set_text(c->tool->addressEn
 				,webkit_hit_test_result_get_link_uri(h));
-			w = FALSE;
-		}
-		else
-		{
-			w = TRUE;
+			c->tool->usrmod = FALSE; //This change isn't done by the usr
 		}
 	}
 	else
 	{
-		if(!w)
-			gtk_entry_set_text(c->tool->addressEn
-				,webkit_web_view_get_uri(wv));
+		gtk_entry_set_text(c->tool->addressEn
+			,webkit_web_view_get_uri(wv));
 	}
 }
 
