@@ -169,7 +169,7 @@ extern char * sql_speed_dial_get(size_t index)
 
 	sqlite3_exec(db,createDial,NULL,NULL,NULL);
 
-	if( rc )
+	if(rc)
 	{
 		printf("Error opening dial database: %s\n"
 			,sqlite3_errmsg(db));
