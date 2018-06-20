@@ -18,8 +18,6 @@ static const char * createPolicy = "PRAGMA synchronous=OFF;" \
 "WHERE NOT EXISTS(SELECT * FROM `POLICY`" \
 "WHERE `FROM IS NULL AND `TO` IS NULL);";
 
-#define g_debug g_print
-
 /** Returns true if 'to' domains should load from `from` */
 static gboolean domainLookup(gchar * from, gchar * to)
 {

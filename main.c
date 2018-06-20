@@ -1267,7 +1267,7 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->twin = x;
 }
 
-static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
+/*static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
     ,void * v)
 {
 	if (e->type == GDK_FOCUS_CHANGE)
@@ -1275,7 +1275,7 @@ static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
 		gtk_editable_select_region(w, 0, 0);
 	}
 	return FALSE;
-}
+}*/
 
 static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	,void * v)
@@ -1284,7 +1284,7 @@ static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	{
 		if(e->type == GDK_2BUTTON_PRESS)
 		{
-			gtk_editable_select_region(w, 0, -1);
+			gtk_widget_grab_focus((GtkWidget *) w);
 			return TRUE;
 		}
 	}
@@ -1338,8 +1338,8 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_destroy_window_request), call);
     g_signal_connect(tool->addressEn, "activate"
         ,G_CALLBACK(c_act), call);
-	g_signal_connect(tool->addressEn, "focus-out-event"
-        ,G_CALLBACK(c_addr_unfocus), NULL);
+	/*g_signal_connect(tool->addressEn, "focus-out-event"
+        ,G_CALLBACK(c_addr_unfocus), NULL);*/
 	g_signal_connect(tool->addressEn, "button-press-event"
         ,G_CALLBACK(c_addr_click), NULL);
     g_signal_connect(tool->backTb, "clicked"
@@ -1418,7 +1418,9 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
 	,guint m, struct call_st * c)
 {
-	if(c->tool->usrmod)
+	if(c->tool->usrmod
+	|| gtk_editable_get_selection_bounds
+	((GtkEditable *) c->tool->addressEn,NULL,NULL))
 		return;
 	if(webkit_hit_test_result_context_is_link(h))
 	{
