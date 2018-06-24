@@ -19,6 +19,13 @@
 				Hide tab interface when only one tab is in a window
 			</description>
 		</key>
+		<key name='download-domain' type='b'>
+			<default>false</default>
+			<summary>Download files to domain folders</summary>
+			<description>
+				When downloading files to default directory create a folder named after the page domain it came from and save it there
+			</description>
+		</key>
 		<key name='planc-init' type='b'>
 			<default>false</default>
 			<summary>Settings Initialized</summary>

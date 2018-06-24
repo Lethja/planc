@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([planc], [0.03])
+AC_INIT([planc], [0.04])
 AM_INIT_AUTOMAKE([-Wall foreign])
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADERS([config.h])
@@ -29,6 +29,7 @@ fi
 
 AC_PROG_CC_C99
 AC_PROG_RANLIB
+AM_PROG_AR
 AC_SYS_LARGEFILE
 
 # Checks for libraries.

@@ -3,7 +3,11 @@
 #include "download.h"
 #include "database.h"
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <math.h>
+#include <glib.h>
+#include <glib/gstdio.h>
+#include "libdomain.h"
 
 static const gchar * G_search;
 static GtkTreeStore * G_store;
@@ -285,7 +289,7 @@ static void progress_cell_data_func(GtkTreeViewColumn * c
 
 	gtk_tree_model_get(model, iter, STAT_COLUMN, &stat
 		,PROG_COLUMN, &slider, -1);
-	
+
 	g_object_set(renderer, "value", slider, NULL);
 	g_object_set(renderer, "text", stat, NULL);
 }
@@ -320,8 +324,45 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 
 	g_free(t);
 
-	gchar * absdir = g_build_filename(g_get_user_special_dir
-		(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+	gchar * absdir;
+	if(g_settings_get_boolean(G_SETTINGS,"download-domain"))
+	{
+		gchar * td = getDomainName
+			(webkit_uri_request_get_uri
+			(webkit_download_get_request(d)));
+
+		gchar * t = g_build_filename(g_get_user_special_dir
+			(G_USER_DIRECTORY_DOWNLOAD), td, NULL);
+
+		if(g_file_test(t, G_FILE_TEST_IS_DIR))
+		{
+			if(g_mkdir(t, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
+			{
+				gchar * x = g_build_filename(g_get_user_special_dir
+					(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+				absdir = g_malloc(strlen(x)+1);
+				strncpy(absdir, x, strlen(x)+1);
+				g_free(x);
+			}
+			else
+			{
+				gchar * x = g_build_filename(g_get_user_special_dir
+					(G_USER_DIRECTORY_DOWNLOAD), td, f, NULL);
+				absdir = g_malloc(strlen(x)+1);
+				strncpy(absdir, x, strlen(x)+1);
+				g_free(x);
+			}
+		}
+		g_free(t);
+	}
+	else
+	{
+		gchar * x = g_build_filename(g_get_user_special_dir
+			(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+		absdir = g_malloc(strlen(x)+1);
+		strncpy(absdir, x, strlen(x)+1);
+		g_free(x);
+	}
 
 	GtkWidget * dbox = gtk_dialog_get_content_area
 		(GTK_DIALOG(DownloadPrompt));
