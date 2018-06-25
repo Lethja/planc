@@ -115,6 +115,8 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"High");
 
+	GtkWidget * dd = gtk_check_button_new_with_label
+		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
 		("Enable Developer Options");
     GtkWidget * ch = gtk_check_button_new_with_label
@@ -137,6 +139,8 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		("Enable Process Per Tab (Requires Restart)");
 
 	//Bind to setting
+	g_settings_bind (G_SETTINGS,"download-domain",dd,"active",
+		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-cache",ch,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-autohide",ta,"active",
@@ -151,7 +155,7 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-ppt",pt,"active",
 		 G_SETTINGS_BIND_DEFAULT);
-	 g_settings_bind (G_SETTINGS,"webkit-dev",dv,"active",
+	g_settings_bind (G_SETTINGS,"webkit-dev",dv,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
@@ -182,6 +186,7 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 		,G_CALLBACK(c_settings_dv), c);
 
 	//Parent
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dd),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dv),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(jv),FALSE,FALSE,0);

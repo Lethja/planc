@@ -239,7 +239,7 @@ static gchar * getDisposition(WebKitURIResponse * u)
 }
 
 static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
-	,struct call_st * v)
+	,gchar * fp)
 {
     GtkWidget *dialog;
     GtkFileChooser *chooser;
@@ -268,8 +268,11 @@ static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
     else
         gtk_file_chooser_set_current_name(chooser, fn);
 
-    gtk_file_chooser_set_current_folder(chooser
-        ,g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD));
+	if(fp)
+			gtk_file_chooser_set_current_folder(chooser, fp);
+	else
+		gtk_file_chooser_set_current_folder(chooser
+			,g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD));
 
     res = gtk_dialog_run (GTK_DIALOG (dialog));
     if (res == GTK_RESPONSE_ACCEPT)
@@ -332,28 +335,21 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 	g_free(t);
 
 	gchar * absdir = NULL;
+	gchar * abspth = NULL;
 	if(g_settings_get_boolean(G_SETTINGS,"download-domain"))
 	{
 		gchar * td = getDomainName(getDownloadPageUrl(d));
 
-		gchar * t = g_build_filename(g_get_user_special_dir
+		abspth = g_build_filename(g_get_user_special_dir
 			(G_USER_DIRECTORY_DOWNLOAD), td, NULL);
 
-		if(g_file_test(t, G_FILE_TEST_IS_DIR)
-		|| g_mkdir(t, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
+		if(g_file_test(abspth, G_FILE_TEST_IS_DIR)
+		|| g_mkdir(abspth, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
 		{
 			absdir = g_build_filename(g_get_user_special_dir
 				(G_USER_DIRECTORY_DOWNLOAD), td, f, NULL);
 		}
 		else
-		{
-			absdir = g_build_filename(g_get_user_special_dir
-				(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
-		}
-
-		g_free(t);
-
-		if(!absdir)
 		{
 			absdir = g_build_filename(g_get_user_special_dir
 				(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
@@ -420,7 +416,7 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 
         case GTK_RESPONSE_APPLY:
         gtk_widget_destroy(DownloadPrompt);
-        r = c_download_save_as(d, f, v);
+        r = c_download_save_as(d, f, abspth);
         break;
 
         default:
@@ -429,6 +425,8 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
         r = FALSE;
         break;
     }
+    if(abspth)
+		g_free(abspth);
     if(absdir)
 		g_free(absdir);
     if(f && f != fn)
