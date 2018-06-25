@@ -24,15 +24,15 @@ static gboolean c_webpage_send_request(WebKitWebPage * wp
 		}
 		else
 		{
-			if(!sql_domain_policy_read(pdom,rdom))
-			{
-				g_debug("DENY: '%s' > '%s'\n", pdom, rdom);
-				r = TRUE;
-			}
-			else
+			if(sql_domain_policy_read(pdom,rdom))
 			{
 				g_debug("PASS: '%s' > '%s'\n", pdom, rdom);
 				r = FALSE;
+			}
+			else
+			{
+				g_debug("DENY: '%s' > '%s'\n", pdom, rdom);
+				r = TRUE;
 			}
 		}
 		free(pdom); free(rdom);

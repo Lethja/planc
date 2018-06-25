@@ -1096,11 +1096,11 @@ static void InitWebContext()
     char * cachedir;
     char * cookiedir;
 
-    datadir = g_build_filename(g_get_user_data_dir(),g_get_prgname()
+    datadir = g_build_filename(g_get_user_data_dir(),PACKAGE_NAME
 		,NULL);
-    cachedir = g_build_filename(g_get_user_cache_dir(),g_get_prgname()
+    cachedir = g_build_filename(g_get_user_cache_dir(),PACKAGE_NAME
 		,NULL);
-    cookiedir = g_build_filename(g_get_user_data_dir(),g_get_prgname()
+    cookiedir = g_build_filename(g_get_user_data_dir(),PACKAGE_NAME
         ,"cookies",NULL);
     WebKitWebsiteDataManager * d = webkit_website_data_manager_new
         ("base-data-directory", cachedir, "base-cache-directory"
@@ -1438,9 +1438,52 @@ static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
 	}
 }
 
+static void initialSetup()
+{
+	GtkWidget * SetupDialog = gtk_dialog_new_with_buttons
+		("No domain policy rules setup for this user - Plan C"
+		,NULL
+		,0
+		,_("_Whitelist"),	GTK_RESPONSE_OK
+		,_("_Blacklist"),	GTK_RESPONSE_CANCEL
+		,NULL);
+	GtkWidget * dbox = gtk_dialog_get_content_area
+		(GTK_DIALOG(SetupDialog));
+	GtkWidget * l = gtk_label_new(
+		//"There is no domain policy rules setup for this user. "
+		"Please select a starting policy:\n\n"
+		"Whilelist is ideal for casual use. All requests from the page "
+		"will be granted.\n"
+		"This is how most web browsers work by default."
+		"\n\nBlacklist is ideal for machines where security/privacy "
+		"outweighs conivence.\nAll requests from a page "
+		"outside the original domain will be denied.\nThis is "
+		"very secure but may interfere with loading complex webpages.");
+	gtk_box_pack_start(GTK_BOX(dbox),l,0,1,0);
+	gtk_widget_show_all(dbox);
+
+	gint res = gtk_dialog_run(GTK_DIALOG(SetupDialog));
+    switch(res)
+    {
+		case GTK_RESPONSE_OK:
+			createPolicyDatabase(1);
+		break;
+		default:
+			createPolicyDatabase(0);
+		break;
+	}
+	gtk_widget_destroy(SetupDialog);
+}
+
 static void c_app_init(GtkApplication * app, void * v)
 {
 	G_SETTINGS = g_settings_new("priv.dis.planc");
+	POLICYDIR(p);
+	if(!g_file_test(p, G_FILE_TEST_IS_REGULAR))
+	{
+		initialSetup();
+	}
+	g_free(p);
 	InitWebContext();
 }
 

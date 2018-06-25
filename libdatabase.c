@@ -1,3 +1,5 @@
+#include "config.h"
+#include "libdatabase.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,30 +39,19 @@ static const char * selectDomainPolicy = "SELECT * FROM `POLICY` " \
 
 static const char * createPolicy = "PRAGMA synchronous=OFF;" \
 "CREATE TABLE IF NOT EXISTS `POLICY`(`FROM` TEXT, `TO` TEXT," \
-"`ALLOW` INTERGER);" \
-"INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`) VALUES (null, null, 0)" \
-"WHERE NOT EXISTS(SELECT * FROM `POLICY`" \
-"WHERE `FROM IS NULL AND `TO` IS NULL);";
+"`ALLOW` INTERGER, `INHERIT` INTERGER);";
+
+static const char * policyDefaultWhitelist = \
+"INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`, `INHERIT`)" \
+"VALUES (null, null, 1, 0)";
+
+static const char * policyDefaultBlacklist = \
+"INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`, `INHERIT`)" \
+"VALUES (null, null, 0, 0)";
 
 static const char * retrieveHistory = "SELECT * FROM `HISTORY`";
 
 static const char * retrieveDownload = "SELECT * FROM `DOWNLOAD`";
-
-#define DIALDIR(dialdir) char * (dialdir) \
-= g_build_filename(g_get_user_config_dir() \
-,g_get_prgname(),"dial",NULL)
-
-#define HISTORYDIR(historydir) char * (historydir) \
-= g_build_filename(g_get_user_data_dir() \
-,g_get_prgname(),"history",NULL)
-
-#define DOWNLOADDIR(downloaddir) char * (downloaddir) \
-= g_build_filename(g_get_user_data_dir() \
-,g_get_prgname(),"download",NULL)
-
-#define POLICYDIR(policydir) char * (policydir) \
-= g_build_filename(g_get_user_config_dir() \
-,"planc","policy",NULL)
 
 /** Returns true if 'to' domains as allow to load from `from` */
 extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
@@ -161,15 +152,18 @@ extern void sql_history_write(const char * url, const char * title)
 	return;
 }
 
-static void createPolicyDatabase()
+void createPolicyDatabase(int t)
 {
 	sqlite3 * db;
 	POLICYDIR(policydir);
 	int rc;
 	rc = sqlite3_open(policydir, &db);
-	g_print("Created policy database '%s'",policydir);
 	g_free(policydir);
 	sqlite3_exec(db,createPolicy,NULL,NULL,NULL);
+	if(t)
+		sqlite3_exec(db,policyDefaultWhitelist,NULL,NULL,NULL);
+	else
+		sqlite3_exec(db,policyDefaultBlacklist,NULL,NULL,NULL);
 	sqlite3_close(db);
 }
 
