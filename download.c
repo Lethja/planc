@@ -1,7 +1,7 @@
 #define _GNU_SOURCE
 #include "main.h"
 #include "download.h"
-#include "database.h"
+#include "libdatabase.h"
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <math.h>
@@ -154,23 +154,30 @@ static void c_download_progress(WebKitDownload * d, guint pro
 	free(l);
 }
 
+static const gchar * getDownloadPageUrl(WebKitDownload * d)
+{
+	const gchar * p
+		= webkit_web_view_get_uri(webkit_download_get_web_view(d));
+	if(!p || strcmp(p,"") == 0)
+		return p;
+	const gchar * a
+		= webkit_uri_request_get_uri(webkit_download_get_request(d));
+	return a;
+}
+
 static void c_download_destination_created(WebKitDownload * d
 	,gchar * u, void * v)
 {
 	gchar * n = getFileNameFromPath(u);
-	const gchar * p
-		= webkit_web_view_get_uri(webkit_download_get_web_view(d));
+	const gchar * p = getDownloadPageUrl(d);
 	const gchar * a
 		= webkit_uri_request_get_uri(webkit_download_get_request(d));
+
+	GtkTreeIter * t = addDownloadEntry(u,n,a,p,"Downloading",v);
 
 	//Write to database now to disk space if p == NULL || ""
 	sql_download_write(p, a, webkit_download_get_destination(d));
 
-	//Set download page (p) to download uri (a) if p == NULL || ""
-	if(!p || strcmp(p,"") == 0)
-		p = a;
-
-	GtkTreeIter * t = addDownloadEntry(u,n,a,p,"Downloading",v);
 	g_signal_connect(d,"received-data"
 		,G_CALLBACK(c_download_progress),t);
 	g_signal_connect(d, "finished"
@@ -324,12 +331,10 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 
 	g_free(t);
 
-	gchar * absdir;
+	gchar * absdir = NULL;
 	if(g_settings_get_boolean(G_SETTINGS,"download-domain"))
 	{
-		gchar * td = getDomainName
-			(webkit_uri_request_get_uri
-			(webkit_download_get_request(d)));
+		gchar * td = getDomainName(getDownloadPageUrl(d));
 
 		gchar * t = g_build_filename(g_get_user_special_dir
 			(G_USER_DIRECTORY_DOWNLOAD), td, NULL);
@@ -428,7 +433,8 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
         r = FALSE;
         break;
     }
-    g_free(absdir);
+    if(absdir)
+		g_free(absdir);
     if(f && f != fn)
 		g_free(f);
     return r;

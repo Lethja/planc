@@ -1,6 +1,6 @@
 #include "main.h"
 #include "settings.h"
-#include "database.h"
+#include "libdatabase.h"
 #include "download.h"
 #include "history.h"
 

@@ -1,8 +1,7 @@
 #define _GNU_SOURCE
 #include "main.h"
 #include "history.h"
-#include "database.h"
-
+#include "libdatabase.h"
 
 enum
 {

@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <glib.h>
+extern gboolean sql_domain_policy_read(gchar * from, gchar * to);
 extern void sql_history_write(const char * url, const char * title);
 extern void sql_download_write(const char * page, const char * url
 	,const char * file);
