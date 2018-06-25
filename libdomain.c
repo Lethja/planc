@@ -23,8 +23,11 @@ extern char * getDomainName(const char * url)
 		return NULL;
 	st = removeWWW(st);
 	char * et = strchr(st,'/');
-	size_t len = 0;
+	char * pv = strrchr(st,':');
+	if(pv)
+		et = pv;
 
+	size_t len = 0;
 	if(et)
 		len = strlen(st) - strlen(et);
 	else

@@ -339,34 +339,30 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 		gchar * t = g_build_filename(g_get_user_special_dir
 			(G_USER_DIRECTORY_DOWNLOAD), td, NULL);
 
-		if(g_file_test(t, G_FILE_TEST_IS_DIR))
+		if(g_file_test(t, G_FILE_TEST_IS_DIR)
+		|| g_mkdir(t, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
 		{
-			if(g_mkdir(t, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH))
-			{
-				gchar * x = g_build_filename(g_get_user_special_dir
-					(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
-				absdir = g_malloc(strlen(x)+1);
-				strncpy(absdir, x, strlen(x)+1);
-				g_free(x);
-			}
-			else
-			{
-				gchar * x = g_build_filename(g_get_user_special_dir
-					(G_USER_DIRECTORY_DOWNLOAD), td, f, NULL);
-				absdir = g_malloc(strlen(x)+1);
-				strncpy(absdir, x, strlen(x)+1);
-				g_free(x);
-			}
+			absdir = g_build_filename(g_get_user_special_dir
+				(G_USER_DIRECTORY_DOWNLOAD), td, f, NULL);
 		}
+		else
+		{
+			absdir = g_build_filename(g_get_user_special_dir
+				(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+		}
+
 		g_free(t);
+
+		if(!absdir)
+		{
+			absdir = g_build_filename(g_get_user_special_dir
+				(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+		}
 	}
 	else
 	{
-		gchar * x = g_build_filename(g_get_user_special_dir
+		absdir = g_build_filename(g_get_user_special_dir
 			(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
-		absdir = g_malloc(strlen(x)+1);
-		strncpy(absdir, x, strlen(x)+1);
-		g_free(x);
 	}
 
 	GtkWidget * dbox = gtk_dialog_get_content_area
