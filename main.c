@@ -1478,6 +1478,13 @@ static void initialSetup()
 static void c_app_init(GtkApplication * app, void * v)
 {
 	G_SETTINGS = g_settings_new("priv.dis.planc");
+	char * config = g_build_filename(g_get_user_config_dir()
+		,PACKAGE_NAME ,NULL);
+	if(!g_file_test(config, G_FILE_TEST_IS_DIR))
+	{
+		g_mkdir(config, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	}
+	g_free(config);
 	POLICYDIR(p);
 	if(!g_file_test(p, G_FILE_TEST_IS_REGULAR))
 	{
