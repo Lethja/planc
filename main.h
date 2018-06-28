@@ -57,5 +57,5 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc);
 extern void * new_tab_ext(char * url, PlancWindow * v
 	,gboolean show);
 
-GtkWidget * get_web_view();
-GtkNotebook * get_web_view_notebook();
+void c_destroy_window_menu(GtkWidget * widget
+	,GtkWindow * c);

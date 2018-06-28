@@ -3,6 +3,7 @@
 #include "libdatabase.h"
 #include "download.h"
 #include "history.h"
+#include "gmenu.h"
 
 GtkApplication * G_APP			= NULL;
 GSettings * G_SETTINGS			= NULL;
@@ -10,6 +11,7 @@ GtkWindow * G_HISTORY			= NULL;
 GtkWindow * G_DOWNLOAD			= NULL;
 WebKitSettings * G_WKC_SETTINGS	= NULL;
 WebKitWebContext * G_WKC		= NULL;
+GtkSettings * G_GTK_SETTINGS	= NULL;
 
 static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
 
@@ -875,10 +877,10 @@ static void c_destroy_window(GtkWidget* widget, void * v)
 	free(c);
 }
 
-static void c_destroy_window_menu(GtkWidget * widget
-	,PlancWindow * v)
+void c_destroy_window_menu(GtkWidget * widget
+	,GtkWindow * c)
 {
-	gtk_window_close((GtkWindow *) v);
+	gtk_window_close(c);
 }
 
 static WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v)
@@ -1066,7 +1068,7 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
 		,G_CALLBACK(c_open_download), v);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
-		,G_CALLBACK(c_destroy_window_menu), v);
+		,G_CALLBACK(c_destroy_window_menu), c->twin);
 
 	c->menu = menu;
 	gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
@@ -1307,6 +1309,17 @@ void InitCallback(struct call_st * c, struct find_st * f
 	return FALSE;
 }*/
 
+gboolean preferGmenu()
+{
+	gboolean g = FALSE;
+	if(G_GTK_SETTINGS)
+	{
+		g_object_get(G_GTK_SETTINGS,"gtk-shell-shows-app-menu"
+			,&g,NULL);
+	}
+	return g;
+}
+
 static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	,void * v)
 {
@@ -1432,7 +1445,9 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
     }
 
 	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
-	gtk_widget_show_all(GTK_WIDGET(window));
+	gtk_widget_show_all(window);
+	if(preferGmenu())
+		gtk_widget_hide(GTK_WIDGET(menu->menu));
     gtk_widget_hide(GTK_WIDGET(find->top));
     return (GtkWidget *) window;
 }
@@ -1527,13 +1542,9 @@ GtkNotebook * get_web_view_notebook()
 static void c_app_init(GtkApplication * app, void * v)
 {
 	G_SETTINGS = g_settings_new("priv.dis.planc");
-	char * config = g_build_filename(g_get_user_config_dir()
-		,PACKAGE_NAME ,NULL);
-	if(!g_file_test(config, G_FILE_TEST_IS_DIR))
-	{
-		g_mkdir(config, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-	}
-	g_free(config);
+	G_GTK_SETTINGS = gtk_settings_get_default();
+	if(preferGmenu())
+		InitAppMenu();
 	POLICYDIR(p);
 	if(!g_file_test(p, G_FILE_TEST_IS_REGULAR))
 	{
