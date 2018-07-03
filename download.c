@@ -398,7 +398,7 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 	gtk_widget_show_all(dbox);
 
 	gint res = gtk_dialog_run(GTK_DIALOG(DownloadPrompt));
-	gboolean r;
+	gboolean r = FALSE;
     switch(res)
     {
 		case GTK_RESPONSE_OK:
