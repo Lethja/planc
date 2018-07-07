@@ -8,6 +8,7 @@
 #include <glib/gstdio.h>
 #include <gmodule.h>
 #include <ctype.h>
+#include "plan.h"
 
 #define WK_CURRENT_TAB(notebook) \
 (WebKitWebView *) gtk_notebook_get_nth_page(notebook \
@@ -25,70 +26,6 @@ extern GtkWindow * G_HISTORY;
 extern GtkWindow * G_DOWNLOAD;
 extern WebKitSettings * G_WKC_SETTINGS;
 extern WebKitWebContext * G_WKC; //Global WebKit Context
-
-struct menu_st
-{
-    GtkWidget * menu;
-    GtkWidget * fileMenu;
-    GtkWidget * editMenu;
-    GtkWidget * viewMenu;
-    GtkWidget * tabsMenu;
-    GtkWidget * viewTabMenu;
-    GtkWidget * helpMenu;
-    GtkWidget * fileMh;
-    GtkWidget * editMh;
-    GtkWidget * viewMh;
-    GtkWidget * tabsMh;
-    GtkWidget * helpMh;
-    GtkWidget * viewTabMh;
-    GtkWidget * tabH;
-    GtkWidget * tabV;
-    GtkWidget * tabM;
-    GtkWidget * findMi;
-    GtkWidget * setwMi;
-    GtkWidget * cTabMi;
-    GtkWidget * nTabMi;
-    GtkWidget * nWinMi;
-    GtkWidget * quitMi;
-    GtkWidget * histMi;
-    GtkWidget * downMi;
-};
-
-struct tool_st
-{
-    GtkWidget * top;
-    GtkToolButton * backTb;
-    GtkToolButton * forwardTb;
-    GtkContainer * addressTi;
-    GtkEntry * addressEn;
-    GtkToolButton * reloadTb;
-    GtkImage * reloadIo;
-    gboolean usrmod; //Has the user modified the address bar?
-};
-
-struct find_st
-{
-    GtkWidget * top;
-    GtkSearchEntry * findSb;
-    GtkToolButton * backTb;
-    GtkToolButton * forwardTb;
-    GtkToolButton * closeTb;
-};
-
-struct sign_st
-{
-	gulong nb_changed;
-};
-
-struct call_st
-{
-    struct menu_st 	* menu;
-    struct tool_st 	* tool;
-    struct find_st 	* find;
-    struct sign_st 	* sign;
-    GtkNotebook 	* tabs;
-    GtkWidget 		* twin;
-};
 
 struct dpco_st //Dual Pointer (Call and Other)
 {

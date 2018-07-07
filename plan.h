@@ -5,37 +5,102 @@
 #include <gtk/gtk.h>
 #endif
 
-#define PLANC_TYPE_WINDOW_CONTAINER \
-	(planc_window_container_get_type ())
-#define PLANC_WINDOW_CONTAINER(obj) \
-	(G_TYPE_CHECK_INSTANCE_CAST ((obj), PLANC_TYPE_WINDOW_CONTAINER \
-	,PlancWindowContainer))
-#define PLANC_WINDOW_CONTAINER_CLASS(klass) \
-	(G_TYPE_CHECK_CLASS_CAST  ((klass), PLANC_TYPE_WINDOW_CONTAINER \
-	,PlancWindowContainerClass))
-#define PLANC_IS_WINDOW_CONTAINER(obj) \
-	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), PLANC_TYPE_WINDOW_CONTAINER))
-#define PLANC_IS_WINDOW_CONTAINER_CLASS(klass) \
-	(G_TYPE_CHECK_CLASS_TYPE  ((klass), PLANC_TYPE_WINDOW_CONTAINER))
-#define PLANC_WINDOW_CONTAINER_GET_CLASS(obj) \
-	(G_TYPE_INSTANCE_GET_CLASS  ((obj), PLANC_TYPE_WINDOW_CONTAINER \
-	,PlancWindowContainerClass))
-
-typedef struct _PlancWindowContainer      PlancWindowContainer;
-typedef struct _PlancWindowContainerClass PlancWindowContainerClass;
-
-struct _PlancWindowContainer
+struct menu_st
 {
-    GtkApplicationWindow parent_instance;
+    GtkWidget * menu;
+    GtkWidget * fileMenu;
+    GtkWidget * editMenu;
+    GtkWidget * viewMenu;
+    GtkWidget * tabsMenu;
+    GtkWidget * viewTabMenu;
+    GtkWidget * helpMenu;
+    GtkWidget * fileMh;
+    GtkWidget * editMh;
+    GtkWidget * viewMh;
+    GtkWidget * tabsMh;
+    GtkWidget * helpMh;
+    GtkWidget * viewTabMh;
+    GtkWidget * tabH;
+    GtkWidget * tabV;
+    GtkWidget * tabM;
+    GtkWidget * findMi;
+    GtkWidget * setwMi;
+    GtkWidget * cTabMi;
+    GtkWidget * nTabMi;
+    GtkWidget * nWinMi;
+    GtkWidget * quitMi;
+    GtkWidget * histMi;
+    GtkWidget * downMi;
 };
 
-struct _PlancWindowContainerClass
+struct tool_st
+{
+    GtkWidget * top;
+    GtkToolButton * backTb;
+    GtkToolButton * forwardTb;
+    GtkContainer * addressTi;
+    GtkEntry * addressEn;
+    GtkToolButton * reloadTb;
+    GtkImage * reloadIo;
+    gboolean usrmod; //Has the user modified the address bar?
+};
+
+struct find_st
+{
+    GtkWidget * top;
+    GtkSearchEntry * findSb;
+    GtkToolButton * backTb;
+    GtkToolButton * forwardTb;
+    GtkToolButton * closeTb;
+};
+
+struct sign_st
+{
+	gulong nb_changed;
+};
+
+struct call_st
+{
+    struct menu_st 	* menu;
+    struct tool_st 	* tool;
+    struct find_st 	* find;
+    struct sign_st 	* sign;
+    GtkNotebook 	* tabs;
+    GtkWidget		* twin;
+};
+
+#define PLANC_TYPE_WINDOW \
+	(planc_window_get_type ())
+#define PLANC_WINDOW(obj) \
+	(G_TYPE_CHECK_INSTANCE_CAST ((obj), PLANC_TYPE_WINDOW \
+	,PlancWindow))
+#define PLANC_WINDOW_CLASS(klass) \
+	(G_TYPE_CHECK_CLASS_CAST  ((klass), PLANC_TYPE_WINDOW \
+	,PlancWindowClass))
+#define PLANC_IS_WINDOW(obj) \
+	(G_TYPE_CHECK_INSTANCE_TYPE ((obj), PLANC_TYPE_WINDOW))
+#define PLANC_IS_WINDOW_CLASS(klass) \
+	(G_TYPE_CHECK_CLASS_TYPE  ((klass), PLANC_TYPE_WINDOW))
+#define PLANC_WINDOW_GET_CLASS(obj) \
+	(G_TYPE_INSTANCE_GET_CLASS  ((obj), PLANC_TYPE_WINDOW \
+	,PlancWindowClass))
+
+typedef struct _PlancWindow      	PlancWindow;
+typedef struct _PlancWindowClass	PlancWindowClass;
+
+struct _PlancWindow
+{
+    GtkApplicationWindow parent_instance;
+    struct call_st * call;
+};
+
+struct _PlancWindowClass
 {
     GtkApplicationWindowClass parent_class;
 };
 
-GType planc_window_container_get_type(void);
+GType planc_window_get_type(void);
 
-//PlancWindowContainer* planc_windowcontainer_new(void);
+PlancWindow * planc_window_new(GtkApplication * app);
 
 #endif /* __PLANC_WINDOWCONTAINER_H__ */

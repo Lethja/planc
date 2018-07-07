@@ -1299,9 +1299,13 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
     struct find_st * find = malloc(sizeof(struct find_st));
     struct sign_st * sign = malloc(sizeof(struct sign_st));
     struct call_st * call = malloc(sizeof(struct call_st));
-
+	
+	InitCallback(call,find,menu,tool,sign,NULL);
+	
     GtkWidget * window = gtk_application_window_new
 		((GtkApplication *) app);
+	
+	call->twin = window;
 
     GtkAccelGroup * accel_group = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
@@ -1319,7 +1323,6 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
     GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add(GTK_CONTAINER(window), vbox);
 
-    InitCallback(call,find,menu,tool,sign,window);
     InitMenubar(menu, call, accel_group);
     InitToolbar(tool, accel_group);
     call->tabs = InitNotetab(call);
