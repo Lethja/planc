@@ -18,43 +18,43 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 		gtk_notebook_set_show_tabs(c->tabs,TRUE);
 }
 
-void c_settings_jv(GtkToggleButton * w, struct call_st * c)
+void c_settings_jv(GtkToggleButton * w, void * v)
 {
 	webkit_settings_set_enable_java(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void c_settings_js(GtkToggleButton * w, struct call_st * c)
+void c_settings_js(GtkToggleButton * w, void * v)
 {
 	webkit_settings_set_enable_javascript(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void c_settings_mse(GtkToggleButton * w, struct call_st * c)
+void c_settings_mse(GtkToggleButton * w, void * v)
 {
 	webkit_settings_set_enable_mediasource(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void c_settings_in(GtkToggleButton * w, struct call_st * c)
+void c_settings_in(GtkToggleButton * w, void * v)
 {
 	webkit_settings_set_enable_plugins(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void c_settings_ch(GtkToggleButton * w, struct call_st * c)
+void c_settings_ch(GtkToggleButton * w, void * v)
 {
 	webkit_settings_set_enable_page_cache(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
 }
 
-void c_settings_dv(GtkToggleButton * w, struct call_st * c)
+void c_settings_dv(GtkToggleButton * w, void * v)
 {
 	g_object_set(G_OBJECT(G_WKC_SETTINGS), "enable-developer-extras"
 		,gtk_toggle_button_get_active(w), NULL);
 }
 
-void c_settings_cm(GtkComboBox * w, struct call_st * c)
+void c_settings_cm(GtkComboBox * w, void * v)
 {
 	switch(gtk_combo_box_get_active(w))
 	{
@@ -87,7 +87,7 @@ GtkWidget * InitComboBoxLabel(const gchar * l, GtkWidget * c)
 	return hbox;
 }
 
-GtkWindow * InitSettingsWindow(struct call_st * c)
+GtkWindow * InitSettingsWindow(PlancWindow * v)
 {
 	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_window_set_default_size(r,400,400);
@@ -163,28 +163,28 @@ GtkWindow * InitSettingsWindow(struct call_st * c)
 
 	//Connect events
 	g_signal_connect(mcmBox, "changed"
-		,G_CALLBACK(c_settings_cm), c);
+		,G_CALLBACK(c_settings_cm), NULL);
 
 	g_signal_connect(ta, "toggled"
-		,G_CALLBACK(c_notebook_tabs_autohide), c);
+		,G_CALLBACK(c_notebook_tabs_autohide), v);
 
 	g_signal_connect(ms, "toggled"
-		,G_CALLBACK(c_settings_mse), c);
+		,G_CALLBACK(c_settings_mse), NULL);
 
 	g_signal_connect(jv, "toggled"
-		,G_CALLBACK(c_settings_jv), c);
+		,G_CALLBACK(c_settings_jv), NULL);
 
 	g_signal_connect(js, "toggled"
-		,G_CALLBACK(c_settings_js), c);
+		,G_CALLBACK(c_settings_js), NULL);
 
 	g_signal_connect(in, "toggled"
-		,G_CALLBACK(c_settings_in), c);
+		,G_CALLBACK(c_settings_in), NULL);
 
 	g_signal_connect(ch, "toggled"
-		,G_CALLBACK(c_settings_ch), c);
+		,G_CALLBACK(c_settings_ch), NULL);
 
 	g_signal_connect(dv, "toggled"
-		,G_CALLBACK(c_settings_dv), c);
+		,G_CALLBACK(c_settings_dv), NULL);
 
 	//Parent
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dd),FALSE,FALSE,0);

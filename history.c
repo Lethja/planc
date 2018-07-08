@@ -28,7 +28,7 @@ static int treeIter(void * store, int count, char **data
 }
 
 void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
-	,GtkTreeViewColumn *column, struct call_st * c)
+	,GtkTreeViewColumn *column, PlancWindow * v)
 {
 	gchar *str_data;
 
@@ -37,10 +37,10 @@ void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
 
 	if (gtk_tree_model_get_iter(model, &iter, path))
 	{
+		struct call_st * c = planc_window_get_call(v);
 		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
 			,&str_data, -1);
-		webkit_web_view_load_uri(WK_CURRENT_TAB(c->tabs)
-			,str_data);
+		webkit_web_view_load_uri(WK_CURRENT_TAB(c->tabs), str_data);
 	}
 }
 

@@ -66,7 +66,6 @@ struct call_st
     struct find_st 	* find;
     struct sign_st 	* sign;
     GtkNotebook 	* tabs;
-    GtkWidget		* twin;
 };
 
 #define PLANC_TYPE_WINDOW \

@@ -216,9 +216,9 @@ void t_tabs_menu(PlancWindow * v, gboolean b)
 		gtk_menu_item_set_submenu((GtkMenuItem *) c->menu->tabsMh
 			,c->menu->tabsMenu);
 		g_signal_connect(c->menu->tabsMh, "select"
-			,G_CALLBACK(c_onclick_tabsMh), c);
+			,G_CALLBACK(c_onclick_tabsMh), v);
 		g_signal_connect_after(c->menu->tabsMh,"deselect"
-			,G_CALLBACK(c_onrelease_tabsMh),c);
+			,G_CALLBACK(c_onrelease_tabsMh),v);
 	}
 	else
 	{
@@ -480,13 +480,13 @@ static void c_addr_del(GtkEditable* e, gint sp, gint ep
     addrEntryState(e,v);
 }
 
-static void c_refresh(GtkWidget * widget, void * v)
+static void c_refresh(GtkWidget * widget, PlancWindow * v)
 {
 	struct call_st * c = planc_window_get_call(v);
     if(webkit_web_view_is_loading(WK_CURRENT_TAB(c->tabs)))
         webkit_web_view_stop_loading(WK_CURRENT_TAB(c->tabs));
     else
-        webkit_web_view_reload(WK_CURRENT_TAB(v));
+        webkit_web_view_reload(WK_CURRENT_TAB(c->tabs));
 }
 
 static void c_go_back(GtkWidget * widget, PlancWindow * v)
@@ -554,7 +554,7 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
         switch(k)
         {
         case GDK_KEY_F5:
-            c_refresh(w,c->tabs);
+            c_refresh(w,v);
         break;
         case GDK_KEY_F6:
 			if(gtk_widget_is_focus((GtkWidget *) c->tool->addressEn))
@@ -584,12 +584,17 @@ static void c_act(GtkWidget * widget, PlancWindow * v)
 {
     struct call_st * call = planc_window_get_call(v);
     char * curi = NULL;
-    switch(addrEntryState((GtkEditable *) widget,v))
+    switch(addrEntryState((GtkEditable *) call->tool->addressEn, v))
     {
         case 0: //Stop loading current page before requesting new uri
             webkit_web_view_stop_loading
                 (WK_CURRENT_TAB(call->tabs));
-
+		break;
+		
+		case 1: //Refresh
+			webkit_web_view_reload(WK_CURRENT_TAB(call->tabs));
+		break;
+		
         case 2: //Go
             curi = prepAddress(gtk_entry_get_text
                 (GTK_ENTRY(call->tool->addressEn)));
@@ -603,13 +608,13 @@ static void c_act(GtkWidget * widget, PlancWindow * v)
 }
 
 static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
-    ,guint i, void * v)
+    ,guint i, PlancWindow * v)
 {
     WebKitWebView * wv = (WebKitWebView *) page;
     struct call_st * call = planc_window_get_call(v);
     update_tab(nb,wv);
 
-    update_win_label(call->twin,nb,(GtkWidget *) wv);
+    update_win_label((GtkWidget *) v, nb, (GtkWidget *) wv);
 
     const gchar * url = webkit_web_view_get_uri(wv);
     gtk_entry_set_text(call->tool->addressEn, url);
@@ -676,7 +681,8 @@ static void c_loads(WebKitWebView * wv, WebKitWebResource * res
 }
 
 
-static void c_load(WebKitWebView * webv, WebKitLoadEvent evt ,void * v)
+static void c_load(WebKitWebView * webv, WebKitLoadEvent evt
+	,PlancWindow * v)
 {
     struct call_st * call = planc_window_get_call(v);
     switch(evt)
@@ -837,7 +843,7 @@ static gboolean closePrompt(PlancWindow * v)
 	if(g > 1)
 	{
 		GtkWidget * dialog = gtk_message_dialog_new
-			((GtkWindow *) call->twin
+			((GtkWindow *) v
 			,GTK_DIALOG_DESTROY_WITH_PARENT
 			,GTK_MESSAGE_QUESTION
 			,GTK_BUTTONS_YES_NO
@@ -888,7 +894,6 @@ static WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v)
 	}
 	else
 		webkit_web_view_load_uri(nt,"about:blank");
-	struct call_st * c = planc_window_get_call(v);
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->plan = v;
@@ -1040,28 +1045,28 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
 		,GDK_KEY_D, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
 
     g_signal_connect(G_OBJECT(menu->cTabMi), "activate"
-		,G_CALLBACK(c_notebook_close_current), c);
+		,G_CALLBACK(c_notebook_close_current), v);
 
     g_signal_connect(G_OBJECT(menu->findMi), "activate"
-		,G_CALLBACK(c_toggleSearch), c);
+		,G_CALLBACK(c_toggleSearch), v);
 
 	g_signal_connect(G_OBJECT(menu->setwMi), "activate"
-		,G_CALLBACK(c_open_settings), c);
+		,G_CALLBACK(c_open_settings), v);
 
     g_signal_connect(G_OBJECT(menu->nTabMi), "activate"
-		,G_CALLBACK(c_new_tab), c);
+		,G_CALLBACK(c_new_tab), v);
 
 	g_signal_connect(G_OBJECT(menu->nWinMi), "activate"
 		,G_CALLBACK(c_new_win), NULL);
 
 	g_signal_connect(G_OBJECT(menu->histMi), "activate"
-		,G_CALLBACK(c_open_history), c);
+		,G_CALLBACK(c_open_history), v);
 
 	g_signal_connect(G_OBJECT(menu->downMi), "activate"
-		,G_CALLBACK(c_open_download), c);
+		,G_CALLBACK(c_open_download), v);
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
-		,G_CALLBACK(c_destroy_window_menu), c);
+		,G_CALLBACK(c_destroy_window_menu), v);
 
 	c->menu = menu;
 	gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
@@ -1290,7 +1295,6 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->find = f;
     c->sign = s;
     c->tool = t;
-    c->twin = x;
 }
 
 /*static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
@@ -1330,7 +1334,6 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
 
     PlancWindow * window = planc_window_new((GtkApplication *) app);
 	planc_window_set_call(window, call);
-	call->twin = (GtkWidget *) window;
 
     GtkAccelGroup * accel_group = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
@@ -1340,7 +1343,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
 		(gdk_display_get_primary_monitor
 		(gdk_display_get_default()),res);
     gtk_window_set_default_size(GTK_WINDOW(window)
-		,res->width*0.5,res->height*0.5);
+		,res->width*0.5, res->height*0.5);
 	free(res);
     gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
     gtk_window_maximize(GTK_WINDOW(window));
@@ -1375,7 +1378,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
     g_signal_connect(tool->forwardTb, "clicked"
         ,G_CALLBACK(c_go_forward), window);
     g_signal_connect(tool->reloadTb, "clicked"
-        ,G_CALLBACK(c_refresh), window);
+        ,G_CALLBACK(c_act), window);
     g_signal_connect(call->tabs, "switch-page"
         ,G_CALLBACK(c_switch_tab), window);
 	g_signal_connect(call->tabs, "page-added"
