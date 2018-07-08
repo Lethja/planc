@@ -4,8 +4,9 @@
 GtkWindow * G_WIN_SETTINGS = NULL;
 
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
-	,struct call_st * c)
+	,PlancWindow * v)
 {
+	struct call_st * c = planc_window_get_call(v);
 	if(gtk_toggle_button_get_active(cbmi))
 	{
 		if(gtk_notebook_get_n_pages(c->tabs) == 1)

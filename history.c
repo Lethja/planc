@@ -45,7 +45,7 @@ void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
 }
 
 gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
-	,struct call_st * c)
+	,PlancWindow * v)
 {
 	if(event->type == GDK_BUTTON_RELEASE)
     {
@@ -65,7 +65,7 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
 				{
 					gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
 						,&str_data, -1);
-					new_tab_ext(str_data,c,TRUE);
+					new_tab_ext(str_data,v,TRUE);
 				}
 			}
 		}

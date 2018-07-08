@@ -102,5 +102,7 @@ struct _PlancWindowClass
 GType planc_window_get_type(void);
 
 PlancWindow * planc_window_new(GtkApplication * app);
+void planc_window_set_call(PlancWindow * self, struct call_st * call);
+struct call_st * planc_window_get_call(PlancWindow * self);
 
 #endif /* __PLANC_WINDOWCONTAINER_H__ */

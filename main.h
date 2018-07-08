@@ -36,23 +36,23 @@ struct dpco_st //Dual Pointer (Call and Other)
 struct newt_st
 {
     WebKitWebView * webv;
-    struct call_st * call;
-    gboolean show;
+	PlancWindow * plan;
+	gboolean show;
 };
 
 void c_free_docp(gpointer data, GClosure *closure);
 
-void connect_signals (WebKitWebView * wv, struct call_st * c);
+void connect_signals (WebKitWebView * wv, PlancWindow * v);
 
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
-	,struct call_st * c);
+	,PlancWindow * v);
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
-	,guint n, struct call_st * c);
+	,guint n, PlancWindow * v);
 
-void c_onrelease_tabsMh(GtkMenuItem * mi, struct call_st * c);
+void c_onrelease_tabsMh(GtkMenuItem * mi, PlancWindow * v);
 
 void InitWindow(GApplication * app, gchar ** argv, int argc);
 
-extern void * new_tab_ext(char * url, struct call_st * c
+extern void * new_tab_ext(char * url, PlancWindow * v
 	,gboolean show);

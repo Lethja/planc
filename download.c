@@ -305,7 +305,7 @@ static void progress_cell_data_func(GtkTreeViewColumn * c
 }
 
 static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
-	,struct call_st * v)
+	,PlancWindow * v)
 {
 	gchar * t = NULL;
 	gchar * f = NULL;
