@@ -52,7 +52,10 @@ void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 
 void c_onrelease_tabsMh(GtkMenuItem * mi, PlancWindow * v);
 
-void InitWindow(GApplication * app, gchar ** argv, int argc);
+GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc);
 
 extern void * new_tab_ext(char * url, PlancWindow * v
 	,gboolean show);
+
+GtkWidget * get_web_view();
+GtkNotebook * get_web_view_notebook();

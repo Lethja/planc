@@ -28,7 +28,7 @@ static int treeIter(void * store, int count, char **data
 }
 
 void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
-	,GtkTreeViewColumn *column, PlancWindow * v)
+	,GtkTreeViewColumn *column, void * v)
 {
 	gchar *str_data;
 
@@ -37,15 +37,15 @@ void c_history_url(GtkTreeView * tree_view, GtkTreePath * path
 
 	if (gtk_tree_model_get_iter(model, &iter, path))
 	{
-		struct call_st * c = planc_window_get_call(v);
+		GtkNotebook * nb = get_web_view_notebook();
 		gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
 			,&str_data, -1);
-		webkit_web_view_load_uri(WK_CURRENT_TAB(c->tabs), str_data);
+		webkit_web_view_load_uri(WK_CURRENT_TAB(nb), str_data);
 	}
 }
 
-gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
-	,PlancWindow * v)
+gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton * event
+	,void * v)
 {
 	if(event->type == GDK_BUTTON_RELEASE)
     {
@@ -63,9 +63,10 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton *event
 
 				if (gtk_tree_model_get_iter(model, &iter, path))
 				{
+					PlancWindow * w = (PlancWindow *) get_web_view();
 					gtk_tree_model_get (GTK_TREE_MODEL(model), &iter, 0
 						,&str_data, -1);
-					new_tab_ext(str_data,v,TRUE);
+					new_tab_ext(str_data,w,TRUE);
 				}
 			}
 		}

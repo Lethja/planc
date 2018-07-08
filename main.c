@@ -590,11 +590,11 @@ static void c_act(GtkWidget * widget, PlancWindow * v)
             webkit_web_view_stop_loading
                 (WK_CURRENT_TAB(call->tabs));
 		break;
-		
+
 		case 1: //Refresh
 			webkit_web_view_reload(WK_CURRENT_TAB(call->tabs));
 		break;
-		
+
         case 2: //Go
             curi = prepAddress(gtk_entry_get_text
                 (GTK_ENTRY(call->tool->addressEn)));
@@ -1321,7 +1321,7 @@ static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
 	return FALSE;
 }
 
-void InitWindow(GApplication * app, gchar ** argv, int argc)
+GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
 {
 	//There's probably a better way to do this with Glib
 	struct menu_st * menu = malloc(sizeof(struct menu_st));
@@ -1434,6 +1434,7 @@ void InitWindow(GApplication * app, gchar ** argv, int argc)
 	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
 	gtk_widget_show_all(GTK_WIDGET(window));
     gtk_widget_hide(GTK_WIDGET(find->top));
+    return (GtkWidget *) window;
 }
 
 static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
@@ -1505,6 +1506,22 @@ static void initialSetup()
 		break;
 	}
 	gtk_widget_destroy(SetupDialog);
+}
+
+GtkWidget * get_web_view()
+{
+	GtkWidget * w = (GtkWidget *) gtk_application_get_active_window
+		(GTK_APPLICATION(G_APP));
+	if(!w) //No web view windows are open, make one
+		w = InitWindow(G_APPLICATION(G_APP), (gchar**)"about:blank", 1);
+	return w;
+}
+
+GtkNotebook * get_web_view_notebook()
+{
+	GtkWidget * w = get_web_view();
+	struct call_st * c = planc_window_get_call((PlancWindow *) w);
+	return GTK_NOTEBOOK(c->tabs);
 }
 
 static void c_app_init(GtkApplication * app, void * v)
