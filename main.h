@@ -45,7 +45,7 @@ void c_free_docp(gpointer data, GClosure *closure);
 void connect_signals (WebKitWebView * wv, PlancWindow * v);
 
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
-	,PlancWindow * v);
+	,void * v);
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	,guint n, PlancWindow * v);
@@ -58,4 +58,10 @@ extern void * new_tab_ext(char * url, PlancWindow * v
 	,gboolean show);
 
 void c_destroy_window_menu(GtkWidget * widget
-	,GtkWindow * c);
+	,PlancWindow * v);
+
+gboolean preferGmenu();
+
+GtkWidget * get_web_view();
+
+GtkNotebook * get_web_view_notebook();

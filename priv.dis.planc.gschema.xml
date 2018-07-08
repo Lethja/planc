@@ -133,6 +133,13 @@
 				Enable Webkit Inspector
 			</description>
 		</key>
+	  <key name='planc-traditional' type='b'>
+			<default>false</default>
+			<summary>Force Traditional Menu</summary>
+			<description>
+				Force Plan C to use the traditional full menu even if the desktop enviroment handles a Gmenu
+			</description>
+		</key>
 		<key name="planc-startpage" type="s">
 			<default l10n="messages">"about:blank"</default>
 			<summary>Startup page</summary>

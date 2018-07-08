@@ -1,21 +1,46 @@
 #include "main.h"
 #include "settings.h"
+#include "plan.h"
 
 GtkWindow * G_WIN_SETTINGS = NULL;
 
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
-	,PlancWindow * v)
+	,void * v)
 {
-	struct call_st * c = planc_window_get_call(v);
-	if(gtk_toggle_button_get_active(cbmi))
+	gboolean setting = gtk_toggle_button_get_active(cbmi);
+	GList * wins = gtk_application_get_windows(G_APP);
+	while(wins)
 	{
-		if(gtk_notebook_get_n_pages(c->tabs) == 1)
-			gtk_notebook_set_show_tabs(c->tabs,FALSE);
-		else
+		struct call_st * c = planc_window_get_call
+			(PLANC_WINDOW(wins->data));
+		if(setting)
+		{
+			if(gtk_notebook_get_n_pages(c->tabs) == 1)
+				gtk_notebook_set_show_tabs(c->tabs,FALSE);
+			else
+				gtk_notebook_set_show_tabs(c->tabs,TRUE);
+		}
+		else if(!gtk_notebook_get_show_tabs(c->tabs))
 			gtk_notebook_set_show_tabs(c->tabs,TRUE);
+		wins = wins->next;
 	}
-	else if(!gtk_notebook_get_show_tabs(c->tabs))
-		gtk_notebook_set_show_tabs(c->tabs,TRUE);
+}
+
+void c_traditional_menu_hide(GtkToggleButton * cbmi
+	,void * v)
+{
+	gboolean setting = gtk_toggle_button_get_active(cbmi);
+	GList * wins = gtk_application_get_windows(G_APP);
+	while(wins)
+	{
+		struct call_st * c = planc_window_get_call
+			(PLANC_WINDOW(wins->data));
+		if(setting)
+			gtk_widget_show(GTK_WIDGET(c->menu->menu));
+		else
+			gtk_widget_hide(GTK_WIDGET(c->menu->menu));
+		wins = wins->next;
+	}
 }
 
 void c_settings_jv(GtkToggleButton * w, void * v)
@@ -116,6 +141,8 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"High");
 
+  GtkWidget * tm = gtk_check_button_new_with_label
+		("Always show menu at top of window");
 	GtkWidget * dd = gtk_check_button_new_with_label
 		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
@@ -142,6 +169,8 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 	//Bind to setting
 	g_settings_bind (G_SETTINGS,"download-domain",dd,"active",
 		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"planc-traditional",tm,"active",
+		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-cache",ch,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-autohide",ta,"active",
@@ -161,12 +190,17 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 
+
+
 	//Connect events
 	g_signal_connect(mcmBox, "changed"
 		,G_CALLBACK(c_settings_cm), NULL);
 
 	g_signal_connect(ta, "toggled"
-		,G_CALLBACK(c_notebook_tabs_autohide), v);
+		,G_CALLBACK(c_notebook_tabs_autohide), NULL);
+
+	g_signal_connect(tm, "toggled"
+		,G_CALLBACK(c_traditional_menu_hide), NULL);
 
 	g_signal_connect(ms, "toggled"
 		,G_CALLBACK(c_settings_mse), NULL);
@@ -187,6 +221,7 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		,G_CALLBACK(c_settings_dv), NULL);
 
 	//Parent
+  gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tm),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dd),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dv),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);
