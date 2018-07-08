@@ -29,7 +29,8 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 void c_traditional_menu_hide(GtkToggleButton * cbmi
 	,void * v)
 {
-	gboolean setting = gtk_toggle_button_get_active(cbmi);
+	gboolean setting = (gtk_toggle_button_get_active(cbmi)
+		|| !preferGmenu());
 	GList * wins = gtk_application_get_windows(G_APP);
 	while(wins)
 	{
