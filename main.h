@@ -65,3 +65,5 @@ gboolean preferGmenu();
 GtkWidget * get_web_view();
 
 GtkNotebook * get_web_view_notebook();
+
+WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v);

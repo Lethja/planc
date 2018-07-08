@@ -883,7 +883,7 @@ void c_destroy_window_menu(GtkWidget * widget
 	gtk_window_close(c);
 }
 
-static WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v)
+WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v)
 {
     WebKitWebView * nt
         = (WebKitWebView *) webkit_web_view_new_with_context(G_WKC);
