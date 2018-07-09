@@ -1284,9 +1284,9 @@ void InitFindBar(struct find_st * f, PlancWindow * v)
     g_signal_connect(f->forwardTb, "clicked"
         ,G_CALLBACK(c_search_nxt), call->tabs);
     g_signal_connect(f->closeTb, "clicked"
-        ,G_CALLBACK(c_toggleSearch), call);
+        ,G_CALLBACK(c_toggleSearch), v);
     g_signal_connect(f->findSb, "focus-out-event"
-        ,G_CALLBACK(c_toggleSearchEvent), call);
+        ,G_CALLBACK(c_toggleSearchEvent), v);
     g_signal_connect(f->findSb, "search-changed"
         ,G_CALLBACK(c_search_page), call->tabs);
 }

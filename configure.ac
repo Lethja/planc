@@ -66,5 +66,4 @@ AS_IF([test "x$enable_gnome" = "xyes"],
 [
 	AC_DEFINE([PLANC_FEATURE_GNOME], [1], [Build with Gnome3 oriented features like Gmenu])
 ])
-#AC_SUBST(GNOME, GNOME)
 AC_OUTPUT
