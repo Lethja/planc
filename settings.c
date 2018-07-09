@@ -25,7 +25,7 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 		wins = wins->next;
 	}
 }
-
+#ifdef PLANC_FEATURE_GNOME
 void c_traditional_menu_hide(GtkToggleButton * cbmi
 	,void * v)
 {
@@ -43,7 +43,7 @@ void c_traditional_menu_hide(GtkToggleButton * cbmi
 		wins = wins->next;
 	}
 }
-
+#endif
 void c_settings_jv(GtkToggleButton * w, void * v)
 {
 	webkit_settings_set_enable_java(G_WKC_SETTINGS
@@ -141,9 +141,10 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		,"Low");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"High");
-
-  GtkWidget * tm = gtk_check_button_new_with_label
+	#ifdef PLANC_FEATURE_GNOME
+	GtkWidget * tm = gtk_check_button_new_with_label
 		("Always show menu at top of window");
+	#endif
 	GtkWidget * dd = gtk_check_button_new_with_label
 		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
@@ -170,8 +171,10 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 	//Bind to setting
 	g_settings_bind (G_SETTINGS,"download-domain",dd,"active",
 		 G_SETTINGS_BIND_DEFAULT);
+	#ifdef PLANC_FEATURE_GNOME
 	g_settings_bind (G_SETTINGS,"planc-traditional",tm,"active",
 		 G_SETTINGS_BIND_DEFAULT);
+	#endif
 	g_settings_bind (G_SETTINGS,"webkit-cache",ch,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-autohide",ta,"active",
@@ -199,10 +202,10 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 
 	g_signal_connect(ta, "toggled"
 		,G_CALLBACK(c_notebook_tabs_autohide), NULL);
-
+	#ifdef PLANC_FEATURE_GNOME
 	g_signal_connect(tm, "toggled"
 		,G_CALLBACK(c_traditional_menu_hide), NULL);
-
+	#endif
 	g_signal_connect(ms, "toggled"
 		,G_CALLBACK(c_settings_mse), NULL);
 
@@ -222,7 +225,9 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		,G_CALLBACK(c_settings_dv), NULL);
 
 	//Parent
-  gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tm),FALSE,FALSE,0);
+	#ifdef PLANC_FEATURE_GNOME
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tm),FALSE,FALSE,0);
+	#endif
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dd),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dv),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);
