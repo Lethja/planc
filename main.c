@@ -1312,8 +1312,6 @@ void InitCallback(struct call_st * c, struct find_st * f
 gboolean preferGmenu()
 {
 	gboolean g = FALSE;
-	if(g_settings_get_boolean(G_SETTINGS,"planc-traditional"))
-		return FALSE;
 	if(G_GTK_SETTINGS)
 	{
 		g_object_get(G_GTK_SETTINGS,"gtk-shell-shows-app-menu"
@@ -1447,8 +1445,9 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
     }
 
 	gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
-	gtk_widget_show_all(window);
-	if(preferGmenu())
+	gtk_widget_show_all(GTK_WIDGET(window));
+	if(preferGmenu()
+	&& !g_settings_get_boolean(G_SETTINGS,"planc-traditional"))
 		gtk_widget_hide(GTK_WIDGET(menu->menu));
 	gtk_widget_hide(GTK_WIDGET(find->top));
 	return (GtkWidget *) window;
