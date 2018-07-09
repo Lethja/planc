@@ -7,7 +7,7 @@ GtkWindow * G_WIN_SETTINGS = NULL;
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 	,void * v)
 {
-	const gboolean setting = gtk_toggle_button_get_active(cbmi);
+	gboolean setting = gtk_toggle_button_get_active(cbmi);
 	GList * wins = gtk_application_get_windows(G_APP);
 	while(wins)
 	{
