@@ -38,6 +38,13 @@ static void c_new_settings(GSimpleAction * a, GVariant * v, gpointer p)
 	InitSettingsWindow();
 }
 
+static void c_close_tab(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	PlancWindow * w
+		= (PlancWindow *) gtk_application_get_active_window(G_APP);
+	c_notebook_close_current(NULL,w);
+}
+
 static void c_close_win(GSimpleAction * a, GVariant * v, gpointer p)
 {
 	PlancWindow * w
@@ -55,6 +62,7 @@ void InitAppMenu()
 		{ "download", c_new_downloads },
 		{ "history", c_new_history },
 		{ "settings", c_new_settings },
+		{ "closetab", c_close_tab },
 		{ "close", c_close_win }
 	};
 
@@ -74,6 +82,7 @@ void InitAppMenu()
 	g_menu_append(s2, "Settings", "app.settings");
 	g_menu_append_section(menu, NULL, (GMenuModel *) s2);
 	s3 = g_menu_new();
+	g_menu_append(s3, "Close Tab", "app.closetab");
 	g_menu_append(s3, "Close Window", "app.close");
 	g_menu_append_section(menu, NULL, (GMenuModel *) s3);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
@@ -85,7 +94,7 @@ void InitAppMenu()
 	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
 		,"app.history",k_hist);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
-		,"app.close",k_cTab);
+		,"app.closetab",k_cTab);
 	gtk_application_set_app_menu (G_APP, G_MENU_MODEL (menu));
 	g_object_unref(menu);
 }
