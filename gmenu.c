@@ -5,6 +5,13 @@
 #include "settings.h"
 #include "plan.h"
 
+static const char * k_nTab[] = {"<Ctrl>t",NULL};
+static const char * k_cTab[] = {"<Ctrl>w",NULL};
+static const char * k_nWin[] = {"<Ctrl>n",NULL};
+static const char * k_down[] = {"<Ctrl>d",NULL};
+static const char * k_hist[] = {"<Ctrl>h",NULL};
+//static const char * k_find[] = {"<Ctrl>f",NULL};
+
 static void c_g_new_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
 	PlancWindow * win = (PlancWindow *) get_web_view();
@@ -33,7 +40,7 @@ static void c_new_settings(GSimpleAction * a, GVariant * v, gpointer p)
 
 static void c_close_win(GSimpleAction * a, GVariant * v, gpointer p)
 {
-	PlancWindow * w 
+	PlancWindow * w
 		= (PlancWindow *) gtk_application_get_active_window(G_APP);
 	if(w)
 		c_destroy_window_menu(NULL,w);
@@ -69,7 +76,16 @@ void InitAppMenu()
 	s3 = g_menu_new();
 	g_menu_append(s3, "Close Window", "app.close");
 	g_menu_append_section(menu, NULL, (GMenuModel *) s3);
-
+	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
+		,"app.newtab",k_nTab);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
+		,"app.newwin",k_nWin);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
+		,"app.download",k_down);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
+		,"app.history",k_hist);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
+		,"app.close",k_cTab);
 	gtk_application_set_app_menu (G_APP, G_MENU_MODEL (menu));
 	g_object_unref(menu);
 }
