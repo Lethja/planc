@@ -6,6 +6,16 @@
 #include <sqlite3.h>
 #include <glib.h>
 
+#define DB_IS_OR_RETURN_FALSE( rc, code, db, stmt, name ) \
+if(rc != code) \
+{ \
+	fprintf(stderr, "Error while reading %s database: %s\n" \
+		,name, sqlite3_errmsg(db)); \
+	sqlite3_finalize(stmt); \
+	sqlite3_close(db); \
+	return FALSE; \
+}
+
 static const char * createHistory = "PRAGMA synchronous=OFF;" \
 		"CREATE TABLE IF NOT EXISTS `HISTORY`("  \
 		"ADDRESS TEXT, TITLE TEXT," \
@@ -56,6 +66,7 @@ static const char * retrieveDownload = "SELECT * FROM `DOWNLOAD`";
 /** Returns true if 'to' domains as allow to load from `from` */
 extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 {
+	const char * name = "Policy";
 	int r = 0; //Return deny incase of a error
 	sqlite3 * db;
 	int rc;
@@ -63,12 +74,14 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 	rc = sqlite3_open(policydir, &db);
 	g_free(policydir);
 
-	sqlite3_stmt * stmt;
+	sqlite3_stmt * stmt = NULL;
 	rc = sqlite3_prepare_v2(db,selectDomainPolicy,-1,&stmt,NULL);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,name);
 	rc = sqlite3_bind_text(stmt,1,from,	-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,name);
 	rc = sqlite3_bind_text(stmt,2,to,	-1,SQLITE_STATIC);
-	if(rc != SQLITE_OK)
-		return FALSE;
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,name);
+
 	gboolean implicit = FALSE;
 	while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
 	{
@@ -105,8 +118,7 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 					return FALSE;
 		}
 	}
-	if(rc != SQLITE_DONE)
-		return FALSE;
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,name);
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	if(r)
