@@ -373,7 +373,7 @@ static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
     return TRUE;
 }
 
-static void c_toggleSearch(GtkWidget * w, PlancWindow * v)
+void c_toggleSearch(GtkWidget * w, PlancWindow * v)
 {
 	struct call_st * c = planc_window_get_call(v);
     if(gtk_widget_get_visible(c->find->top))

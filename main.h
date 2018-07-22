@@ -40,6 +40,8 @@ struct newt_st
 	gboolean show;
 };
 
+void c_toggleSearch(GtkWidget * w, PlancWindow * v);
+
 void c_free_docp(gpointer data, GClosure *closure);
 
 void connect_signals (WebKitWebView * wv, PlancWindow * v);

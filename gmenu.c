@@ -10,7 +10,7 @@ static const char * k_cTab[] = {"<Ctrl>w",NULL};
 static const char * k_nWin[] = {"<Ctrl>n",NULL};
 static const char * k_down[] = {"<Ctrl>d",NULL};
 static const char * k_hist[] = {"<Ctrl>h",NULL};
-//static const char * k_find[] = {"<Ctrl>f",NULL};
+static const char * k_find[] = {"<Ctrl>f",NULL};
 
 static void c_g_new_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
@@ -38,6 +38,15 @@ static void c_new_settings(GSimpleAction * a, GVariant * v, gpointer p)
 	InitSettingsWindow();
 }
 
+static void c_toggle_find(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	PlancWindow * w
+		= (PlancWindow *) gtk_application_get_active_window(G_APP);
+	//struct call_st * c = planc_window_get_call(w);
+	if(w)
+		c_toggleSearch(NULL,w);
+}
+
 static void c_close_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
 	PlancWindow * w
@@ -62,6 +71,7 @@ void InitAppMenu()
 		{ "download", c_new_downloads },
 		{ "history", c_new_history },
 		{ "settings", c_new_settings },
+		{ "find", c_toggle_find },
 		{ "closetab", c_close_tab },
 		{ "close", c_close_win }
 	};
@@ -80,6 +90,7 @@ void InitAppMenu()
 	g_menu_append(s2, "Downloads", "app.download");
 	g_menu_append(s2, "History", "app.history");
 	g_menu_append(s2, "Settings", "app.settings");
+	g_menu_append(s2, "Find on Page", "app.find");
 	g_menu_append_section(menu, NULL, (GMenuModel *) s2);
 	s3 = g_menu_new();
 	g_menu_append(s3, "Close Tab", "app.closetab");
@@ -93,6 +104,8 @@ void InitAppMenu()
 		,"app.download",k_down);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
 		,"app.history",k_hist);
+	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
+		,"app.find",k_find);
 	gtk_application_set_accels_for_action(GTK_APPLICATION(G_APP)
 		,"app.closetab",k_cTab);
 	gtk_application_set_app_menu (G_APP, G_MENU_MODEL (menu));
