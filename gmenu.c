@@ -51,7 +51,8 @@ static void c_close_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
 	PlancWindow * w
 		= (PlancWindow *) gtk_application_get_active_window(G_APP);
-	c_notebook_close_current(NULL,w);
+	if(w)
+		c_notebook_close_current(NULL,w);
 }
 
 static void c_close_win(GSimpleAction * a, GVariant * v, gpointer p)
