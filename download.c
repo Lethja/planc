@@ -559,8 +559,6 @@ extern void InitDownloadWindow()
         ,G_CALLBACK(search_entry_change), filtered);
 	g_signal_connect(tree,"row-activated"
 		,G_CALLBACK(c_download_dir), NULL);
-	/*g_signal_connect(tree,"button-release-event"
-		,G_CALLBACK(c_history_url_tab), v);*/
 
 	gtk_tree_view_column_set_resizable(column, TRUE);
 	gtk_container_add(GTK_CONTAINER (scrollWin), tree);

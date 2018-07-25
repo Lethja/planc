@@ -42,7 +42,6 @@ static void c_toggle_find(GSimpleAction * a, GVariant * v, gpointer p)
 {
 	PlancWindow * w
 		= (PlancWindow *) gtk_application_get_active_window(G_APP);
-	//struct call_st * c = planc_window_get_call(w);
 	if(w)
 		c_toggleSearch(NULL,w);
 }

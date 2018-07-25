@@ -638,24 +638,6 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
         ,webkit_web_view_can_go_forward(wv));
 }
 
-static gboolean c_update_favicon(WebKitWebView * wv, GParamSpec *pspec,
-    void * v)
-{
-    cairo_surface_t* surface;
-    GdkPixbuf * pixbuf;
-
-    /*if ((surface = webkit_web_view_get_favicon (view)) &&
-        (pixbuf = gdk_pixbuf_get_from_surface (
-            surface, 0, 0,
-            cairo_image_surface_get_width (surface),
-            cairo_image_surface_get_height (surface)))
-        ) {
-        gtk_window_set_icon (window, pixbuf);
-    }*/
-
-    return TRUE;
-}
-
 static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
     ,PlancWindow * v)
 {
@@ -1503,7 +1485,6 @@ static void initialSetup()
     GtkWidget * dbox = gtk_dialog_get_content_area
         (GTK_DIALOG(SetupDialog));
     GtkWidget * l = gtk_label_new(
-        //"There is no domain policy rules setup for this user. "
         "Please select a starting policy:\n\n"
         "Whilelist is ideal for casual use. All requests from the page "
         "will be granted.\n"

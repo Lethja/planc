@@ -70,11 +70,6 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton * event
 				}
 			}
 		}
-		/*if(event->button == 3) //Right click
-		{
-			GtkTreeSelection * selection
-				= gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
-		}*/
 	}
     return false;
 }
