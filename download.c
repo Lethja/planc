@@ -116,13 +116,13 @@ static void c_download_finished(WebKitDownload * d, GtkTreeIter * iter)
 	{
 		l = g_strdup_printf
 			("Downloaded: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
-			,webkit_download_get_received_data_length(d),len,NULL);
+			,webkit_download_get_received_data_length(d),len);
 	}
 	else
 	{
 		l = g_strdup_printf
 			("Downloaded: %" G_GUINT64_FORMAT
-			,webkit_download_get_received_data_length(d), NULL);
+			,webkit_download_get_received_data_length(d));
 	}
 	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l
 		,PROG_COLUMN, 100, -1);
@@ -140,13 +140,13 @@ static void c_download_progress(WebKitDownload * d, guint pro
 	{
 		l = g_strdup_printf
 			("Downloading: %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT
-			,webkit_download_get_received_data_length(d),len,NULL);
+			,webkit_download_get_received_data_length(d),len);
 	}
 	else
 	{
 		l = g_strdup_printf
 			("Downloading: %" G_GUINT64_FORMAT
-			,webkit_download_get_received_data_length(d), NULL);
+			,webkit_download_get_received_data_length(d));
 	}
 	gint i = round(webkit_download_get_estimated_progress(d) * 100);
 	gtk_tree_store_set(G_store, iter, STAT_COLUMN, l, PROG_COLUMN, i
