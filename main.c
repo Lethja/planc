@@ -1481,6 +1481,22 @@ static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
     }
 }
 
+static gboolean c_wv_focus(GtkWidget * wv, GdkEvent  * e
+    ,PlancWindow * v)
+{
+    struct call_st * call = planc_window_get_call(v);
+
+    const gchar * url = webkit_web_view_get_uri((WebKitWebView *) wv);
+    if(strcmp(url,"") == 0 || strcmp(url,"about:blank") == 0)
+    {
+        gtk_widget_grab_focus(GTK_WIDGET(call->tool->addressEn));
+        return TRUE;
+    }
+    else
+        gtk_widget_grab_focus(GTK_WIDGET(wv));
+    return FALSE;
+}
+
 static void initialSetup()
 {
     GtkWidget * SetupDialog = gtk_dialog_new_with_buttons
@@ -1594,5 +1610,7 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
     g_signal_connect(wv, "decide-policy", G_CALLBACK(c_policy), v);
     g_signal_connect(wv, "mouse-target-changed"
         ,G_CALLBACK(c_wv_hit), v);
+    g_signal_connect(wv, "focus-in-event"
+        ,G_CALLBACK(c_wv_focus), v);
     webkit_web_view_set_settings(wv,G_WKC_SETTINGS);
 }
