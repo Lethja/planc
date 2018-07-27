@@ -547,11 +547,19 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
             {
             case GDK_KEY_Tab:
                 if(m & GDK_CONTROL_MASK)
+                {
                     gtk_notebook_next_page(c->tabs);
+                    gtk_widget_grab_focus
+                        (WK_CURRENT_TAB_WIDGET(c->tabs));
+                }
             break;
             case GDK_KEY_ISO_Left_Tab:
                 if(m & GDK_CONTROL_MASK)
+                {
                     gtk_notebook_prev_page(c->tabs);
+                    gtk_widget_grab_focus
+                        (WK_CURRENT_TAB_WIDGET(c->tabs));
+                }
             break;
             }
         }
