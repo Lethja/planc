@@ -121,6 +121,10 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 	gtk_window_set_icon_name(r,"preferences-system-network");
 	gtk_window_set_title(r,"Settings - Plan C");
 	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
+	gtk_scrolled_window_set_min_content_width
+		(GTK_SCROLLED_WINDOW(scrl),320);
+	gtk_scrolled_window_set_min_content_height
+		(GTK_SCROLLED_WINDOW(scrl),240);
 	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_container_add((GtkContainer *)r, scrl);
     gtk_container_add((GtkContainer *)scrl, vbox);

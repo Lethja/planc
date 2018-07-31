@@ -488,7 +488,7 @@ extern void InitDownloadWindow()
 	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	GtkWidget * searchEntry = gtk_search_entry_new();
 	GtkWidget * scrollWin = gtk_scrolled_window_new (NULL, NULL);
-	gtk_scrolled_window_set_min_content_height
+	gtk_scrolled_window_set_min_content_width
 		(GTK_SCROLLED_WINDOW(scrollWin),320);
 	gtk_scrolled_window_set_min_content_height
 		(GTK_SCROLLED_WINDOW(scrollWin),240);
