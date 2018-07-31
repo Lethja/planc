@@ -1086,6 +1086,7 @@ static GtkNotebook * InitNotetab(void * v)
 {
     GtkNotebook * tabs = (GtkNotebook *) gtk_notebook_new();
     gtk_notebook_set_show_border(tabs,FALSE);
+    gtk_widget_set_size_request(GTK_WIDGET(tabs),320,240);
     gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
     switch(g)
     {
