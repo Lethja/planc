@@ -6,14 +6,31 @@
 #include <sqlite3.h>
 #include <glib.h>
 
+#define DB_CLOSE( rc, db, stmt, name ) \
+fprintf(stderr, "Error while reading %s database: %s\n" \
+	,name, sqlite3_errmsg(db)); \
+sqlite3_finalize(stmt); \
+sqlite3_close(db);
+
 #define DB_IS_OR_RETURN_FALSE( rc, code, db, stmt, name ) \
 if(rc != code) \
 { \
-	fprintf(stderr, "Error while reading %s database: %s\n" \
-		,name, sqlite3_errmsg(db)); \
-	sqlite3_finalize(stmt); \
-	sqlite3_close(db); \
+	DB_CLOSE( rc, db, stmt, name ) \
 	return FALSE; \
+}
+
+#define DB_IS_OR_RETURN_NULL( rc, code, db, stmt, name ) \
+if(rc != code) \
+{ \
+	DB_CLOSE( rc, db, stmt, name ) \
+	return NULL; \
+}
+
+#define DB_IS_OR_RETURN( rc, code, db, stmt, name ) \
+if(rc != code) \
+{ \
+	DB_CLOSE( rc, db, stmt, name ) \
+	return; \
 }
 
 static const char * createHistory = "PRAGMA synchronous=OFF;" \
@@ -66,7 +83,6 @@ static const char * retrieveDownload = "SELECT * FROM `DOWNLOAD`";
 /** Returns true if 'to' domains as allow to load from `from` */
 extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 {
-	const char * name = "Policy";
 	int r = 0; //Return deny incase of a error
 	sqlite3 * db;
 	int rc;
@@ -76,11 +92,11 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 
 	sqlite3_stmt * stmt = NULL;
 	rc = sqlite3_prepare_v2(db,selectDomainPolicy,-1,&stmt,NULL);
-	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,name);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Policy");
 	rc = sqlite3_bind_text(stmt,1,from,	-1,SQLITE_STATIC);
-	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,name);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Policy");
 	rc = sqlite3_bind_text(stmt,2,to,	-1,SQLITE_STATIC);
-	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,name);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Policy");
 
 	gboolean implicit = FALSE;
 	while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
@@ -118,7 +134,7 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 					return FALSE;
 		}
 	}
-	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,name);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,"Policy");
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	if(r)
@@ -137,29 +153,18 @@ extern void sql_history_write(const char * url, const char * title)
 	HISTORYDIR(historydir);
 	rc = sqlite3_open(historydir, &db);
 	g_free(historydir);
-	if( rc )
-	{
-		printf("Error opening history database: %s\n"
-			,sqlite3_errmsg(db));
-		return;
-	}
-
-	sqlite3_exec(db,createHistory,NULL,NULL,NULL);
-
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
+	rc = sqlite3_exec(db,createHistory,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
 	sqlite3_stmt * stmt;
 	rc = sqlite3_prepare_v2(db,insertHistory,-1,&stmt,NULL);
-	if( rc != SQLITE_OK )
-	{
-		fprintf(stderr, "Error writing to history database0: %s\n"
-			,zErrMsg);
-		sqlite3_free(zErrMsg);
-		sqlite3_close(db);
-		return;
-	}
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"History");
 	rc = sqlite3_bind_text(stmt,1,url,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"History");
 	rc = sqlite3_bind_text(stmt,2,title,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"History");
 	sqlite3_step(stmt);
-    rc = sqlite3_finalize(stmt);
+	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	return;
 }
@@ -171,11 +176,13 @@ void createPolicyDatabase(int t)
 	int rc;
 	rc = sqlite3_open(policydir, &db);
 	g_free(policydir);
-	sqlite3_exec(db,createPolicy,NULL,NULL,NULL);
+	rc = sqlite3_exec(db,createPolicy,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
 	if(t)
-		sqlite3_exec(db,policyDefaultWhitelist,NULL,NULL,NULL);
+		rc = sqlite3_exec(db,policyDefaultWhitelist,NULL,NULL,NULL);
 	else
-		sqlite3_exec(db,policyDefaultBlacklist,NULL,NULL,NULL);
+		rc = sqlite3_exec(db,policyDefaultBlacklist,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
 	sqlite3_close(db);
 }
 
@@ -190,30 +197,22 @@ extern void sql_download_write(const char * page, const char * url
 	DOWNLOADDIR(downloaddir);
 	rc = sqlite3_open(downloaddir, &db);
 	g_free(downloaddir);
-	if(rc)
-	{
-		printf("Error opening download database: %s\n"
-			,sqlite3_errmsg(db));
-		return;
-	}
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Downloads");
 
-	sqlite3_exec(db,createDownload,NULL,NULL,NULL);
-
+	rc = sqlite3_exec(db,createDownload,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Downloads");
 	sqlite3_stmt * stmt;
 	rc = sqlite3_prepare_v2(db,insertDownload,-1,&stmt,NULL);
-	if(rc != SQLITE_OK)
-	{
-		fprintf(stderr, "Error writing to download database: %s\n"
-			,zErrMsg);
-		sqlite3_free(zErrMsg);
-		sqlite3_close(db);
-		return;
-	}
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Downloads");
 	rc = sqlite3_bind_text(stmt,1,page,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Downloads");
 	rc = sqlite3_bind_text(stmt,2,url,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Downloads");
 	rc = sqlite3_bind_text(stmt,3,file,-1,SQLITE_STATIC);
-	sqlite3_step(stmt);
-    rc = sqlite3_finalize(stmt);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Downloads");
+	rc = sqlite3_step(stmt);
+	DB_IS_OR_RETURN(rc,SQLITE_DONE,db,stmt,"Downloads");
+	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	return;
 }
@@ -225,13 +224,9 @@ extern void sql_download_read_to_tree(void * store, void * treeIter)
 	DOWNLOADDIR(downloaddir);
 	rc = sqlite3_open(downloaddir, &db);
 	g_free(downloaddir);
-	if(rc)
-	{
-		printf("Error opening download database: %s\n"
-			,sqlite3_errmsg(db));
-		return;
-	}
-	sqlite3_exec(db,retrieveDownload,treeIter,store,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Download");
+	rc = sqlite3_exec(db,retrieveDownload,treeIter,store,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Download");
 	sqlite3_close(db);
 }
 
@@ -242,13 +237,9 @@ extern void sql_history_read_to_tree(void * store, void * treeIter)
 	HISTORYDIR(historydir);
 	rc = sqlite3_open(historydir, &db);
 	g_free(historydir);
-	if( rc )
-	{
-		printf("Error opening history database: %s\n"
-			,sqlite3_errmsg(db));
-		return;
-	}
-	sqlite3_exec(db,retrieveHistory,treeIter,store,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
+	rc = sqlite3_exec(db,retrieveHistory,treeIter,store,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
 	sqlite3_close(db);
 }
 
@@ -261,16 +252,13 @@ extern char * sql_speed_dial_get(size_t index)
 	g_free(dialdir);
 
 	sqlite3_exec(db,createDial,NULL,NULL,NULL);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Dial");
 
-	if(rc)
-	{
-		printf("Error opening dial database: %s\n"
-			,sqlite3_errmsg(db));
-		return NULL;
-	}
 	sqlite3_stmt * stmt;
 	rc = sqlite3_prepare_v2(db,selectSpeedDial,-1,&stmt,NULL);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Dial");
 	rc = sqlite3_bind_int(stmt,1,index);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Dial");
 	rc = sqlite3_step(stmt);
 	char * r = NULL;
 	if(rc == SQLITE_ROW)
