@@ -38,6 +38,10 @@ static gboolean c_webpage_send_request(WebKitWebPage * wp
 		free(pdom); free(rdom);
 		return r;
 	}
+	if(pdom)
+		free(pdom);
+	if(rdom)
+		free(rdom);
 	return FALSE;
 }
 

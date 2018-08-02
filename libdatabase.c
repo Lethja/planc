@@ -89,7 +89,7 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 	POLICYDIR(policydir);
 	rc = sqlite3_open(policydir, &db);
 	g_free(policydir);
-
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"Policy");
 	sqlite3_stmt * stmt = NULL;
 	rc = sqlite3_prepare_v2(db,selectDomainPolicy,-1,&stmt,NULL);
 	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Policy");
@@ -176,6 +176,7 @@ void createPolicyDatabase(int t)
 	int rc;
 	rc = sqlite3_open(policydir, &db);
 	g_free(policydir);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
 	rc = sqlite3_exec(db,createPolicy,NULL,NULL,NULL);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
 	if(t)
@@ -250,7 +251,7 @@ extern char * sql_speed_dial_get(size_t index)
 	DIALDIR(dialdir);
 	rc = sqlite3_open(dialdir, &db);
 	g_free(dialdir);
-
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Dial");
 	sqlite3_exec(db,createDial,NULL,NULL,NULL);
 	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Dial");
 
