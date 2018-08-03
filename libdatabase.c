@@ -88,6 +88,7 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 	int rc;
 	POLICYDIR(policydir);
 	rc = sqlite3_open(policydir, &db);
+	sqlite3_busy_timeout(db, 5000);
 	g_free(policydir);
 	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"Policy");
 	sqlite3_stmt * stmt = NULL;
@@ -152,6 +153,7 @@ extern void sql_history_write(const char * url, const char * title)
 		return;
 	HISTORYDIR(historydir);
 	rc = sqlite3_open(historydir, &db);
+	sqlite3_busy_timeout(db, 5000);
 	g_free(historydir);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
 	rc = sqlite3_exec(db,createHistory,NULL,NULL,NULL);
@@ -175,6 +177,7 @@ void createPolicyDatabase(int t)
 	POLICYDIR(policydir);
 	int rc;
 	rc = sqlite3_open(policydir, &db);
+	sqlite3_busy_timeout(db, 5000);
 	g_free(policydir);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
 	rc = sqlite3_exec(db,createPolicy,NULL,NULL,NULL);
@@ -197,6 +200,7 @@ extern void sql_download_write(const char * page, const char * url
 		return;
 	DOWNLOADDIR(downloaddir);
 	rc = sqlite3_open(downloaddir, &db);
+	sqlite3_busy_timeout(db, 5000);
 	g_free(downloaddir);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Downloads");
 
@@ -224,6 +228,7 @@ extern void sql_download_read_to_tree(void * store, void * treeIter)
 	int rc;
 	DOWNLOADDIR(downloaddir);
 	rc = sqlite3_open(downloaddir, &db);
+	sqlite3_busy_timeout(db, 5000);
 	g_free(downloaddir);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Download");
 	rc = sqlite3_exec(db,retrieveDownload,treeIter,store,NULL);
@@ -237,6 +242,7 @@ extern void sql_history_read_to_tree(void * store, void * treeIter)
 	int rc;
 	HISTORYDIR(historydir);
 	rc = sqlite3_open(historydir, &db);
+	sqlite3_busy_timeout(db, 5000);
 	g_free(historydir);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
 	rc = sqlite3_exec(db,retrieveHistory,treeIter,store,NULL);
@@ -250,6 +256,7 @@ extern char * sql_speed_dial_get(size_t index)
 	int rc;
 	DIALDIR(dialdir);
 	rc = sqlite3_open(dialdir, &db);
+	sqlite3_busy_timeout(db, 5000);
 	g_free(dialdir);
 	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Dial");
 	sqlite3_exec(db,createDial,NULL,NULL,NULL);
