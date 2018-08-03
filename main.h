@@ -64,8 +64,13 @@ extern void * new_tab_ext(char * url, PlancWindow * v
 void c_destroy_window_menu(GtkWidget * widget
 	,PlancWindow * v);
 
-gboolean preferGmenu();
+static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
 
+static WebKitWebView * c_new_tab_url(WebKitWebView * wv
+    ,WebKitNavigationAction * na ,PlancWindow * v);
+#ifdef PLANC_FEATURE_GNOME
+gboolean preferGmenu();
+#endif
 GtkWidget * get_web_view();
 
 GtkNotebook * get_web_view_notebook();

@@ -15,11 +15,6 @@ WebKitSettings * G_WKC_SETTINGS = NULL;
 WebKitWebContext * G_WKC        = NULL;
 GtkSettings * G_GTK_SETTINGS    = NULL;
 
-static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
-
-static WebKitWebView * c_new_tab_url(WebKitWebView * wv
-    ,WebKitNavigationAction * na ,PlancWindow * v);
-
 /** Sanitize the address for webkit
  * Returned value never null and always must be freed after use
  * Will convert numbers to speed dial addresses if avaliable
