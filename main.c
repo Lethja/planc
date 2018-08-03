@@ -902,7 +902,7 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na, PlancWindow * v)
 {
     WebKitWebView * nt
-        = (WebKitWebView *) webkit_web_view_new_with_context(G_WKC);
+        = (WebKitWebView *) webkit_web_view_new_with_related_view(wv);
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->plan = v;
