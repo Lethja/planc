@@ -62,7 +62,9 @@ static const char * selectSpeedDial = "SELECT * FROM `DIAL`" \
 		" WHERE `DIAL` is ?";
 
 static const char * selectDomainPolicy = "SELECT * FROM `POLICY` " \
-"WHERE (`FROM` is ? OR `FROM` IS NULL) AND (`TO` is ? OR `TO` IS NULL)";
+"WHERE (`FROM` IS ? OR `FROM` IS NULL) " \
+"AND ((`TO` IS ? OR `TO` IS NULL)" \
+"OR `INHERIT` IS 1)";
 
 static const char * createPolicy = "PRAGMA synchronous=OFF;" \
 "CREATE TABLE IF NOT EXISTS `POLICY`(`FROM` TEXT, `TO` TEXT," \
@@ -104,11 +106,22 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 	{
 		size_t score = 0;
 		const unsigned char * f = sqlite3_column_text(stmt,0);
-		if(f)
+		if(f && strcmp(from, f) == 0)
 			score++;
 		const unsigned char * t = sqlite3_column_text(stmt,1);
 		if(t)
-			score++;
+		{
+			if(strcmp(to, t) == 0)
+				score++;
+			else if(sqlite3_column_int(stmt,3)) //If inherit
+			{
+				gchar * g = strstr(to,t);
+				if(g && (char *) g+strlen(g) == (char *) to+strlen(to))
+					score++;
+				else
+					continue;
+			}
+		}
 		switch(score)
 		{
 			case 1: //This is an implicit rule
@@ -122,7 +135,7 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 				}
 			break;
 			case 0: //This is a global default rule
-				if(!implicit)
+				if(!f && !t && !implicit)
 					r = sqlite3_column_int(stmt,2);
 			break;
 			case 2: //This is an explicit rule
