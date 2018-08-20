@@ -1171,6 +1171,25 @@ static void InitWebContext()
 
     G_WKC_SETTINGS = webkit_settings_new();
 
+    switch(g_settings_get_int(G_SETTINGS,"webkit-hw"))
+    {
+        case 1:
+            webkit_settings_set_hardware_acceleration_policy
+				(G_WKC_SETTINGS
+				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND);
+        break;
+        default:
+            webkit_settings_set_hardware_acceleration_policy
+				(G_WKC_SETTINGS
+				,WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
+        break;
+        case 2:
+            webkit_settings_set_hardware_acceleration_policy
+				(G_WKC_SETTINGS
+				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS);
+        break;
+    }
+
     webkit_settings_set_enable_page_cache(G_WKC_SETTINGS
         ,g_settings_get_boolean(G_SETTINGS,"webkit-cache"));
     webkit_settings_set_enable_java(G_WKC_SETTINGS

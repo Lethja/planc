@@ -43,6 +43,14 @@
 				Enabled by default for performance.
 			</description>
 		</key>
+		<key name='webkit-hw' type='i'>
+			<default>1</default>
+			<range min="0" max="2"/>
+			<summary>Hardware Accelleration</summary>
+			<description>
+				Should webkit allow hardware accelleration
+			</description>
+		</key>
 		<key name='webkit-java' type='b'>
 			<default>false</default>
 			<summary>Java execution</summary>

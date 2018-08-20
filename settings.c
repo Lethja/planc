@@ -102,6 +102,28 @@ void c_settings_cm(GtkComboBox * w, void * v)
 	}
 }
 
+void c_settings_hw(GtkComboBox * w, void * v)
+{
+	switch(gtk_combo_box_get_active(w))
+	{
+        case 1:
+            webkit_settings_set_hardware_acceleration_policy
+				(G_WKC_SETTINGS
+				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND);
+        break;
+        default:
+            webkit_settings_set_hardware_acceleration_policy
+				(G_WKC_SETTINGS
+				,WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
+        break;
+        case 2:
+            webkit_settings_set_hardware_acceleration_policy
+				(G_WKC_SETTINGS
+				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS);
+        break;
+	}
+}
+
 GtkWidget * InitComboBoxLabel(const gchar * l, GtkWidget * c)
 {
 	GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
@@ -145,6 +167,15 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		,"Low");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"High");
+
+	GtkWidget * hwBox = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text((GtkComboBoxText *)hwBox
+		,"Never");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)hwBox
+		,"On Request");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)hwBox
+		,"Always");
+
 	#ifdef PLANC_FEATURE_GNOME
 	GtkWidget * tm = gtk_check_button_new_with_label
 		("Always show menu at top of window");
@@ -161,6 +192,8 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		("Default Tab Layout",tabBox);
 	GtkWidget * cm = (GtkWidget *) InitComboBoxLabel
 		("Memory Cache Model",mcmBox);
+	GtkWidget * hw = (GtkWidget *) InitComboBoxLabel
+		("Hardware Accelleration",hwBox);
 	GtkWidget * js = gtk_check_button_new_with_label
 		("Enable JavaScript");
 	GtkWidget * jv = gtk_check_button_new_with_label
@@ -187,6 +220,8 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-plugins",in,"active",
 		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"webkit-hw",hwBox,"active",
+		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-js",js,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-java",jv,"active",
@@ -202,6 +237,9 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 
 	//Connect events
 	g_signal_connect(mcmBox, "changed"
+		,G_CALLBACK(c_settings_cm), NULL);
+
+	g_signal_connect(hwBox, "changed"
 		,G_CALLBACK(c_settings_cm), NULL);
 
 	g_signal_connect(ta, "toggled"
@@ -242,6 +280,7 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ch),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(pt),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(cm),FALSE,FALSE,0);
+	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(hw),FALSE,FALSE,0);
 	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tt),FALSE,FALSE,0);
 
 	switch(webkit_web_context_get_cache_model(G_WKC))
