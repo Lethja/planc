@@ -143,60 +143,50 @@ void c_onrelease_tabsMh(GtkMenuItem * mi, PlancWindow * v)
     }
 }
 
+static GtkRadioMenuItem * add_tabMi(gint it, GSList * list
+	,struct call_st * c)
+{
+	GtkWidget * l = gtk_bin_get_child(GTK_BIN
+		(gtk_notebook_get_tab_label(c->tabs
+		,gtk_notebook_get_nth_page(c->tabs,it))));
+	GtkRadioMenuItem * n
+		= (GtkRadioMenuItem *)gtk_radio_menu_item_new(list);
+	gtk_menu_item_set_label((GtkMenuItem *)n
+		,gtk_label_get_text((GtkLabel* )l));
+	if(gtk_notebook_get_nth_page(c->tabs,it)
+		== WK_CURRENT_TAB_WIDGET(c->tabs))
+	{
+		gtk_check_menu_item_set_active((GtkCheckMenuItem *) n, TRUE);
+	}
+	struct dpco_st * dp = malloc(sizeof(struct dpco_st));
+	dp->call = c;
+	dp->other= gtk_notebook_get_nth_page(c->tabs,it);
+	g_signal_connect(n,"button-release-event"
+		,G_CALLBACK(c_onclick_tabsMi), dp);
+	g_signal_connect(n,"select"
+		,G_CALLBACK(c_select_tabsMi), dp);
+	g_signal_connect(n,"destroy"
+		,G_CALLBACK(c_destroy_tabsMi), dp);
+	gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu)
+		,(GtkWidget *) n);
+	return n;
+}
+
 void c_onclick_tabsMh(GtkMenuItem * mi, PlancWindow * v)
 {
     //Make a menu of all tabs on the fly then display it
     struct call_st * c = planc_window_get_call(v);
-    {
-        GtkWidget * l = gtk_bin_get_child(GTK_BIN
-            (gtk_notebook_get_tab_label(c->tabs
-            ,WK_CURRENT_TAB_WIDGET(c->tabs))));
-        GtkWidget * ct = gtk_menu_item_new();
-        gtk_menu_item_set_label((GtkMenuItem *)ct
-            ,gtk_label_get_text((GtkLabel* )l));
-        struct dpco_st * dp = malloc(sizeof(struct dpco_st));
-        dp->call = c;
-        dp->other = WK_CURRENT_TAB(c->tabs);
-        g_signal_connect(ct,"button-release-event"
-            ,G_CALLBACK(c_onclick_tabsMi), dp);
-        g_signal_connect(ct,"select"
-            ,G_CALLBACK(c_select_tabsMi), dp);
-        g_signal_connect(ct,"destroy"
-            ,G_CALLBACK(c_destroy_tabsMi), dp);
 
-        gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu),ct);
-    }
+	GtkRadioMenuItem * f = add_tabMi(0,NULL,c);
 
-    if(gtk_notebook_get_n_pages(c->tabs) != 1)
-    {
-        gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu)
-            ,gtk_separator_menu_item_new());
+	GSList * r = gtk_radio_menu_item_get_group(f);
 
-        for(gint i = 0; i < gtk_notebook_get_n_pages(c->tabs)
-            ;i++)
-        {
-            if(gtk_notebook_get_nth_page(c->tabs,i)
-                != WK_CURRENT_TAB_WIDGET(c->tabs))
-            {
-                GtkWidget * l = gtk_bin_get_child(GTK_BIN
-                    (gtk_notebook_get_tab_label(c->tabs
-                    ,gtk_notebook_get_nth_page(c->tabs,i))));
-                GtkWidget * n = gtk_menu_item_new();
-                gtk_menu_item_set_label((GtkMenuItem *)n
-                    ,gtk_label_get_text((GtkLabel* )l));
-                struct dpco_st * dp = malloc(sizeof(struct dpco_st));
-                dp->call = c;
-                dp->other= gtk_notebook_get_nth_page(c->tabs,i);
-                g_signal_connect(n,"button-release-event"
-                    ,G_CALLBACK(c_onclick_tabsMi), dp);
-                g_signal_connect(n,"select"
-                    ,G_CALLBACK(c_select_tabsMi), dp);
-                g_signal_connect(n,"destroy"
-                    ,G_CALLBACK(c_destroy_tabsMi), dp);
-                gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu)
-                    ,n);
-            }
-        }
+	if(gtk_notebook_get_n_pages(c->tabs) > 1)
+	{
+		for(gint i = 1; i < gtk_notebook_get_n_pages(c->tabs); i++)
+		{
+			add_tabMi(i,r,c);
+		}
     }
     gtk_widget_show_all((GtkWidget *)mi);
 }
@@ -208,7 +198,7 @@ void t_tabs_menu(PlancWindow * v, gboolean b)
     {
         c->menu->tabsMh = gtk_menu_item_new_with_mnemonic("_Tabs");
         gtk_menu_shell_insert(GTK_MENU_SHELL(c->menu->menu)
-            ,c->menu->tabsMh,3);
+            ,c->menu->tabsMh,4);
         gtk_widget_show_all(c->menu->menu);
         c->menu->tabsMenu = gtk_menu_new();
         gtk_widget_add_events(c->menu->tabsMenu,GDK_KEY_PRESS_MASK);
@@ -967,7 +957,9 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     menu->fileMh = gtk_menu_item_new_with_mnemonic("_File");
     menu->editMh = gtk_menu_item_new_with_mnemonic("_Edit");
     menu->viewMh = gtk_menu_item_new_with_mnemonic("_View");
+    menu->gotoMh = gtk_menu_item_new_with_mnemonic("_Go");
     menu->tabsMh = NULL;
+    menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");
     menu->viewTabMh = gtk_menu_item_new_with_mnemonic("_Tabs");
     menu->tabH = gtk_radio_menu_item_new_with_mnemonic(NULL
         ,"_Horizontal");
@@ -975,7 +967,6 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
         ((GtkRadioMenuItem *)menu->tabH, "_Vertical");
     menu->tabM = gtk_radio_menu_item_new_with_mnemonic_from_widget
         ((GtkRadioMenuItem *)menu->tabH, "_Menu");
-    menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");
     menu->nWinMi = gtk_menu_item_new_with_mnemonic("New _Window");
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
     menu->cTabMi = gtk_menu_item_new_with_mnemonic("_Close Tab");
@@ -1013,6 +1004,8 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->fileMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->editMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->viewMh);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->gotoMh);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->helpMh);
 
     gtk_widget_add_accelerator(menu->cTabMi, "activate", accel_group
         ,GDK_KEY_W, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
