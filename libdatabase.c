@@ -80,6 +80,8 @@ static const char * policyDefaultBlacklist = \
 
 static const char * retrieveHistory = "SELECT * FROM `HISTORY`";
 
+static const char * retrieveDial = "SELECT * FROM `DIAL`";
+
 static const char * retrieveDownload = "SELECT * FROM `DOWNLOAD`";
 
 /** Returns true if 'to' domains as allow to load from `from` */
@@ -260,6 +262,20 @@ extern void sql_history_read_to_tree(void * store, void * treeIter)
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
 	rc = sqlite3_exec(db,retrieveHistory,treeIter,store,NULL);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
+	sqlite3_close(db);
+}
+
+extern void sql_speed_dial_read_to_menu(void * store, void * menuIter)
+{
+	sqlite3 *db;
+	int rc;
+	DIALDIR(dialdir);
+	rc = sqlite3_open(dialdir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(dialdir);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Dial");
+	rc = sqlite3_exec(db,retrieveDial,menuIter,store,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Dial");
 	sqlite3_close(db);
 }
 

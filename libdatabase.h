@@ -8,6 +8,7 @@ extern void sql_download_write(const char * page, const char * url
 extern void sql_history_read_to_tree(void * store, void * treeIter);
 extern void sql_download_read_to_tree(void * store, void * treeIter);
 extern char * sql_speed_dial_get(size_t index);
+extern void sql_speed_dial_read_to_menu(void * store, void * menuIter);
 extern void createPolicyDatabase();
 //Macros to quickly get string of database path, must free.
 

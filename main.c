@@ -102,6 +102,36 @@ void c_free_docp(gpointer data, GClosure *closure)
     free(data);
 }
 
+static int gotoIter(void * store, int count, char **data
+	,char **columns)
+{
+	if(count == 2)
+	{
+		GtkWidget * mi = gtk_menu_item_new_with_label(data[1]);
+		gtk_menu_shell_append(GTK_MENU_SHELL(store), mi);
+		gtk_widget_show_all((GtkWidget *)store);
+	}
+	return 0;
+}
+
+void c_onclick_gotoMh(GtkMenuItem * mi, PlancWindow * v)
+{
+    //Make a menu of all dials on the fly then display it
+	struct call_st * c = planc_window_get_call(v);
+	sql_speed_dial_read_to_menu(c->menu->gotoMenu, &gotoIter);
+}
+
+void c_onrelease_gotoMh(GtkMenuItem * mi, PlancWindow * v)
+{
+    struct call_st * c = planc_window_get_call(v);
+    GList * list = gtk_container_get_children(
+        (GtkContainer *)c->menu->gotoMenu);
+    for (GList * l = list; l != NULL; l = l->next)
+    {
+        gtk_widget_destroy(l->data);
+    }
+}
+
 void c_select_tabsMi(GtkWidget * w, struct dpco_st * dp)
 {
     gtk_notebook_set_current_page(dp->call->tabs
@@ -951,6 +981,7 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     menu->fileMenu = gtk_menu_new();
     menu->editMenu = gtk_menu_new();
     menu->viewMenu = gtk_menu_new();
+    menu->gotoMenu = gtk_menu_new();
     menu->viewTabMenu = gtk_menu_new();
     menu->helpMenu = gtk_menu_new();
 
@@ -960,7 +991,6 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     menu->gotoMh = gtk_menu_item_new_with_mnemonic("_Go");
     menu->tabsMh = NULL;
     menu->helpMh = gtk_menu_item_new_with_mnemonic("_Help");
-    menu->viewTabMh = gtk_menu_item_new_with_mnemonic("_Tabs");
     menu->tabH = gtk_radio_menu_item_new_with_mnemonic(NULL
         ,"_Horizontal");
     menu->tabV = gtk_radio_menu_item_new_with_mnemonic_from_widget
@@ -972,6 +1002,7 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     menu->cTabMi = gtk_menu_item_new_with_mnemonic("_Close Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Find");
     menu->setwMi = gtk_menu_item_new_with_mnemonic("_Settings");
+    menu->viewTabMh = gtk_menu_item_new_with_mnemonic("_Tabs");
     menu->histMi = gtk_menu_item_new_with_mnemonic("_History");
     menu->downMi = gtk_menu_item_new_with_mnemonic("_Downloads");
     menu->quitMi = gtk_menu_item_new_with_mnemonic("_Quit");
@@ -984,9 +1015,10 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
         ,menu->viewMenu);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->viewTabMh)
         ,menu->viewTabMenu);
-
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu)
         ,menu->viewTabMh);
+	gtk_menu_item_set_submenu(GTK_MENU_ITEM(c->menu->gotoMh)
+		,c->menu->gotoMenu);
 
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabH);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabV);
@@ -1006,6 +1038,12 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->viewMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->gotoMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->helpMh);
+
+    g_signal_connect(G_OBJECT(menu->gotoMh), "select"
+		,G_CALLBACK(c_onclick_gotoMh), v);
+
+	g_signal_connect(G_OBJECT(menu->gotoMh), "deselect"
+		,G_CALLBACK(c_onrelease_gotoMh), v);
 
     gtk_widget_add_accelerator(menu->cTabMi, "activate", accel_group
         ,GDK_KEY_W, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);

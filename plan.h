@@ -12,6 +12,7 @@ struct menu_st
     GtkWidget * editMenu;
     GtkWidget * viewMenu;
     GtkWidget * tabsMenu;
+    GtkWidget * gotoMenu;
     GtkWidget * viewTabMenu;
     GtkWidget * helpMenu;
     GtkWidget * fileMh;
