@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "main.h"
 #include "settings.h"
 #include "libdatabase.h"
@@ -102,12 +103,33 @@ void c_free_docp(gpointer data, GClosure *closure)
     free(data);
 }
 
+static void c_goto_dial(GtkMenuItem * mi, GdkEventButton * e, void * v)
+{
+	WebKitWebView * wk = WK_CURRENT_TAB(get_web_view_notebook());
+	char * url = sql_speed_dial_get_by_name
+		(gtk_menu_item_get_label(mi));
+	if(!url)
+		return;
+	char * purl = prepAddress(url);
+	free(url);
+	webkit_web_view_load_uri(wk,purl);
+	free(purl);
+}
+
 static int gotoIter(void * store, int count, char **data
 	,char **columns)
 {
-	if(count == 2)
+	if(count == 3)
 	{
-		GtkWidget * mi = gtk_menu_item_new_with_label(data[1]);
+		GtkWidget * mi;
+		if(data[2])
+			mi = gtk_menu_item_new_with_label(data[2]);
+		else
+			mi = gtk_menu_item_new_with_label(data[1]);
+		uintptr_t id;
+		memcpy(&id,data[0],sizeof(uintptr_t));
+		g_signal_connect(mi,"button-release-event"
+			,G_CALLBACK(c_goto_dial), NULL);
 		gtk_menu_shell_append(GTK_MENU_SHELL(store), mi);
 		gtk_widget_show_all((GtkWidget *)store);
 	}

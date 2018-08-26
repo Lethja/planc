@@ -45,7 +45,7 @@ static const char * createDownload = "PRAGMA synchronous=OFF;" \
 
 static const char * createDial = "PRAGMA synchronous=OFF;" \
 		"CREATE TABLE IF NOT EXISTS `DIAL`("  \
-		"DIAL INTERGER, URL TEXT," \
+		"DIAL INTERGER, URL TEXT, NAME TEXT" \
 		"UNIQUE (`DIAL`));";
 
 static const char * insertHistory = "INSERT OR REPLACE INTO" \
@@ -60,6 +60,9 @@ static const char * insertDownload = "INSERT OR REPLACE INTO" \
 
 static const char * selectSpeedDial = "SELECT * FROM `DIAL`" \
 		" WHERE `DIAL` is ?";
+
+static const char * selectSpeedDialName = "SELECT * FROM `DIAL`" \
+		" WHERE `URL` is ? OR `NAME` is ?";
 
 static const char * selectDomainPolicy = "SELECT * FROM `POLICY` " \
 "WHERE (`FROM` IS ? OR `FROM` IS NULL) " \
@@ -277,6 +280,39 @@ extern void sql_speed_dial_read_to_menu(void * store, void * menuIter)
 	rc = sqlite3_exec(db,retrieveDial,menuIter,store,NULL);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Dial");
 	sqlite3_close(db);
+}
+
+extern char * sql_speed_dial_get_by_name(const char * index)
+{
+	sqlite3 *db;
+	int rc;
+	DIALDIR(dialdir);
+	rc = sqlite3_open(dialdir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(dialdir);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Dial");
+	sqlite3_exec(db,createDial,NULL,NULL,NULL);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Dial");
+
+	sqlite3_stmt * stmt;
+	rc = sqlite3_prepare_v2(db,selectSpeedDialName,-1,&stmt,NULL);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Dial");
+	rc = sqlite3_bind_text(stmt,1,index,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Dial");
+	rc = sqlite3_bind_text(stmt,2,index,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Dial");
+	rc = sqlite3_step(stmt);
+	char * r = NULL;
+	if(rc == SQLITE_ROW)
+	{
+		const char * u =
+			(const char *) sqlite3_column_text(stmt,1);
+		r = malloc(strlen(u)+1);
+		strncpy(r,u,strlen(u)+1);
+	}
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return r;
 }
 
 extern char * sql_speed_dial_get(size_t index)
