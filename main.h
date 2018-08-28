@@ -40,6 +40,8 @@ struct newt_st
 	gboolean show;
 };
 
+char * prepAddress(const gchar * c);
+
 void c_notebook_close_current(GtkWidget * w, PlancWindow * v);
 
 void c_toggleSearch(GtkWidget * w, PlancWindow * v);
@@ -53,8 +55,6 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 
 void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
 	,guint n, PlancWindow * v);
-
-void c_onrelease_tabsMh(GtkMenuItem * mi, PlancWindow * v);
 
 GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc);
 

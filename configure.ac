@@ -58,12 +58,19 @@ AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor round inet_ntoa memmove strchr strrchr strstr strtol strtoul])
 
-# Condictionals
+# Conditionals
 AC_ARG_ENABLE([gnome],
 	AS_HELP_STRING([--enable-gnome], [Build Gnome3 features (GMenu)]))
 AM_CONDITIONAL([GNOME], [test "x$enable_gnome" = "xyes"])
 AS_IF([test "x$enable_gnome" = "xyes"],
 [
 	AC_DEFINE([PLANC_FEATURE_GNOME], [1], [Build with Gnome3 oriented features like Gmenu])
+])
+AC_ARG_ENABLE([dmenu],
+	AS_HELP_STRING([--enable-dmenu], [Enable dynamic traditional menus]))
+AM_CONDITIONAL([DMENU], [test "x$enable_dmenu" = "xyes"])
+AS_IF([test "x$enable_dmenu" = "xyes"],
+[
+	AC_DEFINE([PLANC_FEATURE_DMENU], [1], [Build with dynamic traditional menus])
 ])
 AC_OUTPUT

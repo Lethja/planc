@@ -1,6 +1,8 @@
 #ifndef __PLANC_WINDOWCONTAINER_H__
 #define __PLANC_WINDOWCONTAINER_H__
 
+#include "config.h"
+
 #ifndef NO_INCLUDE_WITHIN_HEADERS
 #include <gtk/gtk.h>
 #endif
@@ -11,20 +13,15 @@ struct menu_st
     GtkWidget * fileMenu;
     GtkWidget * editMenu;
     GtkWidget * viewMenu;
-    GtkWidget * tabsMenu;
-    GtkWidget * gotoMenu;
     GtkWidget * viewTabMenu;
     GtkWidget * helpMenu;
     GtkWidget * fileMh;
     GtkWidget * editMh;
     GtkWidget * viewMh;
-    GtkWidget * tabsMh;
-    GtkWidget * gotoMh;
     GtkWidget * helpMh;
     GtkWidget * viewTabMh;
     GtkWidget * tabH;
     GtkWidget * tabV;
-    GtkWidget * tabM;
     GtkWidget * findMi;
     GtkWidget * setwMi;
     GtkWidget * cTabMi;
@@ -33,6 +30,13 @@ struct menu_st
     GtkWidget * quitMi;
     GtkWidget * histMi;
     GtkWidget * downMi;
+#ifdef PLANC_FEATURE_DMENU
+    GtkWidget * tabsMenu;
+    GtkWidget * gotoMenu;
+    GtkWidget * tabsMh;
+    GtkWidget * gotoMh;
+    GtkWidget * tabM;
+#endif
 };
 
 struct tool_st

@@ -10,6 +10,9 @@ planc_SOURCES = main.c settings.c history.c main.h settings.h history.h download
 if GNOME
 planc_SOURCES += gmenu.c gmenu.h
 endif
+if DMENU
+planc_SOURCES += dmenu.c dmenu.h
+endif
 planc_CFLAGS = $(GTK3_CFLAGS) $(WK4_CFLAGS) -lm -DWKED=\""$(libdir)/planc/webkit"\"
 planc_LDFLAGS = $(GTK3_LIBS) $(WK4_LIBS)
 planc_LDADD = libdomain.la libdatabase.la
