@@ -1,10 +1,7 @@
-#include "config.h"
 #include "libdatabase.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sqlite3.h>
-#include <glib.h>
 
 #define DB_CLOSE( rc, db, stmt, name ) \
 fprintf(stderr, "Error while reading %s database: %s\n" \
@@ -64,6 +61,13 @@ static const char * selectSpeedDial = "SELECT * FROM `DIAL`" \
 static const char * selectSpeedDialName = "SELECT * FROM `DIAL`" \
 		" WHERE `URL` is ? OR `NAME` is ?";
 
+static const char * retrieveHistory = "SELECT * FROM `HISTORY`";
+
+static const char * retrieveDial = "SELECT * FROM `DIAL`";
+
+static const char * retrieveDownload = "SELECT * FROM `DOWNLOAD`";
+
+#ifdef PLANC_FEATURE_DPOLC
 static const char * selectDomainPolicy = "SELECT * FROM `POLICY` " \
 "WHERE (`FROM` IS ? OR `FROM` IS NULL) " \
 "AND ((`TO` IS ? OR `TO` IS NULL)" \
@@ -80,12 +84,6 @@ static const char * policyDefaultWhitelist = \
 static const char * policyDefaultBlacklist = \
 "INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`, `INHERIT`)" \
 "VALUES (null, null, 0, 0)";
-
-static const char * retrieveHistory = "SELECT * FROM `HISTORY`";
-
-static const char * retrieveDial = "SELECT * FROM `DIAL`";
-
-static const char * retrieveDownload = "SELECT * FROM `DOWNLOAD`";
 
 /** Returns true if 'to' domains as allow to load from `from` */
 extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
@@ -162,6 +160,26 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 		return FALSE;
 }
 
+void createPolicyDatabase(int t)
+{
+	sqlite3 * db;
+	POLICYDIR(policydir);
+	int rc;
+	rc = sqlite3_open(policydir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(policydir);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
+	rc = sqlite3_exec(db,createPolicy,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
+	if(t)
+		rc = sqlite3_exec(db,policyDefaultWhitelist,NULL,NULL,NULL);
+	else
+		rc = sqlite3_exec(db,policyDefaultBlacklist,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
+	sqlite3_close(db);
+}
+#endif
+
 extern void sql_history_write(const char * url, const char * title)
 {
 	sqlite3 *db;
@@ -187,25 +205,6 @@ extern void sql_history_write(const char * url, const char * title)
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	return;
-}
-
-void createPolicyDatabase(int t)
-{
-	sqlite3 * db;
-	POLICYDIR(policydir);
-	int rc;
-	rc = sqlite3_open(policydir, &db);
-	sqlite3_busy_timeout(db, 5000);
-	g_free(policydir);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
-	rc = sqlite3_exec(db,createPolicy,NULL,NULL,NULL);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
-	if(t)
-		rc = sqlite3_exec(db,policyDefaultWhitelist,NULL,NULL,NULL);
-	else
-		rc = sqlite3_exec(db,policyDefaultBlacklist,NULL,NULL,NULL);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Policy");
-	sqlite3_close(db);
 }
 
 extern void sql_download_write(const char * page, const char * url

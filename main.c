@@ -1012,10 +1012,12 @@ static GtkNotebook * InitNotetab(void * v)
     return tabs;
 }
 
+#ifdef PLANC_FEATURE_DPOLC
 static void c_wk_ext_init(WebKitWebContext *context, gpointer user_data)
 {
     webkit_web_context_set_web_extensions_directory(context, WKED);
 }
+#endif
 
 static void InitWebContext()
 {
@@ -1037,10 +1039,10 @@ static void InitWebContext()
     g_free(cachedir);
 
     G_WKC = webkit_web_context_new_with_website_data_manager(d);
-
+#ifdef PLANC_FEATURE_DPOLC
     g_signal_connect(G_WKC, "initialize-web-extensions"
         ,G_CALLBACK(c_wk_ext_init), NULL);
-
+#endif
     if(g_settings_get_boolean(G_SETTINGS,"webkit-ppt"))
         webkit_web_context_set_process_model(G_WKC
             ,WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
@@ -1421,6 +1423,7 @@ static gboolean c_wv_focus(GtkWidget * wv, GdkEvent  * e
     return FALSE;
 }
 
+#ifdef PLANC_FEATURE_DPOLC
 static void initialSetup()
 {
     GtkWidget * SetupDialog = gtk_dialog_new_with_buttons
@@ -1456,6 +1459,7 @@ static void initialSetup()
     }
     gtk_widget_destroy(SetupDialog);
 }
+#endif
 
 GtkWidget * get_web_view()
 {
@@ -1484,16 +1488,18 @@ static void c_app_init(GtkApplication * app, void * v)
     }
     g_free(config);
     G_GTK_SETTINGS = gtk_settings_get_default();
-    #ifdef PLANC_FEATURE_GNOME
+#ifdef PLANC_FEATURE_GNOME
     if(preferGmenu())
         InitAppMenu();
-    #endif
+#endif
+#ifdef PLANC_FEATURE_DPOLC
     POLICYDIR(p);
     if(!g_file_test(p, G_FILE_TEST_IS_REGULAR))
     {
         initialSetup();
     }
     g_free(p);
+#endif
     InitWebContext();
 }
 

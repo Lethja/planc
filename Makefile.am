@@ -15,8 +15,10 @@ planc_SOURCES += dmenu.c dmenu.h
 endif
 planc_CFLAGS = $(GTK3_CFLAGS) $(WK4_CFLAGS) -lm -DWKED=\""$(libdir)/planc/webkit"\"
 planc_LDFLAGS = $(GTK3_LIBS) $(WK4_LIBS)
-planc_LDADD = libdomain.la libdatabase.la
 EXTRA_DIST = $(desktop_DATA) $(gsettings_SCHEMAS)
+
+if DPOLC
+planc_LDADD = libdomain.la libdatabase.la
 
 extension_LTLIBRARIES = libdomain.la
 extensiondir = $(libdir)/planc/
@@ -36,3 +38,8 @@ libpolicy_la_SOURCES = libpolicy.c
 libpolicy_la_CFLAGS = $(WK4_CFLAGS) $(SQ3_CFLAGS)
 libpolicy_la_LDFLAGS = $(WK4_LIBS) $(SQ3_LIBS) -module -avoid-version -no-undefined
 libpolicy_la_LIBADD = libdomain.la libdatabase.la
+else
+planc_SOURCES += libdomain.c libdomain.h libdatabase.c libdatabase.h
+planc_CFLAGS += $(SQ3_CFLAGS)
+planc_LDFLAGS += $(SQ3_LIBS)
+endif

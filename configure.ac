@@ -73,4 +73,11 @@ AS_IF([test "x$enable_dmenu" = "xyes"],
 [
 	AC_DEFINE([PLANC_FEATURE_DMENU], [1], [Build with dynamic traditional menus])
 ])
+AC_ARG_ENABLE([dpolc],
+	AS_HELP_STRING([--disable-dpolc], [Disable domain policy webkit extension]))
+AM_CONDITIONAL([DPOLC], [test "x$enable_dpolc" != "xno"])
+AS_IF([test "x$enable_dpolc" != "xno"],
+[
+	AC_DEFINE([PLANC_FEATURE_DPOLC], [1], [Build with domain policy support])
+])
 AC_OUTPUT
