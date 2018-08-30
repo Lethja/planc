@@ -1415,7 +1415,9 @@ static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
 static void c_wv_close(WebKitWebView * wv, PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
-    if(gtk_notebook_get_n_pages(c->tabs) < 2)
+    if(gtk_notebook_get_n_pages(c->tabs) > 1)
+        gtk_widget_destroy(GTK_WIDGET(wv));
+    else
         gtk_widget_destroy(GTK_WIDGET(v));
 }
 
