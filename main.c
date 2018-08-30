@@ -180,7 +180,7 @@ void c_notebook_tabs_changed(GtkNotebook * nb, GtkWidget * w
         && !gtk_check_menu_item_get_active(
         (GtkCheckMenuItem *)c->menu->tabM)
 #endif
-		)
+        )
     {
         if(gtk_notebook_get_n_pages(c->tabs) == 1)
             gtk_notebook_set_show_tabs(c->tabs,FALSE);
@@ -728,6 +728,11 @@ static gboolean closePrompt(PlancWindow * v)
         if(g == GTK_RESPONSE_NO)
             return TRUE;
     }
+    else
+    {
+        webkit_web_view_try_close(WK_CURRENT_TAB(call->tabs));
+        return TRUE;
+    }
     return FALSE;
 }
 
@@ -888,8 +893,8 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu)
         ,menu->viewTabMh);
 #ifdef PLANC_FEATURE_DMENU
-	gtk_menu_item_set_submenu(GTK_MENU_ITEM(c->menu->gotoMh)
-		,c->menu->gotoMenu);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(c->menu->gotoMh)
+        ,c->menu->gotoMenu);
 #endif
 
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabH);
@@ -916,10 +921,10 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->helpMh);
 #ifdef PLANC_FEATURE_DMENU
     g_signal_connect(G_OBJECT(menu->gotoMh), "select"
-		,G_CALLBACK(c_onclick_gotoMh), v);
+        ,G_CALLBACK(c_onclick_gotoMh), v);
 
-	g_signal_connect(G_OBJECT(menu->gotoMh), "deselect"
-		,G_CALLBACK(c_onrelease_gotoMh), v);
+    g_signal_connect(G_OBJECT(menu->gotoMh), "deselect"
+        ,G_CALLBACK(c_onrelease_gotoMh), v);
 #endif
     gtk_widget_add_accelerator(menu->cTabMi, "activate", accel_group
         ,GDK_KEY_W, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
@@ -1086,18 +1091,18 @@ static void InitWebContext()
     {
         case 1:
             webkit_settings_set_hardware_acceleration_policy
-				(G_WKC_SETTINGS
-				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND);
+                (G_WKC_SETTINGS
+                ,WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND);
         break;
         default:
             webkit_settings_set_hardware_acceleration_policy
-				(G_WKC_SETTINGS
-				,WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
+                (G_WKC_SETTINGS
+                ,WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
         break;
         case 2:
             webkit_settings_set_hardware_acceleration_policy
-				(G_WKC_SETTINGS
-				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS);
+                (G_WKC_SETTINGS
+                ,WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS);
         break;
     }
 
@@ -1407,6 +1412,13 @@ static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
     }
 }
 
+static void c_wv_close(WebKitWebView * wv, PlancWindow * v)
+{
+    struct call_st * c = planc_window_get_call(v);
+    if(gtk_notebook_get_n_pages(c->tabs) < 2)
+        gtk_widget_destroy(GTK_WIDGET(v));
+}
+
 static gboolean c_wv_focus(GtkWidget * wv, GdkEvent  * e
     ,PlancWindow * v)
 {
@@ -1542,5 +1554,6 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
         ,G_CALLBACK(c_wv_hit), v);
     g_signal_connect(wv, "focus-in-event"
         ,G_CALLBACK(c_wv_focus), v);
+    g_signal_connect(wv, "close", G_CALLBACK(c_wv_close), v);
     webkit_web_view_set_settings(wv,G_WKC_SETTINGS);
 }
