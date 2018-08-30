@@ -25,13 +25,14 @@ GtkSettings * G_GTK_SETTINGS    = NULL;
 char * prepAddress(const gchar * c)
 {
     char * p;
+    char * r = NULL;
     if(strcmp(c,"") == 0 || strstr(c,"about:") == c)
     {
         p = malloc(strlen("about:blank")+1);
         strncpy(p,"about:blank",strlen("about:blank")+1);
         return p;
     }
-    /*Check if speed dial entry
+    /*Check if speed dial or search entry
      * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
     */
     {
@@ -41,26 +42,57 @@ char * prepAddress(const gchar * c)
             if(!isdigit(c[i]))
                 break;
         }
-        if(i == strlen(c))
+        if(i == strlen(c)) //This is a dial
         {
-            char * x = sql_speed_dial_get(atoi(c));
-            if(x)
-                c = (gchar *) x;
+            char * r = sql_speed_dial_get(atoi(c));
+        }
+        else //This is a search
+        {
+            gchar * sp = strstr(c," ");
+            if(sp)
+            {
+                size_t s = strlen(c)-strlen(sp);
+                gchar * key = malloc(s);
+                strncpy(key,c,s);
+                key[s] = '\0';
+                if(key)
+                {
+                    char * url = sql_search_get(key);
+                    free(key);
+                    if(url)
+                    {
+                        size_t s = strlen(url)+strlen(sp+1)+1;
+                        r = malloc(s);
+                        strncpy(r,url,s);
+                        strncat(r,sp+1,s);
+                        for(size_t i = strlen(url)+1; i < s; i++)
+                        {
+                            if(r[i] == ' ')
+                                r[i] = '+';
+                        }
+                        free(url);
+                    }
+                }
+            }
         }
     }
     //Check if protocol portion of the url exists add it if it dosen't
-    p = strstr(c,"://");
+    if(!r)
+        r = (char *) c;
+    p = strstr(r,"://");
     if(!p)
     {
-        size_t s = strlen("http://")+strlen(c)+1;
+        size_t s = strlen("http://")+strlen(r)+1;
         p = malloc(s);
-        snprintf(p,s,"http://%s",c);
+        snprintf(p,s,"http://%s",r);
     }
     else
     {
-        p = malloc(strlen(c)+1);
-        memcpy(p,c,strlen(c)+1);
+        p = malloc(strlen(r)+1);
+        memcpy(p,r,strlen(r)+1);
     }
+    if(r != c)
+        free(r);
     return p;
 }
 
@@ -1369,11 +1401,11 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
 
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
     gtk_widget_show_all(GTK_WIDGET(window));
-    #ifdef PLANC_FEATURE_GNOME
+#ifdef PLANC_FEATURE_GNOME
     if(preferGmenu()
     && !g_settings_get_boolean(G_SETTINGS,"planc-traditional"))
         gtk_widget_hide(GTK_WIDGET(menu->menu));
-    #endif
+#endif
     gtk_widget_hide(GTK_WIDGET(find->top));
     return (GtkWidget *) window;
 }

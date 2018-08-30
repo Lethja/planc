@@ -9,11 +9,16 @@ extern void sql_download_read_to_tree(void * store, void * treeIter);
 extern char * sql_speed_dial_get(size_t index);
 extern char * sql_speed_dial_get_by_name(const char * index);
 extern void sql_speed_dial_read_to_menu(void * store, void * menuIter);
+extern char * sql_search_get(char * key);
 //Macros to quickly get string of database path, must free.
 
 #define DIALDIR(dialdir) char * (dialdir) \
 = g_build_filename(g_get_user_config_dir() \
 ,PACKAGE_NAME,"dial",NULL)
+
+#define SEARCHDIR(searchdir) char * (searchdir) \
+= g_build_filename(g_get_user_config_dir() \
+,PACKAGE_NAME,"search",NULL)
 
 #define HISTORYDIR(historydir) char * (historydir) \
 = g_build_filename(g_get_user_data_dir() \

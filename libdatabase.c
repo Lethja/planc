@@ -42,8 +42,13 @@ static const char * createDownload = "PRAGMA synchronous=OFF;" \
 
 static const char * createDial = "PRAGMA synchronous=OFF;" \
 		"CREATE TABLE IF NOT EXISTS `DIAL`("  \
-		"DIAL INTERGER, URL TEXT, NAME TEXT" \
+		"DIAL INTERGER, URL TEXT, NAME TEXT," \
 		"UNIQUE (`DIAL`));";
+
+static const char * createSearch = "PRAGMA synchronous=OFF;" \
+		"CREATE TABLE IF NOT EXISTS `SEARCH`("  \
+		"`KEY` TEXT, `URL` TEXT, `NAME` TEXT," \
+		"UNIQUE (`KEY`));";
 
 static const char * insertHistory = "INSERT OR REPLACE INTO" \
 		"`HISTORY` " \
@@ -57,6 +62,9 @@ static const char * insertDownload = "INSERT OR REPLACE INTO" \
 
 static const char * selectSpeedDial = "SELECT * FROM `DIAL`" \
 		" WHERE `DIAL` is ?";
+
+static const char * selectSearchKey = "SELECT * FROM `SEARCH`" \
+		" WHERE `KEY` is ?";
 
 static const char * selectSpeedDialName = "SELECT * FROM `DIAL`" \
 		" WHERE `URL` is ? OR `NAME` is ?";
@@ -331,6 +339,37 @@ extern char * sql_speed_dial_get(size_t index)
 	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Dial");
 	rc = sqlite3_bind_int(stmt,1,index);
 	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Dial");
+	rc = sqlite3_step(stmt);
+	char * r = NULL;
+	if(rc == SQLITE_ROW)
+	{
+		const char * u =
+			(const char *) sqlite3_column_text(stmt,1);
+		r = malloc(strlen(u)+1);
+		strncpy(r,u,strlen(u)+1);
+	}
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return r;
+}
+
+extern char * sql_search_get(char * key)
+{
+	sqlite3 *db;
+	int rc;
+	SEARCHDIR(searchdir);
+	rc = sqlite3_open(searchdir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(searchdir);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Search");
+	sqlite3_exec(db,createSearch,NULL,NULL,NULL);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Search");
+
+	sqlite3_stmt * stmt;
+	rc = sqlite3_prepare_v2(db,selectSearchKey,-1,&stmt,NULL);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Search");
+	rc = sqlite3_bind_text(stmt,1,key,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_step(stmt);
 	char * r = NULL;
 	if(rc == SQLITE_ROW)
