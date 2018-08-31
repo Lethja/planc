@@ -546,6 +546,45 @@ static void c_act(GtkWidget * widget, PlancWindow * v)
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
 }
 
+gboolean c_wv_zoom_wheel(WebKitWebView * wv, GdkEventScroll * e
+    ,void * v)
+{
+    if(e->state == GDK_CONTROL_MASK)
+    {
+        switch(e->direction)
+        {
+            case GDK_SCROLL_UP:
+            webkit_web_view_set_zoom_level(wv,
+                webkit_web_view_get_zoom_level(wv)+0.05);
+            return TRUE;
+            case GDK_SCROLL_DOWN:
+            webkit_web_view_set_zoom_level(wv,
+                webkit_web_view_get_zoom_level(wv)-0.05);
+            return TRUE;
+            case GDK_SCROLL_SMOOTH:
+            {
+                gdouble x, y;
+                if(gdk_event_get_scroll_deltas((GdkEvent *) e,&x,&y))
+                {
+                    if(x > -1 && x < 1)
+                    {
+                        if(y > 0)
+                            webkit_web_view_set_zoom_level(wv,
+                                webkit_web_view_get_zoom_level
+                                (wv)-0.05);
+                        else if(y < 0)
+                            webkit_web_view_set_zoom_level(wv,
+                                webkit_web_view_get_zoom_level
+                                (wv)+0.05);
+                        return TRUE;
+                    }
+                }
+            }
+        }
+    }
+    return FALSE;
+}
+
 static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
     ,guint i, PlancWindow * v)
 {
@@ -1604,6 +1643,8 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
         ,G_CALLBACK(c_wv_hit), v);
     g_signal_connect(wv, "focus-in-event"
         ,G_CALLBACK(c_wv_focus), v);
+    g_signal_connect(wv, "scroll-event"
+        ,G_CALLBACK(c_wv_zoom_wheel), NULL);
     g_signal_connect(wv, "close", G_CALLBACK(c_wv_close), v);
     webkit_web_view_set_settings(wv,G_WKC_SETTINGS);
 }
