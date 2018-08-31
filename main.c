@@ -461,6 +461,29 @@ static void c_open_download(GtkWidget * w, PlancWindow * v)
     InitDownloadWindow();
 }
 
+void c_zoom_in(GtkWidget * w, void * v)
+{
+    WebKitWebView * wv
+        = (WebKitWebView *) WK_CURRENT_TAB(get_web_view_notebook());
+    webkit_web_view_set_zoom_level(wv,
+        webkit_web_view_get_zoom_level(wv)+0.05);
+}
+
+void c_zoom_out(GtkWidget * w, void * v)
+{
+    WebKitWebView * wv
+        = (WebKitWebView *) WK_CURRENT_TAB(get_web_view_notebook());
+    webkit_web_view_set_zoom_level(wv,
+            webkit_web_view_get_zoom_level(wv)-0.05);
+}
+
+void c_zoom_reset(GtkWidget * w, void * v)
+{
+    WebKitWebView * wv
+        = (WebKitWebView *) WK_CURRENT_TAB(get_web_view_notebook());
+    webkit_web_view_set_zoom_level(wv,1);
+}
+
 static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
 {
     guint k;
@@ -470,37 +493,46 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
         struct call_st * c = planc_window_get_call(v);
         if(gdk_event_get_state(e,&m))
         {
-            switch(k)
+            if(m & GDK_CONTROL_MASK) //Control keys
             {
-            case GDK_KEY_Tab:
-                if(m & GDK_CONTROL_MASK)
+                switch(k)
                 {
-                    gtk_notebook_next_page(c->tabs);
-                    gtk_widget_grab_focus
-                        (WK_CURRENT_TAB_WIDGET(c->tabs));
+                case GDK_KEY_Tab:
+                        gtk_notebook_next_page(c->tabs);
+                        gtk_widget_grab_focus
+                            (WK_CURRENT_TAB_WIDGET(c->tabs));
+                return;
+                case GDK_KEY_ISO_Left_Tab:
+                        gtk_notebook_prev_page(c->tabs);
+                        gtk_widget_grab_focus
+                            (WK_CURRENT_TAB_WIDGET(c->tabs));
+                return;
+                case GDK_KEY_plus:
+                case GDK_KEY_KP_Add:
+                    c_zoom_in(NULL,NULL);
+                return;
+                case GDK_KEY_minus:
+                case GDK_KEY_KP_Subtract:
+                    c_zoom_out(NULL,NULL);
+                return;
+                case GDK_KEY_0:
+                case GDK_KEY_KP_0:
+                    c_zoom_reset(NULL,NULL);
+                return;
                 }
-            break;
-            case GDK_KEY_ISO_Left_Tab:
-                if(m & GDK_CONTROL_MASK)
-                {
-                    gtk_notebook_prev_page(c->tabs);
-                    gtk_widget_grab_focus
-                        (WK_CURRENT_TAB_WIDGET(c->tabs));
-                }
-            break;
             }
         }
         switch(k)
         {
         case GDK_KEY_F5:
             c_refresh(w,v);
-        break;
+        return;
         case GDK_KEY_F6:
             if(gtk_widget_is_focus((GtkWidget *) c->tool->addressEn))
                 gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(c->tabs));
             else
                 gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
-        break;
+        return;
         case GDK_KEY_F12:
             {
                 gboolean b;
@@ -514,7 +546,7 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
                     webkit_web_inspector_show(wi);
                 }
             }
-        break;
+        return;
         }
     }
 }
