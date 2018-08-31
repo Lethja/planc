@@ -35,43 +35,59 @@ char * prepAddress(const gchar * c)
     /*Check if speed dial or search entry
      * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
     */
+    size_t i = 0;
+    for(; i < strlen(c); i++)
     {
-        size_t i = 0;
-        for(; i < strlen(c); i++)
+        if(!isdigit(c[i]))
+            break;
+    }
+    if(i == strlen(c)) //This is a dial
+    {
+        char * r = sql_speed_dial_get(atoi(c));
+    }
+    else
+    {
+        gchar * sp = strstr(c," ");
+        if(sp) //This is a search
         {
-            if(!isdigit(c[i]))
-                break;
-        }
-        if(i == strlen(c)) //This is a dial
-        {
-            char * r = sql_speed_dial_get(atoi(c));
-        }
-        else //This is a search
-        {
-            gchar * sp = strstr(c," ");
-            if(sp)
+            size_t s = strlen(c)-strlen(sp);
+            gchar * key = malloc(s);
+            strncpy(key,c,s);
+            key[s] = '\0';
+            if(key)
             {
-                size_t s = strlen(c)-strlen(sp);
-                gchar * key = malloc(s);
-                strncpy(key,c,s);
-                key[s] = '\0';
-                if(key)
+                char * url = sql_search_get(key);
+                free(key);
+                if(!url) //Implicit search, use default search
                 {
-                    char * url = sql_search_get(key);
-                    free(key);
-                    if(url)
+                    key = g_settings_get_string
+                        (G_SETTINGS,"planc-search");
+                    if(key)
                     {
-                        size_t s = strlen(url)+strlen(sp+1)+1;
-                        r = malloc(s);
-                        strncpy(r,url,s);
-                        strncat(r,sp+1,s);
-                        for(size_t i = strlen(url)+1; i < s; i++)
-                        {
-                            if(r[i] == ' ')
-                                r[i] = '+';
-                        }
-                        free(url);
+                        if(strcmp(key," "))
+                            url = sql_search_get(key);
+                        free(key);
+                        if(c[0] == ' ')
+                            sp = (char *) c+1;
+                        else
+                            sp = (char *) c;
                     }
+                }
+                else //Explicit search. Move sp over the first space
+                    sp++;
+
+                if(url)
+                {
+                    size_t s = strlen(url)+strlen(sp)+1;
+                    r = malloc(s);
+                    strncpy(r,url,s);
+                    strncat(r,sp,s);
+                    for(size_t i = strlen(url)+1; i < s; i++)
+                    {
+                        if(r[i] == ' ')
+                            r[i] = '+';
+                    }
+                    free(url);
                 }
             }
         }

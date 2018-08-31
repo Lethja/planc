@@ -169,7 +169,13 @@
 				The page to load in a new tab when none is specified
 			</description>
 		</key>
-
+		<key name="planc-search" type="s">
+			<default l10n="messages">" "</default>
+			<summary>Default Search</summary>
+			<description>
+				The search engine to use when no key is specified
+			</description>
+		</key>
 	</schema>
 
 </schemalist>
