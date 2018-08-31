@@ -14,6 +14,7 @@ struct menu_st
     GtkWidget * editMenu;
     GtkWidget * viewMenu;
     GtkWidget * viewTabMenu;
+    GtkWidget * viewZoomMenu;
     GtkWidget * helpMenu;
     GtkWidget * fileMh;
     GtkWidget * editMh;
@@ -22,6 +23,10 @@ struct menu_st
     GtkWidget * viewTabMh;
     GtkWidget * tabH;
     GtkWidget * tabV;
+    GtkWidget * viewZoomMh;
+    GtkWidget * znorm;
+    GtkWidget * zin;
+    GtkWidget * zout;
     GtkWidget * findMi;
     GtkWidget * setwMi;
     GtkWidget * cTabMi;

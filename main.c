@@ -973,6 +973,7 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     menu->gotoMenu = gtk_menu_new();
 #endif
     menu->viewTabMenu = gtk_menu_new();
+    menu->viewZoomMenu = gtk_menu_new();
     menu->helpMenu = gtk_menu_new();
 
     menu->fileMh = gtk_menu_item_new_with_mnemonic("_File");
@@ -991,11 +992,17 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
     menu->tabM = gtk_radio_menu_item_new_with_mnemonic_from_widget
         ((GtkRadioMenuItem *)menu->tabH, "_Menu");
 #endif
+
+    menu->zin = gtk_menu_item_new_with_mnemonic("Zoom _in");
+    menu->zout = gtk_menu_item_new_with_mnemonic("Zoom _out");
+    menu->znorm = gtk_menu_item_new_with_mnemonic("_Normal size");
+
     menu->nWinMi = gtk_menu_item_new_with_mnemonic("New _Window");
     menu->nTabMi = gtk_menu_item_new_with_mnemonic("New _Tab");
     menu->cTabMi = gtk_menu_item_new_with_mnemonic("_Close Tab");
     menu->findMi = gtk_menu_item_new_with_mnemonic("_Find");
     menu->setwMi = gtk_menu_item_new_with_mnemonic("_Settings");
+    menu->viewZoomMh = gtk_menu_item_new_with_mnemonic("_Zoom");
     menu->viewTabMh = gtk_menu_item_new_with_mnemonic("_Tabs");
     menu->histMi = gtk_menu_item_new_with_mnemonic("_History");
     menu->downMi = gtk_menu_item_new_with_mnemonic("_Downloads");
@@ -1007,8 +1014,12 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
         ,menu->editMenu);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->viewMh)
         ,menu->viewMenu);
+    gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->viewZoomMh)
+        ,menu->viewZoomMenu);
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(menu->viewTabMh)
         ,menu->viewTabMenu);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu)
+        ,menu->viewZoomMh);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu)
         ,menu->viewTabMh);
 #ifdef PLANC_FEATURE_DMENU
@@ -1021,6 +1032,13 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
 #ifdef PLANC_FEATURE_DMENU
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewTabMenu),menu->tabM);
 #endif
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewZoomMenu)
+        ,gtk_separator_menu_item_new());
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewZoomMenu),menu->zin);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewZoomMenu)
+        ,menu->zout);
+    gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewZoomMenu)
+        ,menu->znorm);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu), menu->histMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->viewMenu), menu->downMi);
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->editMenu), menu->findMi);
@@ -1086,6 +1104,15 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
 
     g_signal_connect(G_OBJECT(menu->quitMi), "activate"
         ,G_CALLBACK(c_destroy_window_menu), v);
+
+    g_signal_connect(G_OBJECT(menu->zin), "activate"
+        ,G_CALLBACK(c_zoom_in), NULL);
+
+    g_signal_connect(G_OBJECT(menu->zout), "activate"
+        ,G_CALLBACK(c_zoom_out), NULL);
+
+    g_signal_connect(G_OBJECT(menu->znorm), "activate"
+        ,G_CALLBACK(c_zoom_reset), NULL);
 
     c->menu = menu;
     gint g = g_settings_get_int(G_SETTINGS,"tab-layout");
