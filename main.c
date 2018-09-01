@@ -45,7 +45,7 @@ char * prepAddress(const gchar * c)
     {
         char * r = sql_speed_dial_get(atoi(c));
     }
-    else
+    else if(c[0] != '/')
     {
         gchar * sp = strstr(c," ");
         if(sp) //This is a search
