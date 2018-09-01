@@ -98,9 +98,13 @@ char * prepAddress(const gchar * c)
     p = strstr(r,"://");
     if(!p)
     {
+        //Find out if this should be a file:// or http://
         size_t s = strlen("http://")+strlen(r)+1;
         p = malloc(s);
-        snprintf(p,s,"http://%s",r);
+        if(r[0] == '/') //This is an absolute local path
+            snprintf(p,s,"file://%s",r);
+        else
+            snprintf(p,s,"http://%s",r);
     }
     else
     {
