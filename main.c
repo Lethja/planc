@@ -25,7 +25,6 @@ GtkSettings * G_GTK_SETTINGS    = NULL;
 char * prepAddress(const gchar * c)
 {
     char * p;
-    char * r = NULL;
     if(strcmp(c,"") == 0 || strstr(c,"about:") == c)
     {
         p = malloc(strlen("about:blank")+1);
@@ -35,84 +34,94 @@ char * prepAddress(const gchar * c)
     /*Check if speed dial or search entry
      * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
     */
-    size_t i = 0;
-    for(; i < strlen(c); i++)
+    p = strstr(c,"://");
+    if(!p)
     {
-        if(!isdigit(c[i]))
-            break;
-    }
-    if(i == strlen(c)) //This is a dial
-    {
-        char * r = sql_speed_dial_get(atoi(c));
-    }
-    else if(c[0] != '/')
-    {
-        gchar * sp = strstr(c," ");
-        if(sp) //This is a search
+        char * r = NULL;
+        size_t i = 0;
+        for(; i < strlen(c); i++)
         {
-            size_t s = strlen(c)-strlen(sp);
-            gchar * key = malloc(s);
-            strncpy(key,c,s);
-            key[s] = '\0';
-            if(key)
+            if(!isdigit(c[i]))
+                break;
+        }
+        if(i == strlen(c)) //This is a dial
+        {
+            r = sql_speed_dial_get(atoi(c));
+        }
+        else if(c[0] != '/')
+        {
+            gchar * sp = strstr(c," ");
+            if(sp) //This is a search
             {
-                char * url = sql_search_get(key);
-                free(key);
-                if(!url) //Implicit search, use default search
+                size_t s = strlen(c)-strlen(sp);
+                gchar * key = malloc(s);
+                strncpy(key,c,s);
+                key[s] = '\0';
+                if(key)
                 {
-                    key = g_settings_get_string
-                        (G_SETTINGS,"planc-search");
-                    if(key)
+                    char * url = sql_search_get(key);
+                    free(key);
+                    if(!url) //Implicit search, use default search
                     {
-                        if(strcmp(key," "))
-                            url = sql_search_get(key);
-                        free(key);
-                        if(c[0] == ' ')
-                            sp = (char *) c+1;
-                        else
-                            sp = (char *) c;
+                        key = g_settings_get_string
+                            (G_SETTINGS,"planc-search");
+                        if(key)
+                        {
+                            if(strcmp(key," "))
+                                url = sql_search_get(key);
+                            free(key);
+                            if(c[0] == ' ')
+                                sp = (char *) c+1;
+                            else
+                                sp = (char *) c;
+                        }
                     }
-                }
-                else //Explicit search. Move sp over the first space
-                    sp++;
+                    else //Explicit search. Move sp over the first space
+                        sp++;
 
-                if(url)
-                {
-                    size_t s = strlen(url)+strlen(sp)+1;
-                    r = malloc(s);
-                    strncpy(r,url,s);
-                    strncat(r,sp,s);
-                    for(size_t i = strlen(url)+1; i < s; i++)
+                    if(url)
                     {
-                        if(r[i] == ' ')
-                            r[i] = '+';
+                        size_t s = strlen(url)+strlen(sp)+1;
+                        r = malloc(s);
+                        strncpy(r,url,s);
+                        strncat(r,sp,s);
+                        for(size_t i = strlen(url)+1; i < s; i++)
+                        {
+                            if(r[i] == ' ')
+                                r[i] = '+';
+                        }
+                        free(url);
                     }
-                    free(url);
                 }
             }
         }
-    }
-    //Check if protocol portion of the url exists add it if it dosen't
-    if(!r)
-        r = (char *) c;
-    p = strstr(r,"://");
-    if(!p)
-    {
-        //Find out if this should be a file:// or http://
-        size_t s = strlen("http://")+strlen(r)+1;
-        p = malloc(s);
-        if(r[0] == '/') //This is an absolute local path
-            snprintf(p,s,"file://%s",r);
+        if(!r)
+            r = (char *) c;
+        //Check if protocol portion of the url exists or add it
+        p = strstr(r,"://");
+        if(!p)
+        {
+            size_t s = strlen("http://")+strlen(r)+1;
+            p = malloc(s);
+            //Find out if this should be a file:// or http://
+            if(r[0] == '/') //This is an absolute local path
+                snprintf(p,s,"file://%s",r);
+            else
+                snprintf(p,s,"http://%s",r);
+        }
         else
-            snprintf(p,s,"http://%s",r);
+        {
+            p = malloc(strlen(r)+1);
+            memcpy(p,r,strlen(r)+1);
+        }
+        if(r != c)
+            free(r);
     }
     else
     {
-        p = malloc(strlen(r)+1);
-        memcpy(p,r,strlen(r)+1);
+        p = malloc(strlen(c)+1);
+        memcpy(p,c,strlen(c)+1);
     }
-    if(r != c)
-        free(r);
     return p;
 }
 
