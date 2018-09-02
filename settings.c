@@ -135,20 +135,14 @@ GtkWidget * InitComboBoxLabel(const gchar * l, GtkWidget * c)
 	return hbox;
 }
 
-GtkWindow * InitSettingsWindow(PlancWindow * v)
+static GtkWidget * InitSettingTab_general()
 {
-	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(r,400,400);
-	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
-	gtk_window_set_icon_name(r,"preferences-system-network");
-	gtk_window_set_title(r,"Settings - Plan C");
 	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
 	gtk_scrolled_window_set_min_content_width
 		(GTK_SCROLLED_WINDOW(scrl),320);
 	gtk_scrolled_window_set_min_content_height
 		(GTK_SCROLLED_WINDOW(scrl),240);
 	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_container_add((GtkContainer *)r, scrl);
     gtk_container_add((GtkContainer *)scrl, vbox);
 
     //Init
@@ -157,9 +151,10 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		,"Horizontal");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
 		,"Vertical");
+#ifdef PLANC_FEATURE_DMENU
 	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
 		,"Menu");
-
+#endif
 	GtkWidget * mcmBox = gtk_combo_box_text_new();
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"None");
@@ -295,7 +290,21 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 			gtk_combo_box_set_active((GtkComboBox *) mcmBox,2);
 		break;
 	}
+	return scrl;
+}
 
+GtkWindow * InitSettingsWindow(PlancWindow * v)
+{
+	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+	gtk_window_set_default_size(r,400,400);
+	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
+	gtk_window_set_icon_name(r,"preferences-system-network");
+	gtk_window_set_title(r,"Settings - Plan C");
+
+	GtkWidget * nb = gtk_notebook_new();
+	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_general()
+		,gtk_label_new("General"));
+	gtk_container_add((GtkContainer *)r, nb);
 	gtk_widget_show_all((GtkWidget *)r);
 	return r;
 }

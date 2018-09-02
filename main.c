@@ -824,7 +824,8 @@ extern void * new_tab_ext(char * url, PlancWindow * v, gboolean show)
         webkit_web_view_load_uri(wv,u);
         free(u);
     }
-    else return NULL;
+    else
+        return NULL;
 
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = wv;
