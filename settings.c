@@ -124,15 +124,21 @@ void c_settings_hw(GtkComboBox * w, void * v)
 	}
 }
 
-GtkWidget * InitComboBoxLabel(const gchar * l, GtkWidget * c)
+static void attachLabeledWidget(GtkGrid * grid, const gchar * l
+	,GtkWidget * c, gint row)
 {
-	GtkWidget * hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	GtkWidget * cbl = gtk_label_new(l);
-	gtk_container_add((GtkContainer *)hbox, cbl);
-	if(!c)
-		c = gtk_combo_box_new();
-	gtk_container_add((GtkContainer *)hbox, c);
-	return hbox;
+	gtk_label_set_xalign((GtkLabel *) cbl, 0.0);
+	gtk_widget_set_hexpand(cbl, TRUE);
+	gtk_widget_set_margin_start(cbl, 2);
+	gtk_widget_set_margin_end(cbl, 2);
+	gtk_grid_attach(grid,cbl,0,row,1,1);
+	gtk_widget_set_hexpand(c, TRUE);
+	gtk_widget_set_margin_start(c, 2);
+	gtk_widget_set_margin_end(c, 2);
+	gtk_widget_set_margin_bottom(c, 1);
+	gtk_widget_set_margin_top(c, 1);
+	gtk_grid_attach(grid,c,1,row,1,1);
 }
 
 static GtkWidget * InitSettingTab_general()
@@ -142,7 +148,29 @@ static GtkWidget * InitSettingTab_general()
 		(GTK_SCROLLED_WINDOW(scrl),320);
 	gtk_scrolled_window_set_min_content_height
 		(GTK_SCROLLED_WINDOW(scrl),240);
+	GtkWidget * PcFrame = gtk_frame_new("Plan C");
+	GtkWidget * PcGrid = gtk_grid_new();
+	gtk_widget_set_margin_start(GTK_WIDGET(PcGrid), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(PcGrid), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(PcGrid), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(PcGrid), 2);
+	gtk_container_add((GtkContainer *)PcFrame, PcGrid);
+	
+	GtkWidget * WkFrame = gtk_frame_new("Webkit");
+	GtkWidget * WkGrid = gtk_grid_new();	
+	gtk_widget_set_margin_start(GTK_WIDGET(WkGrid), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(WkGrid), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(WkGrid), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(WkGrid), 2);
+	gtk_container_add((GtkContainer *)WkFrame, WkGrid);
+	
 	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	gtk_widget_set_margin_start(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(vbox), 2);
+	gtk_container_add((GtkContainer *)vbox, PcFrame);
+	gtk_container_add((GtkContainer *)vbox, WkFrame);
     gtk_container_add((GtkContainer *)scrl, vbox);
 
     //Init
@@ -163,12 +191,12 @@ static GtkWidget * InitSettingTab_general()
 	gtk_combo_box_text_append_text((GtkComboBoxText *)mcmBox
 		,"High");
 
-	GtkWidget * hwBox = gtk_combo_box_text_new();
-	gtk_combo_box_text_append_text((GtkComboBoxText *)hwBox
+	GtkWidget * hwaBox = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text((GtkComboBoxText *)hwaBox
 		,"Never");
-	gtk_combo_box_text_append_text((GtkComboBoxText *)hwBox
+	gtk_combo_box_text_append_text((GtkComboBoxText *)hwaBox
 		,"On Request");
-	gtk_combo_box_text_append_text((GtkComboBoxText *)hwBox
+	gtk_combo_box_text_append_text((GtkComboBoxText *)hwaBox
 		,"Always");
 
 	#ifdef PLANC_FEATURE_GNOME
@@ -183,12 +211,6 @@ static GtkWidget * InitSettingTab_general()
 		("Enable Page Cache");
     GtkWidget * ta = gtk_check_button_new_with_label
 		("Autohide tab bar in single tab windows");
-	GtkWidget * tt = (GtkWidget *) InitComboBoxLabel
-		("Default Tab Layout",tabBox);
-	GtkWidget * cm = (GtkWidget *) InitComboBoxLabel
-		("Memory Cache Model",mcmBox);
-	GtkWidget * hw = (GtkWidget *) InitComboBoxLabel
-		("Hardware Accelleration",hwBox);
 	GtkWidget * js = gtk_check_button_new_with_label
 		("Enable JavaScript");
 	GtkWidget * jv = gtk_check_button_new_with_label
@@ -215,7 +237,7 @@ static GtkWidget * InitSettingTab_general()
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-plugins",in,"active",
 		 G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (G_SETTINGS,"webkit-hw",hwBox,"active",
+	g_settings_bind (G_SETTINGS,"webkit-hw",hwaBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-js",js,"active",
 		 G_SETTINGS_BIND_DEFAULT);
@@ -228,13 +250,11 @@ static GtkWidget * InitSettingTab_general()
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 
-
-
 	//Connect events
 	g_signal_connect(mcmBox, "changed"
 		,G_CALLBACK(c_settings_cm), NULL);
 
-	g_signal_connect(hwBox, "changed"
+	g_signal_connect(hwaBox, "changed"
 		,G_CALLBACK(c_settings_cm), NULL);
 
 	g_signal_connect(ta, "toggled"
@@ -262,21 +282,24 @@ static GtkWidget * InitSettingTab_general()
 		,G_CALLBACK(c_settings_dv), NULL);
 
 	//Parent
-	#ifdef PLANC_FEATURE_GNOME
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tm),FALSE,FALSE,0);
-	#endif
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dd),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(dv),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ta),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(jv),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(js),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(in),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ms),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(ch),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(pt),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(cm),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(hw),FALSE,FALSE,0);
-	gtk_box_pack_start(GTK_BOX(vbox),GTK_WIDGET(tt),FALSE,FALSE,0);
+#ifdef PLANC_FEATURE_GNOME
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(tm),0,0,2,1);
+#endif
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(dd),0,1,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,2,2,1);
+	attachLabeledWidget(GTK_GRID(PcGrid), "Default Tab Layout"
+		,GTK_WIDGET(tabBox),3);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,0,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,1,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,2,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(in),0,3,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,4,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,5,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(pt),0,6,2,1);
+	attachLabeledWidget(GTK_GRID(WkGrid), "Memory Cache Model"
+		,GTK_WIDGET(mcmBox),7);
+	attachLabeledWidget(GTK_GRID(WkGrid), "Hardware Accelleration"
+		,GTK_WIDGET(hwaBox),8);
 
 	switch(webkit_web_context_get_cache_model(G_WKC))
 	{
