@@ -1,8 +1,30 @@
 #include "main.h"
 #include "settings.h"
 #include "plan.h"
+#include "libdatabase.h"
 
 GtkWindow * G_WIN_SETTINGS = NULL;
+
+enum
+{
+	KEY_COLUMN,
+	TITLE_COLUMN,
+	URL_COLUMN,
+	N_COLUMNS
+};
+
+static int searchTreeIter(void * store, int count, char **data
+	,char **columns)
+{
+	GtkTreeIter iter;
+	if(count == 3)
+	{
+		gtk_tree_store_append (store, &iter, NULL);
+		gtk_tree_store_set (store, &iter,KEY_COLUMN, data[0]
+			,URL_COLUMN, data[1], TITLE_COLUMN, data[2], -1);
+	}
+	return 0;
+}
 
 void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 	,void * v)
@@ -141,6 +163,86 @@ static void attachLabeledWidget(GtkGrid * grid, const gchar * l
 	gtk_grid_attach(grid,c,1,row,1,1);
 }
 
+static GtkWidget * InitSettingTab_search_tree()
+{
+	GtkTreeStore *store;
+	GtkWidget *tree;
+	GtkTreeViewColumn *column;
+	GtkCellRenderer *renderer;
+
+	/* Create a model.  We are using the store model for now, though we
+	* could use any other GtkTreeModel */
+	store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
+		,G_TYPE_STRING, G_TYPE_STRING);
+
+	/* custom function to fill the model with data */
+	sql_search_read_to_tree(store, &searchTreeIter);
+
+	/* Create a view */
+	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
+
+	/* The view now holds a reference.  We can get rid of our own
+    * reference */
+	g_object_unref (G_OBJECT (store));
+
+	renderer = gtk_cell_renderer_text_new();
+
+	column = gtk_tree_view_column_new_with_attributes ("Provider"
+		,renderer, "text", TITLE_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,0);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+	gtk_tree_view_column_set_fixed_width (column, 200);
+	gtk_tree_view_column_set_resizable(column, TRUE);
+	gtk_widget_set_vexpand(GTK_WIDGET(tree),TRUE);
+	gtk_widget_set_hexpand(GTK_WIDGET(tree),TRUE);
+	return tree;
+}
+
+static GtkWidget * InitSettingTab_search()
+{
+	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
+	gtk_scrolled_window_set_min_content_width
+		(GTK_SCROLLED_WINDOW(scrl),320);
+	gtk_scrolled_window_set_min_content_height
+		(GTK_SCROLLED_WINDOW(scrl),240);
+	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	GtkWidget * IsFrame = gtk_frame_new("Implicit Search");
+	GtkWidget * IsGrid = gtk_grid_new();
+	gtk_widget_set_margin_start(GTK_WIDGET(IsGrid), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(IsGrid), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(IsGrid), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(IsGrid), 2);
+	GtkWidget * is = gtk_check_button_new_with_label
+		("Allow implicit searching");
+	gtk_grid_attach(GTK_GRID(IsGrid),is,0,0,2,1);
+	GtkWidget * ispBox = gtk_combo_box_text_new();
+	attachLabeledWidget(GTK_GRID(IsGrid), "Implicit search provider"
+		,GTK_WIDGET(ispBox),1);
+	gtk_container_add(GTK_CONTAINER(IsFrame),IsGrid);
+	gtk_container_add(GTK_CONTAINER(vbox),IsFrame);
+
+	GtkWidget * SpFrame = gtk_frame_new("Search Providers");
+	GtkWidget * SpGrid = gtk_grid_new();
+	gtk_widget_set_margin_start(GTK_WIDGET(SpGrid), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(SpGrid), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(SpGrid), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(SpGrid), 2);
+
+	GtkWidget * tree = InitSettingTab_search_tree();
+	gtk_grid_attach(GTK_GRID(SpGrid),tree,0,0,1,1);
+
+	gtk_container_add(GTK_CONTAINER(SpFrame),SpGrid);
+	gtk_container_add(GTK_CONTAINER(vbox),SpFrame);
+
+	gtk_widget_set_margin_start(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(vbox), 2);
+
+	gtk_container_add(GTK_CONTAINER(scrl),vbox);
+	return scrl;
+}
+
 static GtkWidget * InitSettingTab_general()
 {
 	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
@@ -155,15 +257,15 @@ static GtkWidget * InitSettingTab_general()
 	gtk_widget_set_margin_top(GTK_WIDGET(PcGrid), 2);
 	gtk_widget_set_margin_bottom(GTK_WIDGET(PcGrid), 2);
 	gtk_container_add((GtkContainer *)PcFrame, PcGrid);
-	
+
 	GtkWidget * WkFrame = gtk_frame_new("Webkit");
-	GtkWidget * WkGrid = gtk_grid_new();	
+	GtkWidget * WkGrid = gtk_grid_new();
 	gtk_widget_set_margin_start(GTK_WIDGET(WkGrid), 2);
 	gtk_widget_set_margin_end(GTK_WIDGET(WkGrid), 2);
 	gtk_widget_set_margin_top(GTK_WIDGET(WkGrid), 2);
 	gtk_widget_set_margin_bottom(GTK_WIDGET(WkGrid), 2);
 	gtk_container_add((GtkContainer *)WkFrame, WkGrid);
-	
+
 	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_widget_set_margin_start(GTK_WIDGET(vbox), 2);
 	gtk_widget_set_margin_end(GTK_WIDGET(vbox), 2);
@@ -327,6 +429,8 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 	GtkWidget * nb = gtk_notebook_new();
 	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_general()
 		,gtk_label_new("General"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_search()
+		,gtk_label_new("Search"));
 	gtk_container_add((GtkContainer *)r, nb);
 	gtk_widget_show_all((GtkWidget *)r);
 	return r;

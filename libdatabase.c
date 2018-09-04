@@ -69,6 +69,8 @@ static const char * selectSearchKey = "SELECT * FROM `SEARCH`" \
 static const char * selectSpeedDialName = "SELECT * FROM `DIAL`" \
 		" WHERE `URL` is ? OR `NAME` is ?";
 
+static const char * retrieveSearch = "SELECT * FROM `SEARCH`";
+
 static const char * retrieveHistory = "SELECT * FROM `HISTORY`";
 
 static const char * retrieveDial = "SELECT * FROM `DIAL`";
@@ -272,6 +274,20 @@ extern void sql_history_read_to_tree(void * store, void * treeIter)
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
 	rc = sqlite3_exec(db,retrieveHistory,treeIter,store,NULL);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"History");
+	sqlite3_close(db);
+}
+
+extern void sql_search_read_to_tree(void * store, void * treeIter)
+{
+	sqlite3 *db;
+	int rc;
+	SEARCHDIR(searchdir);
+	rc = sqlite3_open(searchdir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(searchdir);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
+	rc = sqlite3_exec(db,retrieveSearch,treeIter,store,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
 	sqlite3_close(db);
 }
 
