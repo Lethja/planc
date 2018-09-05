@@ -185,13 +185,21 @@ static GtkWidget * InitSettingTab_search_tree()
     * reference */
 	g_object_unref (G_OBJECT (store));
 
-	renderer = gtk_cell_renderer_text_new();
 
-	column = gtk_tree_view_column_new_with_attributes ("Provider"
-		,renderer, "text", TITLE_COLUMN, NULL);
+	renderer = gtk_cell_renderer_text_new();
+	column = gtk_tree_view_column_new_with_attributes ("Key"
+		,renderer, "text", KEY_COLUMN, NULL);
 	gtk_tree_view_column_set_sort_column_id(column,0);
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
-	gtk_tree_view_column_set_fixed_width (column, 200);
+	gtk_tree_view_column_set_fixed_width (column, 50);
+	gtk_tree_view_column_set_resizable(column, TRUE);
+
+	renderer = gtk_cell_renderer_text_new();
+	column = gtk_tree_view_column_new_with_attributes ("Provider"
+		,renderer, "text", TITLE_COLUMN, NULL);
+	gtk_tree_view_column_set_sort_column_id(column,1);
+	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+	gtk_tree_view_column_set_fixed_width (column, 150);
 	gtk_tree_view_column_set_resizable(column, TRUE);
 	gtk_widget_set_vexpand(GTK_WIDGET(tree),TRUE);
 	gtk_widget_set_hexpand(GTK_WIDGET(tree),TRUE);
@@ -206,6 +214,7 @@ static GtkWidget * InitSettingTab_search()
 	gtk_scrolled_window_set_min_content_height
 		(GTK_SCROLLED_WINDOW(scrl),240);
 	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
 	GtkWidget * IsFrame = gtk_frame_new("Implicit Search");
 	GtkWidget * IsGrid = gtk_grid_new();
 	gtk_widget_set_margin_start(GTK_WIDGET(IsGrid), 2);
@@ -216,7 +225,7 @@ static GtkWidget * InitSettingTab_search()
 		("Allow implicit searching");
 	gtk_grid_attach(GTK_GRID(IsGrid),is,0,0,2,1);
 	GtkWidget * ispBox = gtk_combo_box_text_new();
-	attachLabeledWidget(GTK_GRID(IsGrid), "Implicit search provider"
+	attachLabeledWidget(GTK_GRID(IsGrid), "Implicit search key"
 		,GTK_WIDGET(ispBox),1);
 	gtk_container_add(GTK_CONTAINER(IsFrame),IsGrid);
 	gtk_container_add(GTK_CONTAINER(vbox),IsFrame);
@@ -233,6 +242,9 @@ static GtkWidget * InitSettingTab_search()
 
 	gtk_container_add(GTK_CONTAINER(SpFrame),SpGrid);
 	gtk_container_add(GTK_CONTAINER(vbox),SpFrame);
+
+	gtk_combo_box_set_model(GTK_COMBO_BOX(ispBox)
+		,gtk_tree_view_get_model(GTK_TREE_VIEW(tree)));
 
 	gtk_widget_set_margin_start(GTK_WIDGET(vbox), 2);
 	gtk_widget_set_margin_end(GTK_WIDGET(vbox), 2);
