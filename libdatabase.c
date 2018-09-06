@@ -286,6 +286,8 @@ extern void sql_search_read_to_tree(void * store, void * treeIter)
 	sqlite3_busy_timeout(db, 5000);
 	g_free(searchdir);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
+	sqlite3_exec(db,createSearch,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
 	rc = sqlite3_exec(db,retrieveSearch,treeIter,store,NULL);
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
 	sqlite3_close(db);
