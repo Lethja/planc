@@ -60,6 +60,11 @@ static const char * insertDownload = "INSERT OR REPLACE INTO" \
 		"(`PAGE`,`URL`,`FILE`)" \
 		"VALUES (?1,?2,?3);";
 
+static const char * insertSearch = "INSERT OR REPLACE INTO" \
+		"`SEARCH` " \
+		"(`KEY`,`URL`,`NAME`)" \
+		"VALUES (?1,?2,?3);";
+
 static const char * selectSpeedDial = "SELECT * FROM `DIAL`" \
 		" WHERE `DIAL` is ?";
 
@@ -244,6 +249,34 @@ extern void sql_download_write(const char * page, const char * url
 	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Downloads");
 	rc = sqlite3_step(stmt);
 	DB_IS_OR_RETURN(rc,SQLITE_DONE,db,stmt,"Downloads");
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return;
+}
+
+extern void sql_search_write(const char * key, const char * url
+	,const char * name)
+{
+	sqlite3 *db;
+	int rc;
+	SEARCHDIR(searchdir);
+	rc = sqlite3_open(searchdir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(searchdir);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
+	rc = sqlite3_exec(db,createSearch,NULL,NULL,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
+	sqlite3_stmt * stmt;
+	rc = sqlite3_prepare_v2(db,insertSearch,-1,&stmt,NULL);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	rc = sqlite3_bind_text(stmt,1,key,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	rc = sqlite3_bind_text(stmt,2,url,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	rc = sqlite3_bind_text(stmt,3,name,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	rc = sqlite3_step(stmt);
+	DB_IS_OR_RETURN(rc,SQLITE_DONE,db,stmt,"Search");
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	return;

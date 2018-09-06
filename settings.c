@@ -235,38 +235,30 @@ static GtkDialog * SettingTab_search_ae(char * t, char * k, char * u
 
     gtk_box_pack_start(GTK_BOX(dbox),grid,0,1,0);
     gtk_widget_show_all(dbox);
+	int result = gtk_dialog_run(dialog);
+	switch (result)
+	{
+	case GTK_RESPONSE_ACCEPT:
+		sql_search_write(gtk_entry_get_text(GTK_ENTRY(ek))
+			,gtk_entry_get_text(GTK_ENTRY(eu))
+			,gtk_entry_get_text(GTK_ENTRY(en)));
+		break;
+	default:
+		// do_nothing_since_dialog_was_cancelled ();
+		break;
+	}
 	return dialog;
 }
 
 static void c_settings_search_add(GtkWidget * w, void * v)
 {
 	GtkDialog * d = SettingTab_search_ae(NULL,NULL,NULL,G_WIN_SETTINGS);
-	int result = gtk_dialog_run(d);
-	switch (result)
-	{
-	case GTK_RESPONSE_ACCEPT:
-		// do_application_specific_something ();
-		break;
-	default:
-		// do_nothing_since_dialog_was_cancelled ();
-		break;
-	}
 	gtk_widget_destroy(GTK_WIDGET(d));
 }
 
 static void c_settings_search_edit(GtkWidget * w, GtkTreeView * tree)
 {
 	GtkDialog * d = SettingTab_search_ae(NULL,NULL,NULL,G_WIN_SETTINGS);
-	int result = gtk_dialog_run(d);
-	switch (result)
-	{
-	case GTK_RESPONSE_ACCEPT:
-		// do_application_specific_something ();
-		break;
-	default:
-		// do_nothing_since_dialog_was_cancelled ();
-		break;
-	}
 	gtk_widget_destroy(GTK_WIDGET(d));
 }
 
