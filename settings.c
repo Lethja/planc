@@ -206,6 +206,75 @@ static GtkWidget * InitSettingTab_search_tree()
 	return tree;
 }
 
+static GtkDialog * SettingTab_search_ae(char * t, char * k, char * u
+	,GtkWindow * p)
+{
+	GtkDialog * dialog = (GtkDialog *) gtk_dialog_new_with_buttons
+		("Search Provider", p
+		,GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT
+		,_("_Update"), GTK_RESPONSE_ACCEPT
+		,_("_Cancel"), GTK_RESPONSE_REJECT, NULL);
+
+	GtkWidget * dbox = gtk_dialog_get_content_area(dialog);
+	GtkWidget * grid = gtk_grid_new();
+
+	GtkWidget * en = gtk_entry_new();
+	GtkWidget * ek = gtk_entry_new();
+	GtkWidget * eu = gtk_entry_new();
+
+	if(t)
+		gtk_entry_set_text(GTK_ENTRY(en),t);
+	if(k)
+		gtk_entry_set_text(GTK_ENTRY(ek),k);
+	if(u)
+		gtk_entry_set_text(GTK_ENTRY(eu),u);
+
+	attachLabeledWidget(GTK_GRID(grid),"Provider",en,0);
+	attachLabeledWidget(GTK_GRID(grid),"Key",ek,1);
+	attachLabeledWidget(GTK_GRID(grid),"URL",eu,2);
+
+    gtk_box_pack_start(GTK_BOX(dbox),grid,0,1,0);
+    gtk_widget_show_all(dbox);
+	return dialog;
+}
+
+static void c_settings_search_add(GtkWidget * w, void * v)
+{
+	GtkDialog * d = SettingTab_search_ae(NULL,NULL,NULL,G_WIN_SETTINGS);
+	int result = gtk_dialog_run(d);
+	switch (result)
+	{
+	case GTK_RESPONSE_ACCEPT:
+		// do_application_specific_something ();
+		break;
+	default:
+		// do_nothing_since_dialog_was_cancelled ();
+		break;
+	}
+	gtk_widget_destroy(GTK_WIDGET(d));
+}
+
+static void c_settings_search_edit(GtkWidget * w, GtkTreeView * tree)
+{
+	GtkDialog * d = SettingTab_search_ae(NULL,NULL,NULL,G_WIN_SETTINGS);
+	int result = gtk_dialog_run(d);
+	switch (result)
+	{
+	case GTK_RESPONSE_ACCEPT:
+		// do_application_specific_something ();
+		break;
+	default:
+		// do_nothing_since_dialog_was_cancelled ();
+		break;
+	}
+	gtk_widget_destroy(GTK_WIDGET(d));
+}
+
+static void c_settings_search_drop(GtkWidget * w, GtkTreeView * tree)
+{
+	//Remove selected tree row
+}
+
 static GtkWidget * InitSettingTab_search()
 {
 	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
@@ -238,7 +307,21 @@ static GtkWidget * InitSettingTab_search()
 	gtk_widget_set_margin_bottom(GTK_WIDGET(SpGrid), 2);
 
 	GtkWidget * tree = InitSettingTab_search_tree();
-	gtk_grid_attach(GTK_GRID(SpGrid),tree,0,0,1,1);
+	gtk_grid_attach(GTK_GRID(SpGrid),tree,0,0,3,1);
+	GtkWidget * sa = gtk_button_new_with_mnemonic("_Add");
+	GtkWidget * se = gtk_button_new_with_mnemonic("_Edit");
+	GtkWidget * sr = gtk_button_new_with_mnemonic("_Remove");
+
+	g_signal_connect(sa, "clicked"
+		,G_CALLBACK(c_settings_search_add), NULL);
+	g_signal_connect(se, "clicked"
+		,G_CALLBACK(c_settings_search_edit), tree);
+	g_signal_connect(sr, "clicked"
+		,G_CALLBACK(c_settings_search_drop), tree);
+
+	gtk_grid_attach(GTK_GRID(SpGrid),sa,0,1,1,1);
+	gtk_grid_attach(GTK_GRID(SpGrid),se,1,1,1,1);
+	gtk_grid_attach(GTK_GRID(SpGrid),sr,2,1,1,1);
 
 	gtk_container_add(GTK_CONTAINER(SpFrame),SpGrid);
 	gtk_container_add(GTK_CONTAINER(vbox),SpFrame);
