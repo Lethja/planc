@@ -366,7 +366,7 @@ extern char * sql_speed_dial_get_by_name(const char * index)
 		const char * u =
 			(const char *) sqlite3_column_text(stmt,1);
 		r = malloc(strlen(u)+1);
-		strncpy(r,u,strlen(u)+1);
+		strcpy(r,u);
 	}
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
@@ -397,7 +397,7 @@ extern char * sql_speed_dial_get(size_t index)
 		const char * u =
 			(const char *) sqlite3_column_text(stmt,1);
 		r = malloc(strlen(u)+1);
-		strncpy(r,u,strlen(u)+1);
+		strcpy(r,u);
 	}
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
@@ -428,7 +428,7 @@ extern char * sql_search_get(char * key)
 		const char * u =
 			(const char *) sqlite3_column_text(stmt,1);
 		r = malloc(strlen(u)+1);
-		strncpy(r,u,strlen(u)+1);
+		strcpy(r,u);
 	}
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);

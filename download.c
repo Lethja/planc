@@ -200,7 +200,7 @@ gchar * getPathFromFileName(const gchar * path)
 	{
 		size_t s = strlen(path) - strlen(a);
 		char * r = malloc(s+1);
-		strncpy(r,path,s);
+		strcpy(r,path);
 		r[s+1] = '\0';
 		return r;
 	}
@@ -219,7 +219,7 @@ static gchar * getDisposition(WebKitURIResponse * u)
 		if(soup_message_headers_get_content_disposition(s,&f,NULL))
 		{
 			char * a = malloc(strlen(f)+1);
-			strncpy(a,f,strlen(f)+1);
+			strcpy(a,f);
 			char * b = strrchr (f, '=')+1;
 			char * c = strrchr (b, '/');
 			if(c)
@@ -229,7 +229,7 @@ static gchar * getDisposition(WebKitURIResponse * u)
 			if((b[strlen(b)-1] == '"') || (b[strlen(b)-1] == '\''))
 				b[strlen(b)-1] = '\0';
 			gchar * r = malloc(strlen(b)+1);
-			strncpy(r,b,strlen(b)+1);
+			strcpy(r,b);
 			free(a);
 			free(f);
 			return r;

@@ -55,7 +55,7 @@ char * prepAddress(const gchar * c)
             {
                 size_t s = strlen(c)-strlen(sp);
                 gchar * key = malloc(s);
-                strncpy(key,c,s);
+                strcpy(key,c);
                 key[s] = '\0';
                 if(key)
                 {
@@ -83,8 +83,8 @@ char * prepAddress(const gchar * c)
                     {
                         size_t s = strlen(url)+strlen(sp)+1;
                         r = malloc(s);
-                        strncpy(r,url,s);
-                        strncat(r,sp,s);
+                        strcpy(r,url);
+                        strcat(r,sp);
                         for(size_t i = strlen(url)+1; i < s; i++)
                         {
                             if(r[i] == ' ')
