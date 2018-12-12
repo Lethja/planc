@@ -185,7 +185,6 @@ static GtkWidget * InitSettingTab_search_tree()
     * reference */
 	g_object_unref (G_OBJECT (store));
 
-
 	renderer = gtk_cell_renderer_text_new();
 	column = gtk_tree_view_column_new_with_attributes ("Key"
 		,renderer, "text", KEY_COLUMN, NULL);
@@ -206,13 +205,15 @@ static GtkWidget * InitSettingTab_search_tree()
 	return tree;
 }
 
-static GtkDialog * SettingTab_search_ae(char * t, char * k, char * u
-	,GtkWindow * p)
+static GtkDialog * SettingTab_search_ae(GtkTreeSelection * s
+	,gboolean edit, GtkWindow * p)
 {
+	GtkTreeIter iter;
+	GtkTreeModel * model;
 	GtkDialog * dialog = (GtkDialog *) gtk_dialog_new_with_buttons
 		("Search Provider", p
 		,GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT
-		,_("_Update"), GTK_RESPONSE_ACCEPT
+		,edit ? _("_Update") : _("_Add"), GTK_RESPONSE_ACCEPT
 		,_("_Cancel"), GTK_RESPONSE_REJECT, NULL);
 
 	GtkWidget * dbox = gtk_dialog_get_content_area(dialog);
@@ -222,12 +223,30 @@ static GtkDialog * SettingTab_search_ae(char * t, char * k, char * u
 	GtkWidget * ek = gtk_entry_new();
 	GtkWidget * eu = gtk_entry_new();
 
-	if(t)
-		gtk_entry_set_text(GTK_ENTRY(en),t);
-	if(k)
-		gtk_entry_set_text(GTK_ENTRY(ek),k);
-	if(u)
-		gtk_entry_set_text(GTK_ENTRY(eu),u);
+	if(s)
+	{
+		if (gtk_tree_selection_get_selected(s, &model, &iter))
+		{
+			if(edit)
+			{
+				gchar * key  = NULL;
+				gchar * name = NULL;
+				gchar * uri  = NULL;
+				gtk_tree_model_get(GTK_TREE_MODEL(model), &iter, 0
+					,&key, -1);
+				gtk_tree_model_get(GTK_TREE_MODEL(model), &iter, 1
+					,&name, -1);
+				gtk_tree_model_get(GTK_TREE_MODEL(model), &iter, 2
+					,&uri, -1);
+				gtk_entry_set_text(GTK_ENTRY(en),name);
+				gtk_entry_set_text(GTK_ENTRY(ek),key);
+				gtk_entry_set_text(GTK_ENTRY(eu),uri);
+				g_free(key);
+				g_free(name);
+				g_free(uri);
+			}
+		}
+	}
 
 	attachLabeledWidget(GTK_GRID(grid),"Provider",en,0);
 	attachLabeledWidget(GTK_GRID(grid),"Key",ek,1);
@@ -236,35 +255,92 @@ static GtkDialog * SettingTab_search_ae(char * t, char * k, char * u
     gtk_box_pack_start(GTK_BOX(dbox),grid,0,1,0);
     gtk_widget_show_all(dbox);
 	int result = gtk_dialog_run(dialog);
-	switch (result)
+	if(result == GTK_RESPONSE_ACCEPT)
 	{
-	case GTK_RESPONSE_ACCEPT:
-		sql_search_write(gtk_entry_get_text(GTK_ENTRY(ek))
+		if(sql_search_write(gtk_entry_get_text(GTK_ENTRY(ek))
 			,gtk_entry_get_text(GTK_ENTRY(eu))
-			,gtk_entry_get_text(GTK_ENTRY(en)));
-		break;
-	default:
-		// do_nothing_since_dialog_was_cancelled ();
-		break;
+			,gtk_entry_get_text(GTK_ENTRY(en))))
+		{
+			if(s)
+			{
+				if(!edit)
+				{
+					gtk_tree_store_append(GTK_TREE_STORE(model), &iter
+						,NULL);
+				}
+
+				gtk_tree_store_set(GTK_TREE_STORE(model), &iter
+					,0, gtk_entry_get_text(GTK_ENTRY(ek))
+					,2, gtk_entry_get_text(GTK_ENTRY(eu))
+					,1, gtk_entry_get_text(GTK_ENTRY(en)) ,-1);
+			}
+		}
 	}
 	return dialog;
 }
 
-static void c_settings_search_add(GtkWidget * w, void * v)
+static void c_settings_search_add(GtkWidget * w, GtkTreeView * tree)
 {
-	GtkDialog * d = SettingTab_search_ae(NULL,NULL,NULL,G_WIN_SETTINGS);
+	GtkTreeSelection * s = gtk_tree_view_get_selection(tree);
+	GtkDialog * d = SettingTab_search_ae(s, FALSE, G_WIN_SETTINGS);
 	gtk_widget_destroy(GTK_WIDGET(d));
 }
 
 static void c_settings_search_edit(GtkWidget * w, GtkTreeView * tree)
 {
-	GtkDialog * d = SettingTab_search_ae(NULL,NULL,NULL,G_WIN_SETTINGS);
+	GtkTreeSelection * s = gtk_tree_view_get_selection(tree);
+	GtkDialog * d = SettingTab_search_ae(s, TRUE, G_WIN_SETTINGS);
 	gtk_widget_destroy(GTK_WIDGET(d));
 }
 
 static void c_settings_search_drop(GtkWidget * w, GtkTreeView * tree)
 {
-	//Remove selected tree row
+	GtkTreeIter iter;
+	GtkTreeModel * model;
+	GtkTreeSelection * s = gtk_tree_view_get_selection(tree);
+	gchar * key  = NULL;
+	if (gtk_tree_selection_get_selected(s, &model, &iter))
+	{
+		gtk_tree_model_get(GTK_TREE_MODEL(model), &iter, 0, &key, -1);
+		if(key)
+		{
+			if(sql_search_drop(key))
+				gtk_tree_store_remove(GTK_TREE_STORE(model), &iter);
+			g_free(key);
+		}
+	}
+}
+
+static void c_settings_set_implicit(GtkWidget * w, void * v)
+{
+	GtkTreeIter iter;
+	gtk_combo_box_get_active_iter(GTK_COMBO_BOX(w), &iter);
+	gchar * s;
+	GtkTreeModel * model = gtk_combo_box_get_model(GTK_COMBO_BOX(w));
+	gtk_tree_model_get(GTK_TREE_MODEL(model), &iter, 0, &s, -1);
+	g_settings_set_string(G_SETTINGS, "planc-search", s);
+	g_free(s);
+}
+
+static gboolean setupSearchTree(GtkTreeModel * model
+	,GtkTreePath * path, GtkTreeIter * iter, void * tree)
+{
+	gchar * settingK = g_settings_get_string(G_SETTINGS,"planc-search");
+	gchar * iterK;
+	gtk_tree_model_get(GTK_TREE_MODEL(model), iter, 0, &iterK, -1);
+	if(strcmp(iterK, settingK))
+	{
+		g_free(iterK);
+		return FALSE;
+	}
+	else
+	{
+		g_free(iterK);
+		GtkTreeSelection * selection
+			= gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+		gtk_tree_selection_select_iter(selection, iter);
+		return TRUE;
+	}
 }
 
 static GtkWidget * InitSettingTab_search()
@@ -305,7 +381,7 @@ static GtkWidget * InitSettingTab_search()
 	GtkWidget * sr = gtk_button_new_with_mnemonic("_Remove");
 
 	g_signal_connect(sa, "clicked"
-		,G_CALLBACK(c_settings_search_add), NULL);
+		,G_CALLBACK(c_settings_search_add), tree);
 	g_signal_connect(se, "clicked"
 		,G_CALLBACK(c_settings_search_edit), tree);
 	g_signal_connect(sr, "clicked"
@@ -318,14 +394,37 @@ static GtkWidget * InitSettingTab_search()
 	gtk_container_add(GTK_CONTAINER(SpFrame),SpGrid);
 	gtk_container_add(GTK_CONTAINER(vbox),SpFrame);
 
-	gtk_combo_box_set_model(GTK_COMBO_BOX(ispBox)
-		,gtk_tree_view_get_model(GTK_TREE_VIEW(tree)));
+	{
+		GtkTreeModel * model
+			= gtk_tree_view_get_model(GTK_TREE_VIEW(tree));
+		gtk_combo_box_set_model(GTK_COMBO_BOX(ispBox), model);
+
+		gtk_tree_model_foreach
+			(gtk_tree_view_get_model(GTK_TREE_VIEW(tree))
+			,setupSearchTree, tree);
+
+		GtkTreeIter iter;
+		GtkTreeSelection * selection
+			= gtk_tree_view_get_selection(GTK_TREE_VIEW(tree));
+		if(gtk_tree_selection_get_selected(selection, NULL, &iter))
+			gtk_combo_box_set_active_iter(GTK_COMBO_BOX(ispBox), &iter);
+		else
+		{
+			gtk_tree_model_get_iter_first(model, &iter);
+			gtk_tree_selection_select_iter(selection, &iter);
+		}
+	}
+
+	g_signal_connect(ispBox, "changed"
+		,G_CALLBACK(c_settings_set_implicit), NULL);
+
+	g_settings_bind (G_SETTINGS, "planc-search-implicit", is, "active"
+		,G_SETTINGS_BIND_DEFAULT);
 
 	gtk_widget_set_margin_start(GTK_WIDGET(vbox), 2);
 	gtk_widget_set_margin_end(GTK_WIDGET(vbox), 2);
 	gtk_widget_set_margin_top(GTK_WIDGET(vbox), 2);
 	gtk_widget_set_margin_bottom(GTK_WIDGET(vbox), 2);
-
 	gtk_container_add(GTK_CONTAINER(scrl),vbox);
 	return scrl;
 }

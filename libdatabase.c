@@ -48,7 +48,7 @@ static const char * createDial = "PRAGMA synchronous=OFF;" \
 static const char * createSearch = "PRAGMA synchronous=OFF;" \
 		"CREATE TABLE IF NOT EXISTS `SEARCH`("  \
 		"`KEY` TEXT, `URL` TEXT, `NAME` TEXT," \
-		"UNIQUE (`KEY`));";
+		"UNIQUE (`KEY`) UNIQUE(`NAME`));";
 
 static const char * insertHistory = "INSERT OR REPLACE INTO" \
 		"`HISTORY` " \
@@ -73,6 +73,9 @@ static const char * selectSearchKey = "SELECT * FROM `SEARCH`" \
 
 static const char * selectSpeedDialName = "SELECT * FROM `DIAL`" \
 		" WHERE `URL` is ? OR `NAME` is ?";
+
+static const char * deleteSearch =
+		"DELETE FROM `SEARCH` WHERE `KEY` is ?";
 
 static const char * retrieveSearch = "SELECT * FROM `SEARCH`";
 
@@ -254,7 +257,7 @@ extern void sql_download_write(const char * page, const char * url
 	return;
 }
 
-extern void sql_search_write(const char * key, const char * url
+extern char sql_search_write(const char * key, const char * url
 	,const char * name)
 {
 	sqlite3 *db;
@@ -263,23 +266,44 @@ extern void sql_search_write(const char * key, const char * url
 	rc = sqlite3_open(searchdir, &db);
 	sqlite3_busy_timeout(db, 5000);
 	g_free(searchdir);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"Search");
 	rc = sqlite3_exec(db,createSearch,NULL,NULL,NULL);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,NULL,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"Search");
 	sqlite3_stmt * stmt;
 	rc = sqlite3_prepare_v2(db,insertSearch,-1,&stmt,NULL);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_bind_text(stmt,1,key,-1,SQLITE_STATIC);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_bind_text(stmt,2,url,-1,SQLITE_STATIC);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_bind_text(stmt,3,name,-1,SQLITE_STATIC);
-	DB_IS_OR_RETURN(rc,SQLITE_OK,db,stmt,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_step(stmt);
-	DB_IS_OR_RETURN(rc,SQLITE_DONE,db,stmt,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,"Search");
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
-	return;
+	return 1;
+}
+
+extern char sql_search_drop(const char * key)
+{
+	sqlite3 *db;
+	int rc;
+	SEARCHDIR(searchdir);
+	rc = sqlite3_open(searchdir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(searchdir);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"Search");
+	sqlite3_stmt * stmt;
+	rc = sqlite3_prepare_v2(db, deleteSearch, -1, &stmt, NULL);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
+	rc = sqlite3_bind_text(stmt,1,key,-1,SQLITE_STATIC);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
+	rc = sqlite3_step(stmt);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,"Search");
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return 1;
 }
 
 extern void sql_download_read_to_tree(void * store, void * treeIter)
@@ -404,7 +428,7 @@ extern char * sql_speed_dial_get(size_t index)
 	return r;
 }
 
-extern char * sql_search_get(char * key)
+extern char sql_search_get(char * key, char ** name, char ** uri)
 {
 	sqlite3 *db;
 	int rc;
@@ -412,23 +436,48 @@ extern char * sql_search_get(char * key)
 	rc = sqlite3_open(searchdir, &db);
 	sqlite3_busy_timeout(db, 5000);
 	g_free(searchdir);
-	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"Search");
 	sqlite3_exec(db,createSearch,NULL,NULL,NULL);
-	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,NULL,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"Search");
 
 	sqlite3_stmt * stmt;
 	rc = sqlite3_prepare_v2(db,selectSearchKey,-1,&stmt,NULL);
-	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_bind_text(stmt,1,key,-1,SQLITE_STATIC);
-	DB_IS_OR_RETURN_NULL(rc,SQLITE_OK,db,stmt,"Search");
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_step(stmt);
-	char * r = NULL;
+	int r = 0;
 	if(rc == SQLITE_ROW)
 	{
-		const char * u =
-			(const char *) sqlite3_column_text(stmt,1);
-		r = malloc(strlen(u)+1);
-		strcpy(r,u);
+		if(uri)
+		{
+			const char * u = (const char *) sqlite3_column_text(stmt,1);
+			*uri = malloc(strlen(u)+1);
+			if(!*uri)
+			{
+				sqlite3_finalize(stmt);
+				sqlite3_close(db);
+				return 0;
+			}
+			strcpy(*uri,u);
+		}
+		if(name)
+		{
+			const char * u = (const char *) sqlite3_column_text(stmt,2);
+			*name = malloc(strlen(u)+1);
+			if(!*name)
+			{
+				sqlite3_finalize(stmt);
+				sqlite3_close(db);
+				if(uri && *uri)
+				{
+					free(*uri);
+				}
+				return 0;
+			}
+			strcpy(*name,u);
+		}
+		r = 1;
 	}
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);

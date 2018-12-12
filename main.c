@@ -68,7 +68,8 @@ char * prepAddress(const gchar * c)
                 if(key)
                 {
                     strtcpy(key,c,' ');
-                    char * url = sql_search_get(key);
+                    char * url = NULL;
+                    sql_search_get(key, NULL, &url);
                     free(key);
                     if(!url) //Implicit search, use default search
                     {
@@ -76,13 +77,17 @@ char * prepAddress(const gchar * c)
                             (G_SETTINGS,"planc-search");
                         if(key)
                         {
-                            if(strcmp(key," "))
-                                url = sql_search_get(key);
+                            if(g_settings_get_boolean(G_SETTINGS
+                                ,"planc-search-implicit"))
+                            {
+                                if(strcmp(key," "))
+                                    sql_search_get(key, NULL, &url);
+                                if(c[0] == ' ')
+                                    sp = (char *) c+1;
+                                else
+                                    sp = (char *) c;
+                            }
                             free(key);
-                            if(c[0] == ' ')
-                                sp = (char *) c+1;
-                            else
-                                sp = (char *) c;
                         }
                     }
                     else //Explicit search. Move sp over the first space

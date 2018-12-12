@@ -19,10 +19,10 @@ static int treeIter(void * store, int count, char **data
 	GtkTreeIter iter;
 	if(count == 3)
 	{
-		gtk_tree_store_append (store, &iter, NULL);
-		gtk_tree_store_set (store, &iter,ADDRESS_COLUMN
-		,data[0],	TITLE_COLUMN, data[1]
-		,VISITED_COLUMN, data[2],-1);
+		gtk_tree_store_append(store, &iter, NULL);
+		gtk_tree_store_set(store, &iter, 0
+		,data[0], 1, data[1]
+		,2, data[2], -1);
 	}
 	return 0;
 }
