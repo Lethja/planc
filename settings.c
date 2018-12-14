@@ -368,30 +368,38 @@ static GtkWidget * InitSettingTab_search()
 	gtk_container_add(GTK_CONTAINER(vbox),IsFrame);
 
 	GtkWidget * SpFrame = gtk_frame_new("Search Providers");
-	GtkWidget * SpGrid = gtk_grid_new();
-	gtk_widget_set_margin_start(GTK_WIDGET(SpGrid), 2);
-	gtk_widget_set_margin_end(GTK_WIDGET(SpGrid), 2);
-	gtk_widget_set_margin_top(GTK_WIDGET(SpGrid), 2);
-	gtk_widget_set_margin_bottom(GTK_WIDGET(SpGrid), 2);
-
+	GtkWidget * SpBox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+	GtkWidget * tool = gtk_toolbar_new();
 	GtkWidget * tree = InitSettingTab_search_tree();
-	gtk_grid_attach(GTK_GRID(SpGrid),tree,0,0,3,1);
-	GtkWidget * sa = gtk_button_new_with_mnemonic("_Add");
-	GtkWidget * se = gtk_button_new_with_mnemonic("_Edit");
-	GtkWidget * sr = gtk_button_new_with_mnemonic("_Remove");
+	GtkToolItem * sa = gtk_tool_button_new
+		(gtk_image_new_from_icon_name ("list-add"
+		,GTK_ICON_SIZE_SMALL_TOOLBAR), "Add");
+	GtkToolItem * se = gtk_tool_button_new
+		(gtk_image_new_from_icon_name ("document-properties"
+		,GTK_ICON_SIZE_SMALL_TOOLBAR)
+		,"Edit");
+	GtkToolItem * sr = gtk_tool_button_new
+		(gtk_image_new_from_icon_name ("list-remove"
+		,GTK_ICON_SIZE_SMALL_TOOLBAR)
+		,"Remove");
 
-	g_signal_connect(sa, "clicked"
+	g_signal_connect(GTK_WIDGET(sa), "clicked"
 		,G_CALLBACK(c_settings_search_add), tree);
-	g_signal_connect(se, "clicked"
+	g_signal_connect(GTK_WIDGET(se), "clicked"
 		,G_CALLBACK(c_settings_search_edit), tree);
-	g_signal_connect(sr, "clicked"
+	g_signal_connect(GTK_WIDGET(sr), "clicked"
 		,G_CALLBACK(c_settings_search_drop), tree);
 
-	gtk_grid_attach(GTK_GRID(SpGrid),sa,0,1,1,1);
-	gtk_grid_attach(GTK_GRID(SpGrid),se,1,1,1,1);
-	gtk_grid_attach(GTK_GRID(SpGrid),sr,2,1,1,1);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool), sa, 0);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool), se, 1);
+	gtk_toolbar_insert(GTK_TOOLBAR(tool), sr, 2);
 
-	gtk_container_add(GTK_CONTAINER(SpFrame),SpGrid);
+	gtk_toolbar_set_style(GTK_TOOLBAR(tool), GTK_TOOLBAR_BOTH_HORIZ);
+
+	gtk_box_pack_start(GTK_BOX(SpBox), tree, TRUE, TRUE, 0);
+	gtk_box_pack_start(GTK_BOX(SpBox), tool, FALSE, FALSE, 0);
+
+	gtk_container_add(GTK_CONTAINER(SpFrame),SpBox);
 	gtk_container_add(GTK_CONTAINER(vbox),SpFrame);
 
 	{
