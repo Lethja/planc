@@ -102,8 +102,8 @@ static GtkRadioMenuItem * add_tabMi(gint it, GSList * list
 		,gtk_notebook_get_nth_page(c->tabs,it))));
 	GtkRadioMenuItem * n
 		= (GtkRadioMenuItem *)gtk_radio_menu_item_new(list);
-	gtk_menu_item_set_label((GtkMenuItem *)n
-		,gtk_label_get_text((GtkLabel* )l));
+	gtk_menu_item_set_label((GtkMenuItem *) n
+		,gtk_label_get_text((GtkLabel *)l));
 	if(gtk_notebook_get_nth_page(c->tabs,it)
 		== WK_CURRENT_TAB_WIDGET(c->tabs))
 	{
@@ -112,14 +112,16 @@ static GtkRadioMenuItem * add_tabMi(gint it, GSList * list
 	struct dpco_st * dp = malloc(sizeof(struct dpco_st));
 	dp->call = c;
 	dp->other= gtk_notebook_get_nth_page(c->tabs,it);
-	g_signal_connect(n,"button-release-event"
-		,G_CALLBACK(c_onclick_tabsMi), dp);
-	g_signal_connect(n,"select"
-		,G_CALLBACK(c_select_tabsMi), dp);
-	g_signal_connect(n,"destroy"
-		,G_CALLBACK(c_destroy_tabsMi), dp);
 	gtk_menu_shell_append(GTK_MENU_SHELL(c->menu->tabsMenu)
 		,(GtkWidget *) n);
+
+	g_signal_connect(n,"button-release-event"
+		,G_CALLBACK(c_onclick_tabsMi), dp);
+
+	if(g_settings_get_boolean(G_SETTINGS, "planc-tabs-hover"))
+		g_signal_connect(n, "select", G_CALLBACK(c_select_tabsMi), dp);
+
+	g_signal_connect(n, "destroy", G_CALLBACK(c_destroy_tabsMi), dp);
 	return n;
 }
 

@@ -499,6 +499,10 @@ static GtkWidget * InitSettingTab_general()
 	GtkWidget * tm = gtk_check_button_new_with_label
 		("Always show menu at top of window");
 	#endif
+	#ifdef PLANC_FEATURE_DMENU
+	GtkWidget * th = gtk_check_button_new_with_label
+		("Switch tab when hovering in tab menu");
+	#endif
 	GtkWidget * dd = gtk_check_button_new_with_label
 		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
@@ -523,6 +527,10 @@ static GtkWidget * InitSettingTab_general()
 		 G_SETTINGS_BIND_DEFAULT);
 	#ifdef PLANC_FEATURE_GNOME
 	g_settings_bind (G_SETTINGS,"planc-traditional",tm,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	#endif
+	#ifdef PLANC_FEATURE_DMENU
+	g_settings_bind (G_SETTINGS,"planc-tabs-hover",th,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	#endif
 	g_settings_bind (G_SETTINGS,"webkit-cache",ch,"active",
@@ -581,10 +589,13 @@ static GtkWidget * InitSettingTab_general()
 #ifdef PLANC_FEATURE_GNOME
 	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(tm),0,0,2,1);
 #endif
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(dd),0,1,2,1);
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,2,2,1);
+#ifdef PLANC_FEATURE_DMENU
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(th),0,1,2,1);
+#endif
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(dd),0,2,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,3,2,1);
 	attachLabeledWidget(GTK_GRID(PcGrid), "Default Tab Layout"
-		,GTK_WIDGET(tabBox),3);
+		,GTK_WIDGET(tabBox),4);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,0,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,1,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,2,2,1);
@@ -596,7 +607,6 @@ static GtkWidget * InitSettingTab_general()
 		,GTK_WIDGET(mcmBox),7);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Hardware Accelleration"
 		,GTK_WIDGET(hwaBox),8);
-
 	switch(webkit_web_context_get_cache_model(G_WKC))
 	{
 		case WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER:
