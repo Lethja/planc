@@ -11,7 +11,10 @@ static void c_goto_dial(GtkMenuItem * mi, GdkEventButton * e, void * v)
 		return;
 	char * purl = prepAddress(url);
 	free(url);
-	webkit_web_view_load_uri(wk,purl);
+	if (e->button == 2)
+		new_tab_ext(purl, (PlancWindow *) get_web_view(), TRUE);
+	else
+		webkit_web_view_load_uri(wk,purl);
 	free(purl);
 }
 
