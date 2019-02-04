@@ -88,7 +88,7 @@ void c_onrelease_tabsMh(GtkMenuItem * mi, PlancWindow * v)
     struct call_st * c = planc_window_get_call(v);
     GList * list = gtk_container_get_children(
         (GtkContainer *)c->menu->tabsMenu);
-    for (GList * l = list; l != NULL; l = l->next)
+    for (GList * l = g_list_last(list); l != NULL; l = l->prev)
     {
         gtk_widget_destroy(l->data);
     }
