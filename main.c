@@ -391,6 +391,8 @@ static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
     {
         gtk_image_set_from_icon_name(c->tool->reloadIo
             ,"process-stop",GTK_ICON_SIZE_SMALL_TOOLBAR);
+        gtk_entry_set_progress_fraction(c->tool->addressEn
+            ,webkit_web_view_get_estimated_load_progress(wv));
         c->tool->usrmod = FALSE;
         return 0;
     }
@@ -399,6 +401,7 @@ static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
     {
         gtk_image_set_from_icon_name(c->tool->reloadIo
             ,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
+        gtk_entry_set_progress_fraction(c->tool->addressEn, 0);
         c->tool->usrmod = FALSE;
         return 1;
     }
@@ -406,6 +409,7 @@ static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
     {
         gtk_image_set_from_icon_name(c->tool->reloadIo
             ,"go-last",GTK_ICON_SIZE_SMALL_TOOLBAR);
+        gtk_entry_set_progress_fraction(c->tool->addressEn, 0);
         c->tool->usrmod = TRUE;
         return 2;
     }
@@ -686,6 +690,15 @@ static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
     }
 }
 
+static void c_update_progress(WebKitWebView * webv, void * p
+    ,PlancWindow * v)
+{
+    struct call_st * c = planc_window_get_call(v);
+    if(webv == WK_CURRENT_TAB(c->tabs))
+        gtk_entry_set_progress_fraction(c->tool->addressEn
+            ,webkit_web_view_get_estimated_load_progress(webv));
+}
+
 static void c_loads(WebKitWebView * wv, WebKitWebResource * res
     ,WebKitURIRequest  *req, gpointer v)
 {
@@ -716,6 +729,7 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt
         case WEBKIT_LOAD_FINISHED:
             gtk_image_set_from_icon_name(call->tool->reloadIo
                 ,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);
+            gtk_entry_set_progress_fraction(call->tool->addressEn, 0);
             if(!webkit_web_view_is_ephemeral(webv)
             && strcmp("about:blank",webkit_web_view_get_uri(webv)) != 0
             && strcmp("",webkit_web_view_get_uri(webv)) != 0)
@@ -1717,6 +1731,8 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
         ,v);
     g_signal_connect(wv, "notify::title", G_CALLBACK(c_update_title)
         ,v);
+    g_signal_connect(wv, "notify::estimated-load-progress"
+        ,G_CALLBACK(c_update_progress), v);
     g_signal_connect(wv, "notify::uri", G_CALLBACK(addrWebviewState)
         ,v);
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
