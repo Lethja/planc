@@ -278,7 +278,11 @@ static gboolean c_leave_fullscreen(GtkWidget * widget
     ,PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
-    gtk_widget_show(GTK_WIDGET(c->menu->menu));
+#ifdef PLANC_FEATURE_GNOME
+    if(!preferGmenu()
+    || g_settings_get_boolean(G_SETTINGS,"planc-traditional"))
+#endif
+        gtk_widget_show(GTK_WIDGET(c->menu->menu));
     gtk_widget_show(GTK_WIDGET(c->tool->top));
 #ifdef PLANC_FEATURE_DMENU
     if(gtk_check_menu_item_get_active(
