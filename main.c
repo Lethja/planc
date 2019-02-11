@@ -18,6 +18,11 @@ WebKitSettings * G_WKC_SETTINGS = NULL;
 WebKitWebContext * G_WKC        = NULL;
 GtkSettings * G_GTK_SETTINGS    = NULL;
 
+static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab);
+
+static WebKitWebView * c_new_tab_url(WebKitWebView * wv
+    ,WebKitNavigationAction * na ,PlancWindow * v);
+
 static void strtcpy(char * dest, const char * src, const char token)
 {
     size_t it = 0;
@@ -647,6 +652,8 @@ gboolean c_wv_zoom_wheel(WebKitWebView * wv, GdkEventScroll * e
                     }
                 }
             }
+            default:
+                break;
         }
     }
     return FALSE;

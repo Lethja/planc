@@ -127,16 +127,16 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 	{
 		size_t score = 0;
 		const unsigned char * f = sqlite3_column_text(stmt,0);
-		if(f && strcmp(from, f) == 0)
+		if(f && strcmp(from, (char *) f) == 0)
 			score++;
 		const unsigned char * t = sqlite3_column_text(stmt,1);
 		if(t)
 		{
-			if(strcmp(to, t) == 0)
+			if(strcmp(to, (char *) t) == 0)
 				score++;
 			else if(sqlite3_column_int(stmt,3)) //If inherit
 			{
-				gchar * g = strstr(to,t);
+				gchar * g = strstr(to, (char *) t);
 				if(g && (char *) g+strlen(g) == (char *) to+strlen(to))
 					score++;
 				else
@@ -201,7 +201,7 @@ void createPolicyDatabase(int t)
 extern void sql_history_write(const char * url, const char * title)
 {
 	sqlite3 *db;
-	char *zErrMsg = 0;
+	//char *zErrMsg = 0;
 	int rc;
 	if(!url)
 		return;
@@ -229,7 +229,7 @@ extern void sql_download_write(const char * page, const char * url
 	,const char * file)
 {
 	sqlite3 *db;
-	char * zErrMsg = 0;
+	//char * zErrMsg = 0;
 	int rc;
 	if(!url)
 		return;

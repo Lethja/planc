@@ -11,7 +11,9 @@ static char * removeWWW(char * dom)
 			return dom;
 	}
 	if(dom[3] == '.' && dom[4] != '\0')
-	return dom+4;
+		return dom+4;
+	else
+		return dom;
 }
 
 extern char * getDomainName(const char * url)

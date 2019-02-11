@@ -96,7 +96,8 @@ static void openFile(const gchar * file)
 		waitpid(pid,0,0); //wait for child before continuing
 	}
 }
-
+//TODO: Implement a action to open file directory
+/*
 static void openFileDirectory(const gchar * file)
 {
 	gchar * dir = malloc(strlen(file)+1);
@@ -106,6 +107,7 @@ static void openFileDirectory(const gchar * file)
 	openFile(dir); //XDG will see a directory path
 	free(dir);
 }
+*/
 
 static void c_download_finished(WebKitDownload * d, GtkTreeIter * iter)
 {
@@ -262,11 +264,15 @@ static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
 			free(f);
 		}
 		else
+		{
 			gtk_file_chooser_set_current_name(chooser
 				,"Untitled download");
+		}
 	}
-    else
-        gtk_file_chooser_set_current_name(chooser, fn);
+	else
+	{
+		gtk_file_chooser_set_current_name(chooser, fn);
+	}
 
 	if(fp)
 			gtk_file_chooser_set_current_folder(chooser, fp);
