@@ -1455,6 +1455,26 @@ static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
     return FALSE;
 }
 
+static GdkRectangle * getMonitorResolution(GtkWidget * win)
+{
+        GdkWindow * gdk = gtk_widget_get_window(win);
+        GdkRectangle * res = g_malloc(sizeof(GdkRectangle));
+        if(gdk)
+                gdk_monitor_get_geometry(gdk_display_get_monitor_at_window
+                        (gtk_widget_get_display(win), gdk), res);
+        else
+        {
+                gint x, y;
+                GdkDisplay * di = gdk_display_get_default();
+                GdkDevice * de = gdk_seat_get_pointer
+                        (gdk_display_get_default_seat(di));
+                gdk_device_get_position(de, NULL, &x, &y);
+                GdkMonitor * m = gdk_display_get_monitor_at_point(di, x, y);
+                gdk_monitor_get_geometry(m, res);
+        }
+        return res;
+}
+
 GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
 {
     //There's probably a better way to do this with Glib
@@ -1472,10 +1492,7 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
     GtkAccelGroup * accel_group = gtk_accel_group_new();
     gtk_window_add_accel_group(GTK_WINDOW(window), accel_group);
 
-    GdkRectangle * res = malloc(sizeof(GdkRectangle));
-    gdk_monitor_get_geometry
-        (gdk_display_get_primary_monitor
-        (gdk_display_get_default()),res);
+    GdkRectangle * res = getMonitorResolution((GtkWidget *) window);
     gtk_window_set_default_size(GTK_WINDOW(window)
         ,res->width*0.5, res->height*0.5);
     free(res);
