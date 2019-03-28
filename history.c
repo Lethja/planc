@@ -12,6 +12,7 @@ enum
 };
 
 static const gchar * G_search;
+static GtkWidget * G_scrollWin;
 
 static int treeIter(void * store, int count, char **data
 	,char **columns)
@@ -76,15 +77,35 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton * event
 
 static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
 {
+	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(G_HISTORY))
+		,gdk_cursor_new_from_name(gdk_display_get_default(), "wait"));
 	G_search = gtk_entry_get_text((GtkEntry *) e);
+	while (gtk_events_pending ())
+		gtk_main_iteration ();
 	gtk_tree_model_filter_refilter(f);
+	gtk_adjustment_set_value(gtk_scrolled_window_get_vadjustment
+		(GTK_SCROLLED_WINDOW(G_scrollWin)), 0.0);
+	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(G_HISTORY))
+		,gdk_cursor_new_from_name(gdk_display_get_default()
+		,"default"));
+
 }
 
 static gboolean hisstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	,void * v)
 {
+	static size_t it = 0;
+	if(it > 1000)
+	{
+		while (gtk_events_pending ())
+			gtk_main_iteration ();
+		it = 0;
+	}
+	else
+		it++;
+
 	const gchar * data = G_search;
-	if(!data || strcmp(data,"") == 0)
+	if(!data || strlen(data) < 2)
 		return TRUE;
 	gchar *str;
 	for(size_t x = 0; x < 2; x++)
@@ -121,50 +142,22 @@ extern void InitHistoryWindow(void * v)
 	gtk_window_set_title(G_HISTORY,"History - Plan C");
 	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
 	GtkWidget * searchEntry = gtk_search_entry_new();
-	GtkWidget * scrollWin = gtk_scrolled_window_new (NULL, NULL);
+	G_scrollWin = gtk_scrolled_window_new (NULL, NULL);
 	gtk_scrolled_window_set_min_content_width
-		(GTK_SCROLLED_WINDOW(scrollWin),320);
+		(GTK_SCROLLED_WINDOW(G_scrollWin),320);
 	gtk_scrolled_window_set_min_content_height
-		(GTK_SCROLLED_WINDOW(scrollWin),240);
+		(GTK_SCROLLED_WINDOW(G_scrollWin),240);
 	gtk_box_pack_start(GTK_BOX(Vbox),searchEntry,0,1,0);
-	gtk_box_pack_start(GTK_BOX(Vbox),scrollWin,1,1,0);
+	gtk_box_pack_start(GTK_BOX(Vbox),G_scrollWin,1,1,0);
 	GtkTreeStore *store;
-	GtkWidget *tree;
+	GtkWidget * tree;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *renderer;
 	GtkTreeModelSort * sort;
 	GtkTreeSortable *sortable;
 	GtkTreeModelFilter * filtered;
 
-	/* Create a model.  We are using the store model for now, though we
-	* could use any other GtkTreeModel */
-	store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
-		,G_TYPE_STRING, G_TYPE_STRING);
-
-	/* custom function to fill the model with data */
-	sql_history_read_to_tree(store, &treeIter);
-
-	/* Create the filter modal */
-	filtered = GTK_TREE_MODEL_FILTER
-		(gtk_tree_model_filter_new (GTK_TREE_MODEL (store), NULL));
-
-	gtk_tree_model_filter_set_visible_func(filtered,
-		(GtkTreeModelFilterVisibleFunc) hisstrstr, NULL, NULL);
-
-	sort = GTK_TREE_MODEL_SORT
-		(gtk_tree_model_sort_new_with_model(GTK_TREE_MODEL(filtered)));
-	sortable = GTK_TREE_SORTABLE(sort);
-
-	gtk_tree_sortable_set_sort_column_id(sortable, VISITED_COLUMN
-		,GTK_SORT_DESCENDING);
-
-	/* Create a view */
-	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (sortable));
-
-	/* The view now holds a reference.  We can get rid of our own
-    * reference */
-	g_object_unref (G_OBJECT (store));
-
+	tree = gtk_tree_view_new();
 	renderer = gtk_cell_renderer_text_new();
 
 	column = gtk_tree_view_column_new_with_attributes ("URL"
@@ -186,21 +179,60 @@ extern void InitHistoryWindow(void * v)
 	gtk_tree_view_column_set_sort_column_id(column,2);
 	gtk_tree_view_column_set_fixed_width (column, 100);
 	gtk_tree_view_column_set_resizable(column, TRUE);
-
 	gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
+
+	gtk_container_add(GTK_CONTAINER (G_scrollWin), tree);
+	gtk_container_add(GTK_CONTAINER(G_HISTORY), Vbox);
+    gtk_widget_show_all((GtkWidget *) G_HISTORY);
+
+	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(G_HISTORY))
+		,gdk_cursor_new_from_name(gdk_display_get_default(), "wait"));
+
+	/* Create a model.  We are using the store model for now, though we
+	* could use any other GtkTreeModel */
+
+	store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
+		,G_TYPE_STRING, G_TYPE_STRING);
+
+	filtered = GTK_TREE_MODEL_FILTER
+		(gtk_tree_model_filter_new (GTK_TREE_MODEL (store), NULL));
+
+	g_object_unref (G_OBJECT (store));
+
+	sort = GTK_TREE_MODEL_SORT
+		(gtk_tree_model_sort_new_with_model(GTK_TREE_MODEL(filtered)));
+	sortable = GTK_TREE_SORTABLE(sort);
+
+	gtk_tree_sortable_set_sort_column_id(sortable, VISITED_COLUMN
+		,GTK_SORT_DESCENDING);
+
+	while (gtk_events_pending ())
+		gtk_main_iteration ();
+
+	/* Create a view */
+	gtk_tree_view_set_model(GTK_TREE_VIEW(tree)
+		,GTK_TREE_MODEL(sortable));
+
+	sql_history_read_to_tree(store, &treeIter);
 
 	g_signal_connect(G_HISTORY, "destroy"
         ,G_CALLBACK(c_destroy_window), NULL);
-	g_signal_connect_after(searchEntry, "search-changed"
+	g_signal_connect(searchEntry, "activate"
         ,G_CALLBACK(search_entry_change), filtered);
 	g_signal_connect(tree,"row-activated"
 		,G_CALLBACK(c_history_url), v);
 	g_signal_connect(tree,"button-release-event"
 		,G_CALLBACK(c_history_url_tab), v);
 
+	gtk_tree_model_filter_set_visible_func(filtered,
+		(GtkTreeModelFilterVisibleFunc) hisstrstr, NULL, NULL);
+
 	gtk_tree_view_column_set_resizable(column, TRUE);
-	gtk_container_add(GTK_CONTAINER (scrollWin), tree);
-	gtk_container_add(GTK_CONTAINER(G_HISTORY), Vbox);
+
+	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(G_HISTORY))
+		,gdk_cursor_new_from_name(gdk_display_get_default()
+		,"default"));
+
     gtk_widget_show_all((GtkWidget *) G_HISTORY);
     return;
 }
