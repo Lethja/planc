@@ -14,6 +14,7 @@ enum
 static const gchar * G_search;
 static GtkWidget * G_scrollWin;
 static GtkTreeStore * store;
+static GtkWidget * tree;
 
 static int treeIter(void * store, int count, char **data
 	,char **columns)
@@ -129,6 +130,7 @@ static gboolean hisstrstr(GtkTreeModel * model, GtkTreeIter * iter
 
 static void c_destroy_window(GtkWindow * w, void * v)
 {
+	gtk_tree_view_set_model (GTK_TREE_VIEW(tree), NULL);
 	G_HISTORY = NULL;
 }
 
@@ -180,11 +182,6 @@ static void history_load_data_result (GObject * obj, GAsyncResult * res
 	gboolean success = FALSE;
 
 	store = history_load_data_finish (obj, res, NULL);
-
-	if (store)
-		g_printf ("Hurray!\n");
-	else
-		g_printf ("Uh oh!\n");
 }
 
 extern void InitHistoryWindow(void * v)
@@ -211,7 +208,6 @@ extern void InitHistoryWindow(void * v)
 		(GTK_SCROLLED_WINDOW(G_scrollWin),240);
 	gtk_box_pack_start(GTK_BOX(Vbox),searchEntry,0,1,0);
 	gtk_box_pack_start(GTK_BOX(Vbox),G_scrollWin,1,1,0);
-	GtkWidget * tree;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *renderer;
 	GtkTreeModelSort * sort;
@@ -263,8 +259,6 @@ extern void InitHistoryWindow(void * v)
 	filtered = GTK_TREE_MODEL_FILTER
 		(gtk_tree_model_filter_new (GTK_TREE_MODEL (store), NULL));
 
-	g_object_unref (G_OBJECT (store));
-
 	sort = GTK_TREE_MODEL_SORT
 		(gtk_tree_model_sort_new_with_model(GTK_TREE_MODEL(filtered)));
 	sortable = GTK_TREE_SORTABLE(sort);
@@ -276,6 +270,10 @@ extern void InitHistoryWindow(void * v)
 	/* Create a view */
 	gtk_tree_view_set_model(GTK_TREE_VIEW(tree)
 		,GTK_TREE_MODEL(sortable));
+
+	g_object_unref(G_OBJECT (store));
+	g_object_unref(G_OBJECT (filtered));
+	g_object_unref(G_OBJECT (sort));
 
 	g_signal_connect(G_HISTORY, "destroy"
         ,G_CALLBACK(c_destroy_window), NULL);
