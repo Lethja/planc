@@ -18,16 +18,6 @@ static GtkTreeStore * store;
 static int treeIter(void * store, int count, char **data
 	,char **columns)
 {
-	static size_t it = 0;
-	if(it > 50)
-	{
-		while (gtk_events_pending ())
-			gtk_main_iteration ();
-		it = 0;
-	}
-	else
-		it++;
-
 	GtkTreeIter iter;
 	if(count == 3)
 	{
@@ -142,6 +132,61 @@ static void c_destroy_window(GtkWindow * w, void * v)
 	G_HISTORY = NULL;
 }
 
+/* The function to use as a parameter of g_task_run_in_thread */
+static void load_data_thread (GTask         *task,
+                  gpointer       source_object,
+                  gpointer       store,
+                  GCancellable  *cancellable)
+{
+	/* Actual function here*/
+	sql_history_read_to_tree(store, &treeIter);
+	GError *error = NULL;
+	if (store)
+		g_task_return_pointer (task, store, g_object_unref);
+	else
+		g_task_return_error (task, error);
+}
+
+static void load_data_free (GtkTreeStore * store)
+{
+	g_object_unref(store);
+}
+
+/* Normal function you call from main thread */
+void history_load_data_async (void * self, GCancellable * cancellable
+	,GAsyncReadyCallback  callback)
+{
+	GTask *task;
+	GtkTreeStore * store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
+		,G_TYPE_STRING, G_TYPE_STRING);
+	task = g_task_new (self, cancellable, callback, store);
+	g_task_set_task_data (task, store, NULL);
+	g_task_run_in_thread (task, load_data_thread);
+	g_object_unref (task);
+}
+
+/* Just needs to exist to signal or could return a value if non-void */
+GtkTreeStore * history_load_data_finish (void * self
+	,GAsyncResult * result, GError **error)
+{
+	g_return_val_if_fail (g_task_is_valid (result, self), NULL);
+
+	return g_task_propagate_pointer (G_TASK (result), error);
+}
+
+static void history_load_data_result (GObject * obj, GAsyncResult * res
+	,gpointer user_data)
+{
+	gboolean success = FALSE;
+
+	store = history_load_data_finish (obj, res, NULL);
+
+	if (store)
+		g_printf ("Hurray!\n");
+	else
+		g_printf ("Uh oh!\n");
+}
+
 extern void InitHistoryWindow(void * v)
 {
 	if(G_HISTORY)
@@ -149,6 +194,7 @@ extern void InitHistoryWindow(void * v)
 		gtk_window_present(G_HISTORY);
 		return;
 	}
+	store = NULL;
 	G_search = NULL;
     G_HISTORY =
 		(GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -206,8 +252,13 @@ extern void InitHistoryWindow(void * v)
 	/* Create a model.  We are using the store model for now, though we
 	* could use any other GtkTreeModel */
 
-	store = gtk_tree_store_new (N_COLUMNS, G_TYPE_STRING
-		,G_TYPE_STRING, G_TYPE_STRING);
+	history_load_data_async(NULL, NULL, history_load_data_result);
+
+	while(!store)
+	{
+		while (gtk_events_pending ())
+			gtk_main_iteration ();
+	}
 
 	filtered = GTK_TREE_MODEL_FILTER
 		(gtk_tree_model_filter_new (GTK_TREE_MODEL (store), NULL));
@@ -221,14 +272,10 @@ extern void InitHistoryWindow(void * v)
 	gtk_tree_sortable_set_sort_column_id(sortable, VISITED_COLUMN
 		,GTK_SORT_DESCENDING);
 
-	while (gtk_events_pending ())
-		gtk_main_iteration ();
 
 	/* Create a view */
 	gtk_tree_view_set_model(GTK_TREE_VIEW(tree)
 		,GTK_TREE_MODEL(sortable));
-
-	sql_history_read_to_tree(store, &treeIter);
 
 	g_signal_connect(G_HISTORY, "destroy"
         ,G_CALLBACK(c_destroy_window), NULL);
