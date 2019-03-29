@@ -79,7 +79,8 @@ static const char * deleteSearch =
 
 static const char * retrieveSearch = "SELECT * FROM `SEARCH`";
 
-static const char * retrieveHistory = "SELECT * FROM `HISTORY`";
+static const char * retrieveHistory = "SELECT * FROM `HISTORY`"
+"ORDER BY `VISITED` DESC";
 
 static const char * retrieveDial = "SELECT * FROM `DIAL`";
 

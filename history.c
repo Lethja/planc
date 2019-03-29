@@ -13,17 +13,33 @@ enum
 
 static const gchar * G_search;
 static GtkWidget * G_scrollWin;
+static GtkTreeStore * store;
 
 static int treeIter(void * store, int count, char **data
 	,char **columns)
 {
+	static size_t it = 0;
+	if(it > 50)
+	{
+		while (gtk_events_pending ())
+			gtk_main_iteration ();
+		it = 0;
+	}
+	else
+		it++;
+
 	GtkTreeIter iter;
 	if(count == 3)
 	{
 		gtk_tree_store_append(store, &iter, NULL);
+		GDateTime * d = g_date_time_new_from_unix_utc(atoll(data[2]));
+		gchar * s = g_date_time_format(d,"%F %T");
 		gtk_tree_store_set(store, &iter, 0
 		,data[0], 1, data[1]
-		,2, data[2], -1);
+		,2, s ? s : "Unknown", -1);
+		if(s)
+			g_free(s);
+		g_date_time_unref(d);
 	}
 	return 0;
 }
@@ -95,7 +111,7 @@ static gboolean hisstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	,void * v)
 {
 	static size_t it = 0;
-	if(it > 1000)
+	if(it > 50)
 	{
 		while (gtk_events_pending ())
 			gtk_main_iteration ();
@@ -149,7 +165,6 @@ extern void InitHistoryWindow(void * v)
 		(GTK_SCROLLED_WINDOW(G_scrollWin),240);
 	gtk_box_pack_start(GTK_BOX(Vbox),searchEntry,0,1,0);
 	gtk_box_pack_start(GTK_BOX(Vbox),G_scrollWin,1,1,0);
-	GtkTreeStore *store;
 	GtkWidget * tree;
 	GtkTreeViewColumn *column;
 	GtkCellRenderer *renderer;
