@@ -9,6 +9,7 @@
 #ifdef PLANC_FEATURE_DMENU
 #include "dmenu.h"
 #endif
+#include <time.h>
 
 GtkApplication * G_APP          = NULL;
 GSettings * G_SETTINGS          = NULL;
@@ -1604,6 +1605,36 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
     InitWindow(app, argv, argc);
 }
 
+static void c_app_exit(GApplication * app, void * v)
+{
+	//TODO: History cleanup here
+	time_t t = time(NULL);
+	if(t > 31557600)
+	{
+		gint s = g_settings_get_int(G_SETTINGS, "planc-history-clean");
+		switch(s)
+		{
+			case 1: //Every session
+				sql_history_clean(t);
+			break;
+			case 2: //Every week
+				sql_history_clean(t-604800);
+			break;
+			case 3: //Every fortnight
+				sql_history_clean(t-1209600);
+			break;
+			case 4: //Every month
+				sql_history_clean(t-2592000);
+			break;
+			case 5: //Every year
+				sql_history_clean(t-31557600);
+			break;
+			default:
+			break;
+		}
+	}
+}
+
 static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
     ,guint m, PlancWindow * v)
 {
@@ -1744,6 +1775,9 @@ int main(int argc, char **argv)
         ,NULL);
 
     g_signal_connect(G_APP, "command-line", G_CALLBACK(c_app_act)
+        ,NULL);
+
+	g_signal_connect(G_APP, "shutdown", G_CALLBACK(c_app_exit)
         ,NULL);
 
     status = g_application_run(G_APPLICATION(G_APP), argc, argv);

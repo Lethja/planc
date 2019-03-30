@@ -162,6 +162,14 @@
 				Switch when hovering over an entry in the tabs menu
 			</description>
 		</key>
+		<key name="planc-history-clean" type="i">
+			<default>4</default>
+			<range min="0" max="5"/>
+			<summary>Automatic history cleaning</summary>
+			<description>
+				Decide how often to clean out the history database
+			</description>
+		</key>
 		<key name="planc-startpage" type="s">
 			<default l10n="messages">"about:blank"</default>
 			<summary>Startup page</summary>

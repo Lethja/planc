@@ -258,8 +258,6 @@ extern void InitHistoryWindow(void * v)
 	gtk_tree_sortable_set_sort_column_id(sortable, VISITED_COLUMN
 		,GTK_SORT_DESCENDING);
 
-
-	/* Create a view */
 	gtk_tree_view_set_model(GTK_TREE_VIEW(tree)
 		,GTK_TREE_MODEL(sortable));
 

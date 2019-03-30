@@ -343,6 +343,51 @@ static gboolean setupSearchTree(GtkTreeModel * model
 	}
 }
 
+static GtkWidget * InitSettingTab_history()
+{
+	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
+	gtk_scrolled_window_set_min_content_width
+		(GTK_SCROLLED_WINDOW(scrl),320);
+	gtk_scrolled_window_set_min_content_height
+		(GTK_SCROLLED_WINDOW(scrl),240);
+	GtkWidget * vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+
+	GtkWidget * IsFrame = gtk_frame_new("History Cleaning");
+	GtkWidget * IsGrid = gtk_grid_new();
+	gtk_widget_set_margin_start(GTK_WIDGET(IsGrid), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(IsGrid), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(IsGrid), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(IsGrid), 2);
+	GtkWidget * achBox = gtk_combo_box_text_new();
+	attachLabeledWidget(GTK_GRID(IsGrid), "Clean History Entries"
+		,GTK_WIDGET(achBox),0);
+	gtk_combo_box_text_append_text((GtkComboBoxText *)achBox
+		,"Never");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)achBox
+		,"Every Exit");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)achBox
+		,"Visited Over A Week Ago");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)achBox
+		,"Visited Over A Fortnight Ago");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)achBox
+		,"Visited Over A Month Ago");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)achBox
+		,"Visited Over A Year Ago");
+	gtk_container_add(GTK_CONTAINER(IsFrame),IsGrid);
+	gtk_container_add(GTK_CONTAINER(vbox),IsFrame);
+
+	gtk_widget_set_margin_start(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_end(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_top(GTK_WIDGET(vbox), 2);
+	gtk_widget_set_margin_bottom(GTK_WIDGET(vbox), 2);
+	gtk_container_add(GTK_CONTAINER(scrl),vbox);
+
+	g_settings_bind (G_SETTINGS, "planc-history-clean", achBox, "active"
+		,G_SETTINGS_BIND_DEFAULT);
+
+	return scrl;
+}
+
 static GtkWidget * InitSettingTab_search()
 {
 	GtkWidget * scrl = gtk_scrolled_window_new(NULL,NULL);
@@ -635,6 +680,8 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		,gtk_label_new("General"));
 	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_search()
 		,gtk_label_new("Search"));
+	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_history()
+		,gtk_label_new("History"));
 	gtk_container_add((GtkContainer *)r, nb);
 	gtk_widget_show_all((GtkWidget *)r);
 	return r;

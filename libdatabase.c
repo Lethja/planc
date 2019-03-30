@@ -77,6 +77,9 @@ static const char * selectSpeedDialName = "SELECT * FROM `DIAL`" \
 static const char * deleteSearch =
 		"DELETE FROM `SEARCH` WHERE `KEY` is ?";
 
+static const char * cleanHistory = \
+		"DELETE FROM `HISTORY` WHERE `VISITED` < ?";
+
 static const char * retrieveSearch = "SELECT * FROM `SEARCH`";
 
 static const char * retrieveHistory = "SELECT * FROM `HISTORY`"
@@ -302,6 +305,27 @@ extern char sql_search_drop(const char * key)
 	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Search");
 	rc = sqlite3_step(stmt);
 	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,"Search");
+	sqlite3_finalize(stmt);
+	sqlite3_close(db);
+	return 1;
+}
+
+extern char sql_history_clean(int64_t i)
+{
+	sqlite3 *db;
+	int rc;
+	HISTORYDIR(historydir);
+	rc = sqlite3_open(historydir, &db);
+	sqlite3_busy_timeout(db, 5000);
+	g_free(historydir);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,NULL,"History");
+	sqlite3_stmt * stmt;
+	rc = sqlite3_prepare_v2(db, cleanHistory, -1, &stmt, NULL);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"History");
+	rc = sqlite3_bind_int64(stmt,1,i);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"History");
+	rc = sqlite3_step(stmt);
+	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,"History");
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
 	return 1;

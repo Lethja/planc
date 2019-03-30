@@ -10,6 +10,7 @@ extern void sql_search_read_to_tree(void * store, void * treeIter);
 extern char sql_search_write(const char * key, const char * url
 	,const char * name);
 extern char sql_search_drop(const char * key);
+extern char sql_history_clean(int64_t i);
 extern char * sql_speed_dial_get(size_t index);
 extern char * sql_speed_dial_get_by_name(const char * index);
 extern void sql_speed_dial_read_to_menu(void * store, void * menuIter);
