@@ -95,21 +95,14 @@ static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
 	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(G_HISTORY))
 		,gdk_cursor_new_from_name(gdk_display_get_default()
 		,"default"));
-
 }
 
 static gboolean hisstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	,void * v)
 {
-	static size_t it = 0;
-	if(it > 50)
-	{
-		while (gtk_events_pending ())
-			gtk_main_iteration ();
-		it = 0;
-	}
-	else
-		it++;
+	//Keep the program responsive while filtering big lists
+	while (gtk_events_pending ())
+		gtk_main_iteration ();
 
 	if(*G_search == '\0')
 		return TRUE;
