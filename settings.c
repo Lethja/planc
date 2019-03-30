@@ -359,7 +359,7 @@ static GtkWidget * InitSettingTab_history()
 	gtk_widget_set_margin_top(GTK_WIDGET(IsGrid), 2);
 	gtk_widget_set_margin_bottom(GTK_WIDGET(IsGrid), 2);
 	GtkWidget * achBox = gtk_combo_box_text_new();
-	attachLabeledWidget(GTK_GRID(IsGrid), "Clean History Entries"
+	attachLabeledWidget(GTK_GRID(IsGrid), "Clean History Automatically"
 		,GTK_WIDGET(achBox),0);
 	gtk_combo_box_text_append_text((GtkComboBoxText *)achBox
 		,"Never");
