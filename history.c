@@ -86,9 +86,9 @@ static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
 {
 	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(G_HISTORY))
 		,gdk_cursor_new_from_name(gdk_display_get_default(), "wait"));
-	G_search = gtk_entry_get_text((GtkEntry *) e);
 	while (gtk_events_pending ())
 		gtk_main_iteration ();
+	G_search = gtk_entry_get_text((GtkEntry *) e);
 	gtk_tree_model_filter_refilter(f);
 	gtk_adjustment_set_value(gtk_scrolled_window_get_vadjustment
 		(GTK_SCROLLED_WINDOW(G_scrollWin)), 0.0);
@@ -111,14 +111,13 @@ static gboolean hisstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	else
 		it++;
 
-	const gchar * data = G_search;
-	if(!data || strlen(data) < 2)
+	if(*G_search == '\0')
 		return TRUE;
 	gchar *str;
 	for(size_t x = 0; x < 2; x++)
 	{
 		gtk_tree_model_get(model, iter, x, &str, -1);
-		if(str && strcasestr(str,data))
+		if(str && strcasestr(str,G_search))
 		{
 			g_free(str);
 			return TRUE;
