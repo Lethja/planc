@@ -1111,11 +1111,11 @@ void InitMenubar(struct menu_st * menu, PlancWindow * v
 #endif
     gtk_menu_shell_append(GTK_MENU_SHELL(menu->menu), menu->helpMh);
 #ifdef PLANC_FEATURE_DMENU
-    g_signal_connect(G_OBJECT(menu->gotoMh), "select"
-        ,G_CALLBACK(c_onclick_gotoMh), v);
+    g_signal_connect(G_OBJECT(menu->gotoMenu), "show"
+        ,G_CALLBACK(c_show_gotoMenu), v);
 
-    g_signal_connect(G_OBJECT(menu->gotoMh), "deselect"
-        ,G_CALLBACK(c_onrelease_gotoMh), v);
+    g_signal_connect(G_OBJECT(menu->gotoMenu), "hide"
+        ,G_CALLBACK(c_hide_gotoMenu), v);
 #endif
     gtk_widget_add_accelerator(menu->cTabMi, "activate", accel_group
         ,GDK_KEY_W, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);

@@ -38,14 +38,14 @@ static int gotoIter(void * store, int count, char **data
 	return 0;
 }
 
-void c_onclick_gotoMh(GtkMenuItem * mi, PlancWindow * v)
+void c_show_gotoMenu(GtkMenuItem * mi, PlancWindow * v)
 {
     //Make a menu of all dials on the fly then display it
 	struct call_st * c = planc_window_get_call(v);
 	sql_speed_dial_read_to_menu(c->menu->gotoMenu, &gotoIter);
 }
 
-void c_onrelease_gotoMh(GtkMenuItem * mi, PlancWindow * v)
+void c_hide_gotoMenu(GtkMenuItem * mi, PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
     GList * list = gtk_container_get_children(
@@ -86,7 +86,7 @@ void c_destroy_tabsMi(GtkMenuItem * mi, struct dpco_st * dp)
     free(dp);
 }
 
-void c_onrelease_tabsMh(GtkMenuItem * mi, PlancWindow * v)
+void c_hide_tabsMenu(GtkMenuItem * mi, PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
     GList * list = gtk_container_get_children(
@@ -128,7 +128,7 @@ static GtkRadioMenuItem * add_tabMi(gint it, GSList * list
 	return n;
 }
 
-void c_onclick_tabsMh(GtkMenuItem * mi, PlancWindow * v)
+void c_show_tabsMenu(GtkMenuItem * mi, PlancWindow * v)
 {
     //Make a menu of all tabs on the fly then display it
     struct call_st * c = planc_window_get_call(v);
@@ -160,10 +160,10 @@ void t_tabs_menu(PlancWindow * v, gboolean b)
         gtk_widget_add_events(c->menu->tabsMenu,GDK_KEY_PRESS_MASK);
         gtk_menu_item_set_submenu((GtkMenuItem *) c->menu->tabsMh
             ,c->menu->tabsMenu);
-        g_signal_connect(c->menu->tabsMh, "select"
-            ,G_CALLBACK(c_onclick_tabsMh), v);
-        g_signal_connect_after(c->menu->tabsMh,"deselect"
-            ,G_CALLBACK(c_onrelease_tabsMh),v);
+        g_signal_connect(c->menu->tabsMenu, "show"
+            ,G_CALLBACK(c_show_tabsMenu), v);
+        g_signal_connect_after(c->menu->tabsMenu,"hide"
+            ,G_CALLBACK(c_hide_tabsMenu),v);
     }
     else
     {
