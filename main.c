@@ -302,7 +302,7 @@ static gboolean c_leave_fullscreen(GtkWidget * widget
     return FALSE;
 }
 
-static gboolean c_policy (WebKitWebView *wv ,WebKitPolicyDecision *d
+static gboolean c_policy (WebKitWebView * wv, WebKitPolicyDecision * d
     ,WebKitPolicyDecisionType t, void * v)
 {
     switch (t) {
@@ -642,12 +642,12 @@ gboolean c_wv_zoom_wheel(WebKitWebView * wv, GdkEventScroll * e
                     if(x > -1 && x < 1)
                     {
                         if(y > 0)
-                            webkit_web_view_set_zoom_level(wv,
-                                webkit_web_view_get_zoom_level
+                            webkit_web_view_set_zoom_level(wv
+                                ,webkit_web_view_get_zoom_level
                                 (wv)-0.05);
                         else if(y < 0)
-                            webkit_web_view_set_zoom_level(wv,
-                                webkit_web_view_get_zoom_level
+                            webkit_web_view_set_zoom_level(wv
+                                ,webkit_web_view_get_zoom_level
                                 (wv)+0.05);
                         return TRUE;
                     }
@@ -751,12 +751,10 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt
     }
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->backTb)
-        ,webkit_web_view_can_go_back
-        (WK_CURRENT_TAB(call->tabs)));
+        ,webkit_web_view_can_go_back(WK_CURRENT_TAB(call->tabs)));
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->forwardTb)
-        ,webkit_web_view_can_go_forward
-        (WK_CURRENT_TAB(call->tabs)));
+        ,webkit_web_view_can_go_forward(WK_CURRENT_TAB(call->tabs)));
 
     if(webkit_web_view_get_uri(webv))
     {
@@ -771,15 +769,15 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt
     {
         if(webkit_web_view_get_uri(webv))
         {
-            update_tab(call->tabs,webv);
+            update_tab(call->tabs, webv);
         }
         else if (gtk_entry_get_text_length(call->tool->addressEn))
         {
-            update_tab(call->tabs,webv);
+            update_tab(call->tabs, webv);
         }
         else
         {
-            update_tab(call->tabs,webv);
+            update_tab(call->tabs, webv);
         }
     }
 }
@@ -828,7 +826,7 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
             ,gtk_notebook_page_num
             (call->tabs,(GtkWidget *) newtab->webv));
         if(g_strcmp0
-        (webkit_web_view_get_uri(newtab->webv), "about:blank"))
+            (webkit_web_view_get_uri(newtab->webv), "about:blank"))
         {
             gtk_widget_grab_focus((GtkWidget *) newtab->webv);
         }
@@ -1607,32 +1605,32 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 
 static void c_app_exit(GApplication * app, void * v)
 {
-	//TODO: History cleanup here
-	time_t t = time(NULL);
-	if(t > 31557600)
-	{
-		gint s = g_settings_get_int(G_SETTINGS, "planc-history-clean");
-		switch(s)
-		{
-			case 1: //Every session
-				sql_history_clean(t);
-			break;
-			case 2: //Every week
-				sql_history_clean(t-604800);
-			break;
-			case 3: //Every fortnight
-				sql_history_clean(t-1209600);
-			break;
-			case 4: //Every month
-				sql_history_clean(t-2592000);
-			break;
-			case 5: //Every year
-				sql_history_clean(t-31557600);
-			break;
-			default:
-			break;
-		}
-	}
+    //TODO: History cleanup here
+    time_t t = time(NULL);
+    if(t > 31557600)
+    {
+        gint s = g_settings_get_int(G_SETTINGS, "planc-history-clean");
+        switch(s)
+        {
+            case 1: //Every session
+                sql_history_clean(t);
+            break;
+            case 2: //Every week
+                sql_history_clean(t-604800);
+            break;
+            case 3: //Every fortnight
+                sql_history_clean(t-1209600);
+            break;
+            case 4: //Every month
+                sql_history_clean(t-2592000);
+            break;
+            case 5: //Every year
+                sql_history_clean(t-31557600);
+            break;
+            default:
+            break;
+        }
+    }
 }
 
 static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
@@ -1777,7 +1775,7 @@ int main(int argc, char **argv)
     g_signal_connect(G_APP, "command-line", G_CALLBACK(c_app_act)
         ,NULL);
 
-	g_signal_connect(G_APP, "shutdown", G_CALLBACK(c_app_exit)
+    g_signal_connect(G_APP, "shutdown", G_CALLBACK(c_app_exit)
         ,NULL);
 
     status = g_application_run(G_APPLICATION(G_APP), argc, argv);
