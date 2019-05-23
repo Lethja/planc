@@ -313,6 +313,7 @@ static void progress_cell_data_func(GtkTreeViewColumn * c
 static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 	,PlancWindow * v)
 {
+	InitDownloadWindow();
 	gchar * t = NULL;
 	gchar * f = NULL;
 	if (fn == NULL || strcmp(fn,"") == 0)
@@ -331,8 +332,7 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 	}
 
 	GtkWidget * DownloadPrompt = gtk_dialog_new_with_buttons(t
-		,gtk_application_get_active_window(G_APP)
-		,GTK_DIALOG_DESTROY_WITH_PARENT
+		,G_DOWNLOAD, GTK_DIALOG_DESTROY_WITH_PARENT
 		,_("_Save"),	GTK_RESPONSE_OK
 		,_("Save _As"),	GTK_RESPONSE_APPLY
 		,_("_Cancel"),	GTK_RESPONSE_CANCEL
