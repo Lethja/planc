@@ -59,9 +59,17 @@ void c_traditional_menu_hide(GtkToggleButton * cbmi
 		struct call_st * c = planc_window_get_call
 			(PLANC_WINDOW(wins->data));
 		if(setting)
+		{
 			gtk_widget_show(GTK_WIDGET(c->menu->menu));
+			gtk_application_window_set_show_menubar
+					(GTK_APPLICATION_WINDOW(wins->data), FALSE);
+		}
 		else
+		{
 			gtk_widget_hide(GTK_WIDGET(c->menu->menu));
+			gtk_application_window_set_show_menubar
+					(GTK_APPLICATION_WINDOW(wins->data), TRUE);
+		}
 		wins = wins->next;
 	}
 }

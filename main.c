@@ -1623,9 +1623,14 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
     gtk_widget_show_all(GTK_WIDGET(window));
 #ifdef PLANC_FEATURE_GNOME
-    if(preferGmenu()
-    && !g_settings_get_boolean(G_SETTINGS,"planc-traditional"))
-        gtk_widget_hide(GTK_WIDGET(menu->menu));
+	if(preferGmenu())
+	{
+		if(!g_settings_get_boolean(G_SETTINGS, "planc-traditional"))
+			gtk_widget_hide(menu->menu);
+		else
+			gtk_application_window_set_show_menubar
+				(GTK_APPLICATION_WINDOW(window) ,FALSE);
+	}
 #endif
     gtk_widget_hide(GTK_WIDGET(find->top));
     return (GtkWidget *) window;
