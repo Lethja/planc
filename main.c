@@ -1452,8 +1452,28 @@ gboolean preferGmenu()
     gboolean g = FALSE;
     if(G_GTK_SETTINGS)
     {
-        g_object_get(G_GTK_SETTINGS,"gtk-shell-shows-app-menu"
-            ,&g,NULL);
+        gchar * dec;
+        g_object_get(G_GTK_SETTINGS,"gtk-decoration-layout"
+            ,&dec, NULL);
+        gchar * m = strstr(dec, "menu");
+        if(m)
+        {
+            if(m > dec)
+            {
+                gchar * rm = m-1;
+                if(rm[0] != ':' && rm[0] != ',')
+                    goto preferGmenu_end; //Return false but free dec
+            }
+            switch(m[4])
+            {
+                case ':':
+                case ',':
+                case '\0':
+                    g = TRUE;
+            }
+        }
+preferGmenu_end:
+        g_free(dec);
     }
     return g;
 }
