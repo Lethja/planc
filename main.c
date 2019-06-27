@@ -957,6 +957,24 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     ,WebKitNavigationAction * na, PlancWindow * v)
 {
     WebKitWebView * nt
+        = (WebKitWebView *) webkit_web_view_new_with_context(G_WKC);
+    struct newt_st * newtab = malloc(sizeof(struct newt_st));
+    newtab->webv = nt;
+    newtab->plan = v;
+    newtab->show = FALSE;
+
+    webkit_web_view_load_request(nt
+        ,webkit_navigation_action_get_request(na));
+
+    g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
+        ,newtab);
+    return nt;
+}
+
+static WebKitWebView * c_new_tab_related(WebKitWebView * wv
+    ,WebKitNavigationAction * na, PlancWindow * v)
+{
+    WebKitWebView * nt
         = (WebKitWebView *) webkit_web_view_new_with_related_view(wv);
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
@@ -1785,7 +1803,7 @@ int main(int argc, char **argv)
 
 void connect_signals (WebKitWebView * wv, PlancWindow * v)
 {
-    g_signal_connect(wv, "create", G_CALLBACK(c_new_tab_url), v);
+    g_signal_connect(wv, "create", G_CALLBACK(c_new_tab_related), v);
     g_signal_connect(wv, "load-changed", G_CALLBACK(c_load), v);
     g_signal_connect(wv, "resource-load-started", G_CALLBACK(c_loads)
         ,v);
