@@ -35,6 +35,13 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 	{
 		struct call_st * c = planc_window_get_call
 			(PLANC_WINDOW(wins->data));
+#ifdef PLANC_FEATURE_DMENU
+		if(c->menu->tabsMh)
+		{
+			wins = wins->next;
+			continue;
+		}
+#endif
 		if(setting)
 		{
 			if(gtk_notebook_get_n_pages(c->tabs) == 1)
