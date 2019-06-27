@@ -3,6 +3,10 @@
 #include "libdatabase.h"
 #include "download.h"
 #include "history.h"
+#include <gdk/gdk.h>
+#if defined (GDK_WINDOWING_X11)
+#include <gdk/gdkx.h>
+#endif
 #ifdef PLANC_FEATURE_GNOME
 #include "gmenu.h"
 #endif
@@ -167,6 +171,82 @@ void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
     gtk_window_set_title((GtkWindow *) win, str);
     if(str)
         g_free(str);
+}
+
+static void uninhibit_now(struct call_st * c, PlancWindow * v)
+{
+#ifdef GDK_WINDOWING_X11
+    if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+    {
+        gchar *cmd;
+        gint returncode;
+        cmd = g_strdup_printf("xdg-screensaver resume %i"
+            ,(int)GDK_WINDOW_XID(gtk_widget_get_window
+            (GTK_WIDGET(v))));
+        returncode = system(cmd);
+        if (returncode)
+            g_print("'%s' failed with error %d", cmd
+                ,returncode);
+        g_free(cmd);
+    }
+    else
+#endif
+        gtk_application_uninhibit(G_APP, c->sign->inhibit);
+
+    c->sign->inhibit = 0;
+}
+
+static gboolean uninhibit(PlancWindow * v)
+{
+    struct call_st * c = planc_window_get_call(v);
+    if (!c->sign->inhibit)
+        return FALSE;
+
+    uninhibit_now(c, v);
+    return FALSE;
+}
+
+static void update_screensaver_inhibitor(gboolean inhibit
+    ,PlancWindow * v)
+{
+    if(g_settings_get_boolean(G_SETTINGS, "planc-inhibit"))
+    {
+        struct call_st * c = planc_window_get_call(v);
+        if(inhibit && !c->sign->inhibit)
+        {
+#ifdef GDK_WINDOWING_X11
+            if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
+            {
+                gchar *cmd;
+                gint returncode;
+                cmd = g_strdup_printf("xdg-screensaver suspend %i"
+                    ,(int)GDK_WINDOW_XID(gtk_widget_get_window
+                    (GTK_WIDGET(v))));
+                returncode = system(cmd);
+                if (returncode)
+                    g_print("'%s' failed with error %d", cmd
+                        ,returncode);
+                g_free(cmd);
+                c->sign->inhibit = 1;
+            }
+            else
+#endif
+            {
+                c->sign->inhibit = gtk_application_inhibit(G_APP
+                    ,GTK_WINDOW(v)
+                    ,GTK_APPLICATION_INHIBIT_IDLE, "Audio Playback");
+            }
+        }
+        else if (c->sign->inhibit)
+#ifdef GDK_WINDOWING_X11
+            g_timeout_add_seconds_full(G_PRIORITY_LOW
+                ,GDK_IS_X11_DISPLAY(gdk_display_get_default()) ? 5 : 10
+                ,(GSourceFunc) uninhibit, v, NULL);
+#else
+            g_timeout_add_seconds_full(G_PRIORITY_LOW, 10
+                ,(GSourceFunc) uninhibit, v, NULL);
+#endif
+    }
 }
 
 void update_tab(GtkNotebook * nb, WebKitWebView * ch)
@@ -592,6 +672,18 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
     }
 }
 
+static void c_active_window(GtkWidget * widget, void * p
+    ,PlancWindow * v)
+{
+    struct call_st * c = planc_window_get_call(v);
+    gboolean b = gtk_window_is_active(GTK_WINDOW(v))
+        && webkit_web_view_is_playing_audio(WK_CURRENT_TAB(c->tabs));
+    if(b)
+        update_screensaver_inhibitor(b, v);
+    else if (c->sign->inhibit)
+        uninhibit_now(c, v);
+}
+
 static void c_act(GtkWidget * widget, PlancWindow * v)
 {
     struct call_st * call = planc_window_get_call(v);
@@ -685,6 +777,9 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 
     gtk_widget_set_sensitive(GTK_WIDGET(call->tool->forwardTb)
         ,webkit_web_view_can_go_forward(wv));
+
+    update_screensaver_inhibitor
+        (webkit_web_view_is_playing_audio(wv), v);
 }
 
 static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
@@ -699,6 +794,17 @@ static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
 
         update_addr_entry(c->tool->addressEn
             ,webkit_web_view_get_uri(webv));
+    }
+}
+
+static void c_update_audio(WebKitWebView * webv, void * p
+    ,PlancWindow * v)
+{
+    struct call_st * c = planc_window_get_call(v);
+    if(webv == WK_CURRENT_TAB(c->tabs))
+    {
+        update_screensaver_inhibitor
+            (webkit_web_view_is_playing_audio(webv), v);
     }
 }
 
@@ -1555,6 +1661,8 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_destroy_window), NULL);
     g_signal_connect(window, "delete-event"
         ,G_CALLBACK(c_destroy_window_request), window);
+    g_signal_connect(window, "notify::is-active"
+        ,G_CALLBACK(c_active_window), window);
     g_signal_connect(tool->addressEn, "activate"
         ,G_CALLBACK(c_act), window);
     /*g_signal_connect(tool->addressEn, "focus-out-event"
@@ -1623,14 +1731,14 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
     gtk_widget_show_all(GTK_WIDGET(window));
 #ifdef PLANC_FEATURE_GNOME
-	if(preferGmenu())
-	{
-		if(!g_settings_get_boolean(G_SETTINGS, "planc-traditional"))
-			gtk_widget_hide(menu->menu);
-		else
-			gtk_application_window_set_show_menubar
-				(GTK_APPLICATION_WINDOW(window) ,FALSE);
-	}
+    if(preferGmenu())
+    {
+        if(!g_settings_get_boolean(G_SETTINGS, "planc-traditional"))
+            gtk_widget_hide(menu->menu);
+        else
+            gtk_application_window_set_show_menubar
+                (GTK_APPLICATION_WINDOW(window) ,FALSE);
+    }
 #endif
     gtk_widget_hide(GTK_WIDGET(find->top));
     return (GtkWidget *) window;
@@ -1838,6 +1946,8 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
         ,G_CALLBACK(c_update_progress), v);
     g_signal_connect(wv, "notify::uri", G_CALLBACK(addrWebviewState)
         ,v);
+    g_signal_connect(wv, "notify::is-playing-audio"
+        ,G_CALLBACK(c_update_audio), v);
     g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
         ,v);
     g_signal_connect(wv, "enter-fullscreen"

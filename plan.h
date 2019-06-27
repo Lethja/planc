@@ -68,6 +68,7 @@ struct find_st
 struct sign_st
 {
 	gulong nb_changed;
+	guint inhibit;
 };
 
 struct call_st
