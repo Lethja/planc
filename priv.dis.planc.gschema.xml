@@ -33,6 +33,13 @@
 				Has user started the program and initialized defaults
 			</description>
 		</key>
+		<key name='planc-inhibit' type='b'>
+			<default>true</default>
+			<summary>Inhibit idle behaviour during audio playback</summary>
+			<description>
+				Do not allow a screensaver to start or the screen to blank while the current tab is playing audio
+			</description>
+		</key>
 		<key name='webkit-cache' type='b'>
 			<default>true</default>
 			<summary>Memory Cache</summary>

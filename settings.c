@@ -564,6 +564,8 @@ static GtkWidget * InitSettingTab_general()
 		("Enable Page Cache");
     GtkWidget * ta = gtk_check_button_new_with_label
 		("Autohide tab bar in single tab windows");
+	GtkWidget * ii = gtk_check_button_new_with_label
+		("Inhibit system idel actions when audio is playing");
 	GtkWidget * js = gtk_check_button_new_with_label
 		("Enable JavaScript");
 	GtkWidget * jv = gtk_check_button_new_with_label
@@ -589,6 +591,8 @@ static GtkWidget * InitSettingTab_general()
 	g_settings_bind (G_SETTINGS,"webkit-cache",ch,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-autohide",ta,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"planc-inhibit",ii,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-mse",ms,"active",
 		 G_SETTINGS_BIND_DEFAULT);
@@ -646,9 +650,10 @@ static GtkWidget * InitSettingTab_general()
 	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(th),0,1,2,1);
 #endif
 	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(dd),0,2,2,1);
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,3,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ii),0,3,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,4,2,1);
 	attachLabeledWidget(GTK_GRID(PcGrid), "Default Tab Layout"
-		,GTK_WIDGET(tabBox),4);
+		,GTK_WIDGET(tabBox),5);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,0,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,1,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,2,2,1);
