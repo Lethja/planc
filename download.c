@@ -477,7 +477,7 @@ static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
 	gtk_tree_model_filter_refilter(f);
 }
 
-extern void InitDownloadWindow()
+void InitDownloadWindow()
 {
 	if(G_DOWNLOAD)
 	{
