@@ -175,6 +175,9 @@ void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
 
 static void uninhibit_now(struct call_st * c, PlancWindow * v)
 {
+	if (gtk_window_is_active(GTK_WINDOW(v))
+	&& webkit_web_view_is_playing_audio(WK_CURRENT_TAB(c->tabs)))
+		return;
 #ifdef GDK_WINDOWING_X11
     if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
     {
@@ -801,7 +804,8 @@ static void c_update_audio(WebKitWebView * webv, void * p
     ,PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
-    if(webv == WK_CURRENT_TAB(c->tabs))
+    if(webv == WK_CURRENT_TAB(c->tabs)
+    && gtk_window_is_active(GTK_WINDOW(v)))
     {
         update_screensaver_inhibitor
             (webkit_web_view_is_playing_audio(webv), v);
