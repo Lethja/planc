@@ -69,6 +69,7 @@ struct sign_st
 {
 	gulong nb_changed;
 	guint inhibit;
+	guint waiter;
 };
 
 struct call_st

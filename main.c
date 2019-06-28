@@ -175,9 +175,9 @@ void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
 
 static void uninhibit_now(struct call_st * c, PlancWindow * v)
 {
-	if (gtk_window_is_active(GTK_WINDOW(v))
-	&& webkit_web_view_is_playing_audio(WK_CURRENT_TAB(c->tabs)))
-		return;
+    if (gtk_window_is_active(GTK_WINDOW(v))
+    && webkit_web_view_is_playing_audio(WK_CURRENT_TAB(c->tabs)))
+        return;
 #ifdef GDK_WINDOWING_X11
     if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
     {
@@ -206,6 +206,8 @@ static gboolean uninhibit(PlancWindow * v)
         return FALSE;
 
     uninhibit_now(c, v);
+    g_source_remove(c->sign->waiter);
+    c->sign->waiter = 0;
     return FALSE;
 }
 
@@ -240,14 +242,14 @@ static void update_screensaver_inhibitor(gboolean inhibit
                     ,GTK_APPLICATION_INHIBIT_IDLE, "Audio Playback");
             }
         }
-        else if (c->sign->inhibit)
+        else if (c->sign->inhibit && !c->sign->waiter)
 #ifdef GDK_WINDOWING_X11
-            g_timeout_add_seconds_full(G_PRIORITY_LOW
+            c->sign->waiter = g_timeout_add_seconds_full(G_PRIORITY_LOW
                 ,GDK_IS_X11_DISPLAY(gdk_display_get_default()) ? 5 : 10
                 ,(GSourceFunc) uninhibit, v, NULL);
 #else
-            g_timeout_add_seconds_full(G_PRIORITY_LOW, 10
-                ,(GSourceFunc) uninhibit, v, NULL);
+            c->sign->waiter = g_timeout_add_seconds_full(G_PRIORITY_LOW
+                ,10, (GSourceFunc) uninhibit, v, NULL);
 #endif
     }
 }
@@ -1027,6 +1029,12 @@ static void c_destroy_window(GtkWidget* widget, void * v)
 {
     struct call_st * c = planc_window_get_call((PlancWindow *) widget);
     g_signal_handler_disconnect(c->tabs,c->sign->nb_changed);
+    gtk_widget_destroy(GTK_WIDGET(c->tabs));
+    if(c->sign->waiter)
+    {
+        g_source_remove(c->sign->waiter);
+        c->sign->waiter = 0;
+    }
     free(c->menu);
     free(c->find);
     free(c->sign);
