@@ -108,9 +108,9 @@ static const char * policyDefaultBlacklist = \
 
 enum policyflag //Policy byteflag
 {
-	POLIC = (1<<1),	//Allow or Deny
-	RECRF = (1<<2),	//Accept subdomains from
-	RECRT = (1<<3)	//Accept subdomains to
+	POLIC = (1<<0),	//Allow or Deny
+	RECRF = (1<<1),	//Accept subdomains from
+	RECRT = (1<<2)	//Accept subdomains to
 //	EXPLO = (1<<4)	//Explicit override
 };
 
@@ -127,35 +127,38 @@ static size_t compareDomains(gchar * req, const unsigned char * dbr
 			return score; //No match no points
 		if (r == req) //If the match is at the start give another point
 			score++;
-		if (!strncmp(r, dbr, strlen(dbr))) //Identical, another point
+		if (!strncmp(r, req, strlen(dbr))) //Identical, another point
 			score++;
 	}
 	else
 	{
-		if (!strcmp(req, dbr)) //They're identical, 3 points
-			score = 3;
+		if (!strcmp(req, dbr)) //They're identical, 4 points
+			score = 4;
 	}
 	return score;
 }
 
 static size_t compute_rule(gchar * reqf, gchar * reqt
 	,const unsigned char * dbrf, const unsigned char * dbrt
-	,int * allow)
+	,int allow)
 {
 	/*We compute the best rule to follow based on how many points it
 	 * accumluates, the more explicit the rule is the more points it
 	 * will get */
-	size_t score = 0;
+	size_t fscore = 0;
+	size_t tscore = 0;
 	//If the database entry in NULL then we give it one point
 	if(!dbrf)
-		score++;
+		fscore++;
 	else //Score based on explicit infomation
-		score += compareDomains(reqf, dbrf, *allow && RECRF);
+		fscore += compareDomains(reqf, dbrf, (allow & RECRF) > 0);
 	if(!dbrt)
-		score++;
+		tscore++;
 	else
-		score += compareDomains(reqt, dbrt, *allow && RECRT);
-	return score;
+		tscore += compareDomains(reqt, dbrt, (allow & RECRT) > 0);
+	if(!fscore || !tscore) //No match no score
+		return 0;
+	return fscore + tscore;
 }
 
 /** Returns true if 'to' domains as allow to load from `from` */
@@ -183,18 +186,17 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 		const unsigned char * f = sqlite3_column_text(stmt,0);
 		const unsigned char * t = sqlite3_column_text(stmt,1);
 		int allow = sqlite3_column_int(stmt,2);
-		size_t score = compute_rule(from, to, f, t, &allow);
+		size_t score = compute_rule(from, to, f, t, allow);
 		if(score == bestScore)
 		{
 			if (r != 0) //Deny should always overrule allow on equ score
-				r = (allow && POLIC) > 0;
+				r = (allow & POLIC) > 0;
 		}
 		else if(score > bestScore)
 		{
+			r = (allow & POLIC) > 0;
 			bestScore = score;
-			r = (allow && POLIC) > 0;
 		}
-		//g_debug("%s > %s = %zu. Best = %zu", f, t, score, bestScore);
 	}
 	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,"Policy");
 	sqlite3_finalize(stmt);
