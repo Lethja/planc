@@ -54,6 +54,29 @@ void c_notebook_tabs_autohide(GtkToggleButton * cbmi
 		wins = wins->next;
 	}
 }
+
+static void uninhibit_all(gpointer d, gpointer p)
+	{
+		PlancWindow * v = PLANC_WINDOW(d);
+		struct call_st * c = planc_window_get_call(v);
+		if(c->sign->inhibit)
+			uninhibit_now(c, v);
+	}
+
+static void c_inhibit_idle(GtkToggleButton * cbmi, void * p)
+{
+	gboolean setting = gtk_toggle_button_get_active(cbmi);
+	if(setting)
+	{
+		GtkWindow * v = gtk_application_get_active_window(G_APP);
+		c_active_window(NULL, NULL, PLANC_WINDOW(v));
+	}
+	else //Inhibiting was just disabled, double check everything
+	{
+		GList * l = gtk_application_get_windows(G_APP);
+		g_list_foreach(l, uninhibit_all, NULL);
+	}
+}
 #ifdef PLANC_FEATURE_GNOME
 void c_traditional_menu_hide(GtkToggleButton * cbmi
 	,void * v)
@@ -627,6 +650,9 @@ static GtkWidget * InitSettingTab_general()
 
 	g_signal_connect(ta, "toggled"
 		,G_CALLBACK(c_notebook_tabs_autohide), NULL);
+
+	g_signal_connect(ii, "toggled"
+		,G_CALLBACK(c_inhibit_idle), NULL);
 	#ifdef PLANC_FEATURE_GNOME
 	g_signal_connect(tm, "toggled"
 		,G_CALLBACK(c_traditional_menu_hide), NULL);

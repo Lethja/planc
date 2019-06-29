@@ -72,3 +72,8 @@ GtkWidget * get_web_view();
 GtkNotebook * get_web_view_notebook();
 
 WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v);
+
+void c_active_window(GtkWidget * widget, void * p
+    ,PlancWindow * v);
+
+void uninhibit_now(struct call_st * c, PlancWindow * v);

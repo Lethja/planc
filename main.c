@@ -173,7 +173,7 @@ void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
         g_free(str);
 }
 
-static void uninhibit_now(struct call_st * c, PlancWindow * v)
+void uninhibit_now(struct call_st * c, PlancWindow * v)
 {
     if (gtk_window_is_active(GTK_WINDOW(v))
     && webkit_web_view_is_playing_audio(WK_CURRENT_TAB(c->tabs)))
@@ -190,11 +190,21 @@ static void uninhibit_now(struct call_st * c, PlancWindow * v)
         if (returncode)
             g_print("'%s' failed with error %d", cmd
                 ,returncode);
+#ifndef NDEBUG
+        else
+            g_debug("Uninhibited: %s", cmd);
+#endif
         g_free(cmd);
     }
     else
 #endif
+    if(c->sign->inhibit)
+    {
         gtk_application_uninhibit(G_APP, c->sign->inhibit);
+#ifndef NDEBUG
+        g_debug("Uninhibited: %d", c->sign->inhibit);
+#endif
+    }
 
     c->sign->inhibit = 0;
 }
@@ -202,7 +212,7 @@ static void uninhibit_now(struct call_st * c, PlancWindow * v)
 static gboolean uninhibit(PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
-    if (!c->sign->inhibit)
+    if (!c->sign->waiter)
         return FALSE;
 
     uninhibit_now(c, v);
@@ -231,6 +241,10 @@ static void update_screensaver_inhibitor(gboolean inhibit
                 if (returncode)
                     g_print("'%s' failed with error %d", cmd
                         ,returncode);
+#ifndef NDEBUG
+                else
+                    g_debug("Inhibiting: %s", cmd);
+#endif
                 g_free(cmd);
                 c->sign->inhibit = 1;
             }
@@ -240,6 +254,9 @@ static void update_screensaver_inhibitor(gboolean inhibit
                 c->sign->inhibit = gtk_application_inhibit(G_APP
                     ,GTK_WINDOW(v)
                     ,GTK_APPLICATION_INHIBIT_IDLE, "Audio Playback");
+#ifndef NDEBUG
+                g_debug("Inhibited: %d", c->sign->inhibit);
+#endif
             }
         }
         else if (c->sign->inhibit && !c->sign->waiter)
@@ -677,7 +694,7 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
     }
 }
 
-static void c_active_window(GtkWidget * widget, void * p
+void c_active_window(GtkWidget * widget, void * p
     ,PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
