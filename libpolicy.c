@@ -26,12 +26,16 @@ static gboolean c_webpage_send_request(WebKitWebPage * wp
 		{
 			if(sql_domain_policy_read(pdom,rdom))
 			{
-				g_debug("PASS: '%s' > '%s'\n", pdom, rdom);
+#ifndef NDEBUG
+				g_debug("PASS: '%s' > '%s'", pdom, rdom);
+#endif
 				r = FALSE;
 			}
 			else
 			{
-				g_debug("DENY: '%s' > '%s'\n", pdom, rdom);
+#ifndef NDEBUG
+				g_debug("DENY: '%s' > '%s'", pdom, rdom);
+#endif
 				r = TRUE;
 			}
 		}
