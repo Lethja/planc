@@ -120,7 +120,6 @@ static size_t compareDomains(gchar * req, const unsigned char * dbr
 	size_t score = 0;
 	if(implicit)
 	{
-		g_debug("Implicit \n%s\n%s", req, dbr);
 		char * r = strstr(req, dbr);
 		if(r) //If there's a match at all give a point
 			score = 2;
@@ -133,7 +132,6 @@ static size_t compareDomains(gchar * req, const unsigned char * dbr
 	}
 	else
 	{
-		g_debug("Explicit \n%s\n%s", req, dbr);
 		if (!strcmp(req, dbr)) //They're identical, 4 points
 			score = 4;
 	}
@@ -197,11 +195,13 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 		else if(score > bestScore)
 		{
 			r = (allow & POLIC) > 0;
+#ifndef NDEBUG
 			g_debug("From %s (%s)\nTo  %s(%s)\n%d-%d-%d = %d"
 				" (%zu vs %zu)"
 				,from, f, to, t
 				,(allow & RECRF) > 0, (allow & RECRT) > 0
 				,(allow & POLIC) > 0, r, score, bestScore);
+#endif
 			bestScore = score;
 		}
 	}
