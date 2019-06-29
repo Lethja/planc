@@ -91,26 +91,77 @@ static const char * retrieveDownload = "SELECT * FROM `DOWNLOAD`";
 
 #ifdef PLANC_FEATURE_DPOLC
 static const char * selectDomainPolicy = "SELECT * FROM `POLICY` " \
-"WHERE (`FROM` IS ? OR `FROM` IS NULL) " \
-"AND ((`TO` IS ? OR `TO` IS NULL)" \
-"OR `INHERIT` IS 1)";
+"WHERE (INSTR(?,`FROM`) OR `FROM` IS NULL) " \
+"AND (INSTR(?,`TO`) OR `TO` IS NULL)";
 
 static const char * createPolicy = "PRAGMA synchronous=OFF;" \
 "CREATE TABLE IF NOT EXISTS `POLICY`(`FROM` TEXT, `TO` TEXT," \
-"`ALLOW` INTERGER, `INHERIT` INTERGER);";
+"`ALLOW` INTERGER)";
 
 static const char * policyDefaultWhitelist = \
-"INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`, `INHERIT`)" \
-"VALUES (null, null, 1, 0)";
+"INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`)" \
+"VALUES (null, null, 1)";
 
 static const char * policyDefaultBlacklist = \
-"INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`, `INHERIT`)" \
-"VALUES (null, null, 0, 0)";
+"INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`)" \
+"VALUES (null, null, 0)";
+
+enum policyflag //Policy byteflag
+{
+	POLIC = (1<<1),	//Allow or Deny
+	RECRF = (1<<2),	//Accept subdomains from
+	RECRT = (1<<3)	//Accept subdomains to
+//	EXPLO = (1<<4)	//Explicit override
+};
+
+static size_t compareDomains(gchar * req, const unsigned char * dbr
+	,char implicit)
+{
+	size_t score = 0;
+	if(implicit)
+	{
+		char * r = strstr(req, dbr);
+		if(r) //If there's a match at all give a point
+			score++;
+		else
+			return score; //No match no points
+		if (r == req) //If the match is at the start give another point
+			score++;
+		if (!strncmp(r, dbr, strlen(dbr))) //Identical, another point
+			score++;
+	}
+	else
+	{
+		if (!strcmp(req, dbr)) //They're identical, 3 points
+			score = 3;
+	}
+	return score;
+}
+
+static size_t compute_rule(gchar * reqf, gchar * reqt
+	,const unsigned char * dbrf, const unsigned char * dbrt
+	,int * allow)
+{
+	/*We compute the best rule to follow based on how many points it
+	 * accumluates, the more explicit the rule is the more points it
+	 * will get */
+	size_t score = 0;
+	//If the database entry in NULL then we give it one point
+	if(!dbrf)
+		score++;
+	else //Score based on explicit infomation
+		score += compareDomains(reqf, dbrf, *allow && RECRF);
+	if(!dbrt)
+		score++;
+	else
+		score += compareDomains(reqt, dbrt, *allow && RECRT);
+	return score;
+}
 
 /** Returns true if 'to' domains as allow to load from `from` */
 extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 {
-	int r = 0; //Return deny incase of a error
+	int r = -1; //Return deny incase of a error
 	sqlite3 * db;
 	int rc;
 	POLICYDIR(policydir);
@@ -126,57 +177,29 @@ extern gboolean sql_domain_policy_read(gchar * from, gchar * to)
 	rc = sqlite3_bind_text(stmt,2,to,	-1,SQLITE_STATIC);
 	DB_IS_OR_RETURN_FALSE(rc,SQLITE_OK,db,stmt,"Policy");
 
-	gboolean implicit = FALSE;
+	size_t bestScore = 0;
 	while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
 	{
-		size_t score = 0;
 		const unsigned char * f = sqlite3_column_text(stmt,0);
-		if(f && strcmp(from, (char *) f) == 0)
-			score++;
 		const unsigned char * t = sqlite3_column_text(stmt,1);
-		if(t)
+		int allow = sqlite3_column_int(stmt,2);
+		size_t score = compute_rule(from, to, f, t, &allow);
+		if(score == bestScore)
 		{
-			if(strcmp(to, (char *) t) == 0)
-				score++;
-			else if(sqlite3_column_int(stmt,3)) //If inherit
-			{
-				gchar * g = strstr(to, (char *) t);
-				if(g && (char *) g+strlen(g) == (char *) to+strlen(to))
-					score++;
-				else
-					continue;
-			}
+			if (r != 0) //Deny should always overrule allow on equ score
+				r = (allow && POLIC) > 0;
 		}
-		switch(score)
+		else if(score > bestScore)
 		{
-			case 1: //This is an implicit rule
-				implicit = TRUE;
-				r = sqlite3_column_int(stmt,2);
-				if(!r) //Deny from one implict rule conculudes
-				{
-					sqlite3_finalize(stmt);
-					sqlite3_close(db);
-					return FALSE;
-				}
-			break;
-			case 0: //This is a global default rule
-				if(!f && !t && !implicit)
-					r = sqlite3_column_int(stmt,2);
-			break;
-			case 2: //This is an explicit rule
-				r = sqlite3_column_int(stmt,2);
-				sqlite3_finalize(stmt);
-				sqlite3_close(db);
-				if(r)
-					return TRUE;
-				else
-					return FALSE;
+			bestScore = score;
+			r = (allow && POLIC) > 0;
 		}
+		//g_debug("%s > %s = %zu. Best = %zu", f, t, score, bestScore);
 	}
 	DB_IS_OR_RETURN_FALSE(rc,SQLITE_DONE,db,stmt,"Policy");
 	sqlite3_finalize(stmt);
 	sqlite3_close(db);
-	if(r)
+	if(r == 1)
 		return TRUE;
 	else
 		return FALSE;
