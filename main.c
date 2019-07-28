@@ -1606,8 +1606,11 @@ gboolean preferGmenu()
             const gchar * w = gdk_x11_screen_get_window_manager_name
                 (gdk_display_get_default_screen(d));
             //Only MutterWM is known to support appmenu properly
-            if(strcmp(w, "muttur"))
-                return g;
+            if(w)
+            {
+                if(strcmp(w, "muttur"))
+                    return g;
+            }
             GtkSettings * gtksettings = gtk_settings_get_default();
             if(gtksettings)
             {
@@ -1635,10 +1638,16 @@ gboolean preferGmenu()
 preferGmenu_end:
                 g_free(dec);
             }
-        } else
+        } else //Check for Wayland Gnome3
 #endif
-        if (!strcmp(getenv("DESKTOP_SESSION"), "gnome"))//Wayland Gnome3
-            g = TRUE;
+        {
+            gchar * e = getenv("DESKTOP_SESSION");
+            if(e)
+            {
+                if (!strcmp(e, "gnome"))
+                    g = TRUE;
+            }
+        }
     }
     return g;
 }
