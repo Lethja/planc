@@ -728,7 +728,7 @@ GtkWindow * InitSettingsWindow(PlancWindow * v)
 		,gtk_label_new("Search"));
 	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_history()
 		,gtk_label_new("History"));
-	gtk_container_add((GtkContainer *)r, nb);
-	gtk_widget_show_all((GtkWidget *)r);
+	gtk_container_add((GtkContainer *) r, nb);
+	gtk_widget_show_all((GtkWidget *) r);
 	return r;
 }

@@ -9,6 +9,7 @@
 #endif
 #ifdef PLANC_FEATURE_GNOME
 #include "gmenu.h"
+gboolean G_GMENU; /* Gmenu active this session */
 #endif
 #ifdef PLANC_FEATURE_DMENU
 #include "dmenu.h"
@@ -387,7 +388,7 @@ static gboolean c_leave_fullscreen(GtkWidget * widget
 {
     struct call_st * c = planc_window_get_call(v);
 #ifdef PLANC_FEATURE_GNOME
-    if(!preferGmenu()
+    if(!G_GMENU
     || g_settings_get_boolean(G_SETTINGS,"planc-traditional"))
 #endif
         gtk_widget_show(GTK_WIDGET(c->menu->menu));
@@ -627,7 +628,8 @@ void c_zoom_reset(GtkWidget * w, void * v)
     webkit_web_view_set_zoom_level(wv,1);
 }
 
-static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
+static gboolean c_accl_rels(GtkWidget * w, GdkEvent * e
+    ,PlancWindow * v)
 {
     guint k;
     guint m;
@@ -644,24 +646,24 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
                         gtk_notebook_next_page(c->tabs);
                         gtk_widget_grab_focus
                             (WK_CURRENT_TAB_WIDGET(c->tabs));
-                return;
+                return TRUE;
                 case GDK_KEY_ISO_Left_Tab:
                         gtk_notebook_prev_page(c->tabs);
                         gtk_widget_grab_focus
                             (WK_CURRENT_TAB_WIDGET(c->tabs));
-                return;
+                return TRUE;
                 case GDK_KEY_plus:
                 case GDK_KEY_KP_Add:
                     c_zoom_in(NULL,NULL);
-                return;
+                return TRUE;
                 case GDK_KEY_minus:
                 case GDK_KEY_KP_Subtract:
                     c_zoom_out(NULL,NULL);
-                return;
+                return TRUE;
                 case GDK_KEY_0:
                 case GDK_KEY_KP_0:
                     c_zoom_reset(NULL,NULL);
-                return;
+                return TRUE;
                 }
             }
         }
@@ -669,13 +671,13 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
         {
         case GDK_KEY_F5:
             c_refresh(w,v);
-        return;
+        return TRUE;
         case GDK_KEY_F6:
             if(gtk_widget_is_focus((GtkWidget *) c->tool->addressEn))
                 gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(c->tabs));
             else
                 gtk_widget_grab_focus((GtkWidget *) c->tool->addressEn);
-        return;
+        return TRUE;
         case GDK_KEY_F12:
             {
                 gboolean b;
@@ -689,7 +691,17 @@ static void c_accl_rels(GtkWidget * w, GdkEvent * e, PlancWindow * v)
                     webkit_web_inspector_show(wi);
                 }
             }
-        return;
+        return TRUE;
+#ifdef PLANC_FEATURE_GNOME
+        case GDK_KEY_Alt_L:
+        case GDK_KEY_Alt_R:
+        if((G_GMENU)
+        &&(!g_settings_get_boolean(G_SETTINGS, "planc-traditional"))
+        &&(!gtk_menu_shell_get_selected_item(
+            GTK_MENU_SHELL(c->menu->menu))))
+            gtk_widget_hide(c->menu->menu);
+        return FALSE;
+#endif
         }
     }
 }
@@ -1584,35 +1596,79 @@ void InitCallback(struct call_st * c, struct find_st * f
 #ifdef PLANC_FEATURE_GNOME
 gboolean preferGmenu()
 {
-    gboolean g = FALSE;
-    if(G_GTK_SETTINGS)
+    gboolean g = gtk_application_prefers_app_menu(G_APP);
+    if(!g)
     {
-        gchar * dec;
-        g_object_get(G_GTK_SETTINGS,"gtk-decoration-layout"
-            ,&dec, NULL);
-        gchar * m = strstr(dec, "menu");
-        if(m)
+#ifdef GDK_WINDOWING_X11
+        GdkDisplay * d = gdk_display_get_default();
+        if (GDK_IS_X11_DISPLAY(d))
         {
-            if(m > dec)
+            const gchar * w = gdk_x11_screen_get_window_manager_name
+                (gdk_display_get_default_screen(d));
+            //Only MutterWM is known to support appmenu properly
+            if(strcmp(w, "muttur"))
+                return g;
+            GtkSettings * gtksettings = gtk_settings_get_default();
+            if(gtksettings)
             {
-                gchar * rm = m-1;
-                if(rm[0] != ':' && rm[0] != ',')
-                    goto preferGmenu_end; //Return false but free dec
-            }
-            switch(m[4])
-            {
-                case ':':
-                case ',':
-                case '\0':
-                    g = TRUE;
-            }
-        }
+                gchar * dec;
+                g_object_get(gtksettings, "gtk-decoration-layout"
+                    ,&dec, NULL);
+                gchar * m = strstr(dec, "menu");
+                if(m)
+                {
+                    if(m > dec)
+                    {
+                        gchar * rm = m-1;
+                        if(rm[0] != ':' && rm[0] != ',')
+                            goto preferGmenu_end;
+                            //Return false but free dec
+                    }
+                    switch(m[4])
+                    {
+                        case ':':
+                        case ',':
+                        case '\0':
+                            g = TRUE;
+                    }
+                }
 preferGmenu_end:
-        g_free(dec);
+                g_free(dec);
+            }
+        } else
+#endif
+        if (!strcmp(getenv("DESKTOP_SESSION"), "gnome"))//Wayland Gnome3
+            g = TRUE;
     }
     return g;
 }
+
+gboolean c_key_press (GtkWidget * w, GdkEventKey * e
+    ,PlancWindow * v)
+{
+    switch(e->keyval)
+    {
+        case GDK_KEY_Alt_L:
+        case GDK_KEY_Alt_R:
+        case GDK_KEY_F10:
+        {
+            struct call_st * c = planc_window_get_call(v);
+            if(!gtk_widget_is_visible(c->menu->menu))
+                gtk_widget_show(c->menu->menu);
+            return FALSE;
+        }
+    }
+    return FALSE;
+}
+
+static void c_tmenu_deactivate(GtkWidget * w, void * v)
+{
+    if((G_GMENU)
+    &&(!g_settings_get_boolean(G_SETTINGS, "planc-traditional")))
+        gtk_widget_hide(w);
+}
 #endif
+
 static gboolean c_addr_click(GtkEditable * w, GdkEventButton * e
     ,void * v)
 {
@@ -1714,7 +1770,16 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_addr_ins), window);
     g_signal_connect_after(tool->addressEn, "delete-text"
         ,G_CALLBACK(c_addr_del), window);
-    g_signal_connect_after(window, "key-release-event"
+#ifdef PLANC_FEATURE_GNOME
+    if(G_GMENU)
+    {
+        g_signal_connect(window, "key-press-event"
+            ,G_CALLBACK(c_key_press), window);
+        g_signal_connect(menu->menu, "deactivate"
+            ,G_CALLBACK(c_tmenu_deactivate), window);
+    }
+#endif
+    g_signal_connect(window, "key-release-event"
         ,G_CALLBACK(c_accl_rels), window);
     g_signal_connect(G_OBJECT(call->menu->tabV), "activate"
         ,G_CALLBACK(c_update_tabs_layout), window);
@@ -1760,7 +1825,7 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
     gtk_widget_show_all(GTK_WIDGET(window));
 #ifdef PLANC_FEATURE_GNOME
-    if(preferGmenu())
+    if(G_GMENU)
     {
         if(!g_settings_get_boolean(G_SETTINGS, "planc-traditional"))
             gtk_widget_hide(menu->menu);
@@ -1928,7 +1993,8 @@ static void c_app_init(GtkApplication * app, void * v)
     g_free(config);
     G_GTK_SETTINGS = gtk_settings_get_default();
 #ifdef PLANC_FEATURE_GNOME
-    if(preferGmenu())
+    G_GMENU = preferGmenu();
+    if(G_GMENU)
         InitAppMenu();
 #endif
 #ifdef PLANC_FEATURE_DPOLC
