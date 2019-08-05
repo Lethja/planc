@@ -340,32 +340,46 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 
 	g_free(t);
 
+	gchar * absdl
+		= (gchar *) g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD);
+	gchar * absuh = (gchar *) g_get_home_dir();
+	if(!absuh || !absdl)
+	{
+		webkit_download_cancel(d);
+		return FALSE;
+	}
+	if(!strcmp(absuh, absdl))
+	{
+		gchar * r = absuh;
+		absuh = g_build_filename(r, "Downloads", NULL);
+		free(r);
+		if(g_file_test(absuh, G_FILE_TEST_IS_DIR))
+			absdl = absuh;
+	}
 	gchar * absdir = NULL;
 	gchar * abspth = NULL;
 	if(g_settings_get_boolean(G_SETTINGS,"download-domain"))
 	{
 		gchar * td = getDomainName(getDownloadPageUrl(d));
-
-		abspth = g_build_filename(g_get_user_special_dir
-			(G_USER_DIRECTORY_DOWNLOAD), td, NULL);
+		abspth = g_build_filename(absdl, td, NULL);
 
 		if(g_file_test(abspth, G_FILE_TEST_IS_DIR)
 		|| g_mkdir(abspth, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
 		{
-			absdir = g_build_filename(g_get_user_special_dir
-				(G_USER_DIRECTORY_DOWNLOAD), td, f, NULL);
+			absdir = g_build_filename(absdl, td, f, NULL);
 		}
 		else
 		{
-			absdir = g_build_filename(g_get_user_special_dir
-				(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+			absdir = g_build_filename(absdl, f, NULL);
 		}
 	}
 	else
 	{
-		absdir = g_build_filename(g_get_user_special_dir
-			(G_USER_DIRECTORY_DOWNLOAD), f, NULL);
+		absdir = g_build_filename(absdl, f, NULL);
 	}
+
+	if(absdl == absuh)
+		free(absuh);
 
 	GtkWidget * dbox = gtk_dialog_get_content_area
 		(GTK_DIALOG(DownloadPrompt));
