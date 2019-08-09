@@ -349,40 +349,32 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 		return FALSE;
 	}
 	gchar * fdlp;
-	if(!strcmp(absuh, absdl))
+	switch(strcmp(absuh, absdl))
 	{
-		fdlp = g_build_filename(absuh, "Downloads", NULL);
-		if(!g_file_test(fdlp, G_FILE_TEST_IS_DIR))
-		{
+		case 0:
+			fdlp = g_build_filename(absuh, "Downloads", NULL);
+			if(g_file_test(fdlp, G_FILE_TEST_IS_DIR))
+				break;
 			g_free(fdlp);
-			goto c_download_prompt_home_fallback;
-		}
-	}
-	else
-	{
-c_download_prompt_home_fallback:
-		fdlp = (gchar *) absdl;
+		default:
+			fdlp = (gchar *) absdl;
 	}
 	gchar * absdir = NULL;
 	gchar * abspth = NULL;
-	if(g_settings_get_boolean(G_SETTINGS,"download-domain"))
+	switch(g_settings_get_boolean(G_SETTINGS,"download-domain"))
 	{
-		gchar * td = getDomainName(getDownloadPageUrl(d));
-		abspth = g_build_filename(fdlp, td, NULL);
+		default:
+		abspth = g_build_filename(fdlp
+			,getDomainName(getDownloadPageUrl(d)), NULL);
 
 		if(g_file_test(abspth, G_FILE_TEST_IS_DIR)
 		|| g_mkdir(abspth, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
-		{
-			absdir = g_build_filename(fdlp, td, f, NULL);
-		}
+			absdir = g_build_filename(abspth, f, NULL);
 		else
 		{
+			case 0:
 			absdir = g_build_filename(fdlp, f, NULL);
 		}
-	}
-	else
-	{
-		absdir = g_build_filename(fdlp, f, NULL);
 	}
 
 	if(fdlp != absdl)
