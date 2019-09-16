@@ -13,6 +13,7 @@ gboolean G_GMENU; /* Gmenu active this session */
 #endif
 #ifdef PLANC_FEATURE_DMENU
 #include "dmenu.h"
+GtkWidget * lasttab = NULL;
 #endif
 #include <time.h>
 
@@ -821,6 +822,14 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
 
     update_screensaver_inhibitor
         (webkit_web_view_is_playing_audio(wv), v);
+#ifdef PLANC_FEATURE_DMENU
+	if(g_settings_get_int(G_SETTINGS, "tab-layout") == 2
+	&& (page == lasttab))
+	{
+		g_application_withdraw_notification(G_APPLICATION(G_APP), "nt");
+		lasttab = NULL;
+	}
+#endif
 }
 
 static void c_update_title(WebKitWebView * webv, WebKitLoadEvent evt
@@ -960,6 +969,43 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
     return ebox;
 }
 
+#ifdef PLANC_FEATURE_DMENU
+static void c_g_close_tab(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	if(lasttab == NULL)
+		return;
+	gtk_widget_destroy(lasttab);
+	g_application_withdraw_notification(G_APPLICATION(G_APP), "nt");
+	lasttab = NULL;
+}
+
+static void c_g_show_tab(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	if(lasttab == NULL)
+		return;
+	GtkWidget * top = gtk_widget_get_toplevel(lasttab);
+	struct call_st * call = planc_window_get_call(PLANC_WINDOW(top));
+	gtk_window_get_focus(GTK_WINDOW(top));
+	gint i = gtk_notebook_page_num (call->tabs, lasttab);
+	if(i != -1)
+		gtk_notebook_set_current_page(call->tabs, i);
+	g_application_withdraw_notification(G_APPLICATION(G_APP), "nt");
+	lasttab = NULL;
+}
+
+static void newTabNotify()
+{
+	GNotification * boop = g_notification_new("New Tab");
+	g_notification_set_body(boop, "A new tab has been opened"
+		" check the Tabs menu");
+	g_notification_set_icon(boop, g_icon_new_for_string("tab-new"
+		,NULL));
+	g_notification_add_button(boop, "View Page", "app.switchtab");
+	g_notification_add_button(boop, "Close Tab", "app.closetab");
+	g_application_send_notification(G_APPLICATION(G_APP), "nt", boop);
+}
+#endif
+
 static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
 {
     struct call_st * call = planc_window_get_call(newtab->plan);
@@ -981,6 +1027,14 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
     }
 
     connect_signals(newtab->webv,newtab->plan);
+#ifdef PLANC_FEATURE_DMENU
+	if(g_settings_get_int(G_SETTINGS, "tab-layout") == 2
+	&& (WK_CURRENT_TAB(call->tabs) != newtab->webv))
+	{
+		lasttab = (GtkWidget *) newtab->webv;
+		newTabNotify(call->tabs, newtab->webv);
+	}
+#endif
     free(newtab);
 }
 
@@ -1591,15 +1645,6 @@ void InitCallback(struct call_st * c, struct find_st * f
     c->tool = t;
 }
 
-/*static gboolean c_addr_unfocus(GtkEditable * w, GdkEventButton * e
-    ,void * v)
-{
-    if (e->type == GDK_FOCUS_CHANGE)
-    {
-        gtk_editable_select_region(w, 0, 0);
-    }
-    return FALSE;
-}*/
 #ifdef PLANC_FEATURE_GNOME
 gboolean preferGmenu()
 {
@@ -1755,7 +1800,7 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
     gtk_box_pack_start(GTK_BOX(vbox), menu->menu, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), tool->top, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), GTK_WIDGET(call->tabs)
-        , TRUE, TRUE, 0);
+        ,TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), find->top, FALSE, FALSE, 0);
 
     g_signal_connect(window, "destroy"
@@ -1766,8 +1811,6 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_active_window), window);
     g_signal_connect(tool->addressEn, "activate"
         ,G_CALLBACK(c_act), window);
-    /*g_signal_connect(tool->addressEn, "focus-out-event"
-        ,G_CALLBACK(c_addr_unfocus), NULL);*/
     g_signal_connect(tool->addressEn, "button-press-event"
         ,G_CALLBACK(c_addr_click), NULL);
     g_signal_connect(tool->backTb, "clicked"
@@ -2022,6 +2065,15 @@ static void c_app_init(GtkApplication * app, void * v)
         initialSetup();
     }
     g_free(p);
+#endif
+#ifdef PLANC_FEATURE_DMENU
+	static const GActionEntry actions[] =
+	{
+		{ "switchtab", c_g_show_tab },
+		{ "closetab", c_g_close_tab }
+	};
+	g_action_map_add_action_entries (G_ACTION_MAP (G_APP), actions
+		,G_N_ELEMENTS (actions), G_APP);
 #endif
     InitWebContext();
 }
