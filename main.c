@@ -985,7 +985,7 @@ static void c_g_show_tab(GSimpleAction * a, GVariant * v, gpointer p)
 		return;
 	GtkWidget * top = gtk_widget_get_toplevel(lasttab);
 	struct call_st * call = planc_window_get_call(PLANC_WINDOW(top));
-	gtk_window_get_focus(GTK_WINDOW(top));
+	gtk_window_present(GTK_WINDOW(top));
 	gint i = gtk_notebook_page_num (call->tabs, lasttab);
 	if(i != -1)
 		gtk_notebook_set_current_page(call->tabs, i);
@@ -995,9 +995,8 @@ static void c_g_show_tab(GSimpleAction * a, GVariant * v, gpointer p)
 
 static void newTabNotify()
 {
-	GNotification * boop = g_notification_new("New Tab");
-	g_notification_set_body(boop, "A new tab has been opened"
-		" check the Tabs menu");
+	GNotification * boop = g_notification_new("New Tab - Plan C");
+	g_notification_set_body(boop, "A tab has been opened");
 	g_notification_set_icon(boop, g_icon_new_for_string("tab-new"
 		,NULL));
 	g_notification_add_button(boop, "View Page", "app.switchtab");
