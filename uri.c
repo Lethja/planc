@@ -2,6 +2,10 @@
 #include "libdatabase.h"
 #include "uri.h"
 
+/**
+ * Like strncpy but stop the copy on a certian character
+ * instead of a number, be warned it won't stop on '\0'
+ */
 static void strtcpy(char * dest, const char * src, const char token)
 {
     size_t it = 0;
@@ -13,6 +17,11 @@ static void strtcpy(char * dest, const char * src, const char token)
     dest[it] = '\0';
 }
 
+/**
+ * Return a pointer within 'haystack' on the first instance of
+ * any chararcter within 'needles' being found
+ * or 'NULL' if no 'needles' are found
+ */
 static char * strchrany(const char * haystack, const char * needles)
 {
 	char * r = (char *) haystack;
@@ -31,7 +40,7 @@ static char * strchrany(const char * haystack, const char * needles)
 				return r;
 			n++;
 			n_st--;
-		} while(n_st);
+		} while (n_st);
 		r++;
 		n = (char *) needles;
 		h_st--;
@@ -40,6 +49,9 @@ static char * strchrany(const char * haystack, const char * needles)
 	return NULL;
 }
 
+/**
+ * Get the key for an implicit search
+ */
 static void implicitSearch(char ** uri, char ** searchPtr
 	,const char * addr)
 {
@@ -58,6 +70,10 @@ static void implicitSearch(char ** uri, char ** searchPtr
 	}
 }
 
+/**
+ * Remove the character at 'position' and replace it with 'ins'
+ * Might realloc '*str' to a new position, be sure to account for this
+ */
 static void escapeChar(char ** str, char * position, const char * ins)
 {
 	size_t len = strlen(*str) + strlen(ins) + 1;
@@ -75,6 +91,11 @@ static void escapeChar(char ** str, char * position, const char * ins)
 	free(tmpcat);
 }
 
+/**
+ * Convert a human search query into http paramaters compatible escape
+ * characters. This function is only used for detection, call escapeChar
+ * to actually insert into the string
+ */
 static char * formatQuery(char * url, char ** q)
 {
 	size_t s = strlen(url)+strlen(*q)+1, i = strlen(url);
@@ -97,6 +118,9 @@ static char * formatQuery(char * url, char ** q)
 	return r;
 }
 
+/** Prepare to attempt to find a search key in 'c'
+ * or use implicit searching if enabled
+ */
 static char * setupSearch(const char * c)
 {
 	char * r = NULL, * url = NULL, * sp = NULL;
