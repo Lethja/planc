@@ -72,23 +72,32 @@ static void implicitSearch(char ** uri, char ** searchPtr
 
 /**
  * Remove the character at 'position' and replace it with 'ins'
- * Might realloc '*str' to a new position, be sure to account for this
+ * Make sure 'str' is big enough to fit the result
  */
 static void escapeChar(char ** str, char * position, const char * ins)
 {
-	size_t len = strlen(*str) + strlen(ins) + 1;
-	size_t idx = strlen(*str) - strlen(position);
 	char * tmpcat = malloc(strlen(ins)+strlen(position)+1);
 	strcpy(tmpcat, ins);
 	strcat(tmpcat, position+1);
-	char * nstr = realloc(*str, len);
-	if(nstr)
-	{
-		nstr[idx] = '\0';
-		strcat(nstr, tmpcat);
-		*str = nstr;
-	}
+	strcpy(position, tmpcat);
 	free(tmpcat);
+}
+
+/**
+ * Calculate how big the EscapeChar version of the string will be
+ * allows you to allocate enough space on the heap once rather then
+ * constantly calling realloc()
+ */
+static size_t countEscapeChar(const char * str)
+{
+	size_t r = 0;
+	char * i = (char *) str;
+	while(i = strchrany(i, ":"))
+	{
+		r += 2;
+		i++;
+	}
+	return r;
 }
 
 /**
@@ -98,8 +107,9 @@ static void escapeChar(char ** str, char * position, const char * ins)
  */
 static char * formatQuery(char * url, char ** q)
 {
-	size_t s = strlen(url)+strlen(*q)+1, i = strlen(url);
-	char * r = malloc(s);
+	size_t s = strlen(url)+strlen(*q), i = strlen(url);
+	size_t padding = countEscapeChar(*q);
+	char * r = malloc(s+padding+1);
 	strcpy(r,url);
 	strcat(r,*q);
 	while(r[i] != '\0')
@@ -143,7 +153,7 @@ static char * setupSearch(const char * c)
 	else //Could be a implicit search, use default search if available
 	{
 setupSearch_tryImplicit:
-		if(!g_settings_get_boolean(G_SETTINGS, "planc-search-implicit"))
+		if(g_settings_get_boolean(G_SETTINGS, "planc-search-implicit"))
 			if(!strchrany(c, ".:/\\"))
 				implicitSearch(&url, &sp, c);
 	}
