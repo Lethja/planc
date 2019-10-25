@@ -43,10 +43,6 @@ static char * strchrany(const char * haystack, const char * needles)
 static void implicitSearch(char ** uri, char ** searchPtr
 	,const char * addr)
 {
-	if(!g_settings_get_boolean(G_SETTINGS
-			,"planc-search-implicit"))
-		return;
-
 	char * key = g_settings_get_string(G_SETTINGS, "planc-search");
 	if(key)
 	{
@@ -60,6 +56,45 @@ static void implicitSearch(char ** uri, char ** searchPtr
 		}
 		free(key);
 	}
+}
+
+static void escapeChar(char ** str, char * position, const char * ins)
+{
+	size_t len = strlen(*str) + strlen(ins) + 1;
+	size_t idx = strlen(*str) - strlen(position);
+	char * tmpcat = malloc(strlen(ins)+strlen(position)+1);
+	strcpy(tmpcat, ins);
+	strcat(tmpcat, position+1);
+	char * nstr = realloc(*str, len);
+	if(nstr)
+	{
+		nstr[idx] = '\0';
+		strcat(nstr, tmpcat);
+		*str = nstr;
+	}
+	free(tmpcat);
+}
+
+static char * formatQuery(char * url, char ** q)
+{
+	size_t s = strlen(url)+strlen(*q)+1, i = strlen(url);
+	char * r = malloc(s);
+	strcpy(r,url);
+	strcat(r,*q);
+	while(r[i] != '\0')
+	{
+		switch(r[i])
+		{
+			case ' ':
+				r[i] = '+';
+			break;
+			case ':':
+				escapeChar(&r, r+i, "%3A");
+			break;
+		}
+		i++;
+	}
+	return r;
 }
 
 static char * setupSearch(const char * c)
@@ -81,24 +116,17 @@ static char * setupSearch(const char * c)
 				sp++;
 		}
 	}
-	else //Implicit search, use default search if available
+	else //Could be a implicit search, use default search if available
 	{
 setupSearch_tryImplicit:
-		if(!strchrany(c, ".:/\\"))
-			implicitSearch(&url, &sp, c);
+		if(!g_settings_get_boolean(G_SETTINGS, "planc-search-implicit"))
+			if(!strchrany(c, ".:/\\"))
+				implicitSearch(&url, &sp, c);
 	}
 
 	if(url)
 	{
-		size_t s = strlen(url)+strlen(sp)+1;
-		r = malloc(s);
-		strcpy(r,url);
-		strcat(r,sp);
-		for(size_t i = strlen(url)+1; i < s; i++)
-		{
-			if(r[i] == ' ')
-				r[i] = '+';
-		}
+		r = formatQuery(url, &sp);
 		free(url);
 	}
 	return r;
@@ -131,14 +159,11 @@ char * prepAddress(const char * c)
                 break;
         }
         if(i == strlen(c)) //This is a dial
-        {
             r = sql_speed_dial_get(atoi(c));
-        }
         else if(c[0] != '/') //This isn't an absolute directory
-        {
 			r = setupSearch(c);
-        }
-        if(!r)
+
+        if(!r) //Not a search query
             r = (char *) c;
         //Check if protocol portion of the url exists or add it
         p = strstr(r,"://");
