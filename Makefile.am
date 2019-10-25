@@ -6,7 +6,7 @@ desktop_DATA = planc.desktop
 
 bin_PROGRAMS = planc
 plancdir = $(bindir)
-planc_SOURCES = main.c settings.c history.c main.h settings.h history.h download.c download.h plan.c plan.h
+planc_SOURCES = main.c settings.c history.c main.h settings.h history.h download.c download.h plan.c plan.h uri.c uri.h
 if GNOME
 planc_SOURCES += gmenu.c gmenu.h
 endif
