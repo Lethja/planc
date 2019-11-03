@@ -633,6 +633,18 @@ static void c_act(GtkWidget * widget, PlancWindow * v)
     gtk_widget_grab_focus(WK_CURRENT_TAB_WIDGET(call->tabs));
 }
 
+gboolean c_wv_script_dialog (WebKitWebView * wv, WebKitScriptDialog *d
+	,PlancWindow * v)
+{
+	if(webkit_script_dialog_get_dialog_type(d)
+	== WEBKIT_SCRIPT_DIALOG_BEFORE_UNLOAD_CONFIRM)
+	{
+		GtkWidget * w = gtk_widget_get_toplevel(GTK_WIDGET(wv));
+		gtk_window_present(GTK_WINDOW(w));
+	}
+	return false;
+}
+
 gboolean c_wv_zoom_wheel(WebKitWebView * wv, GdkEventScroll * e
     ,void * v)
 {
@@ -2003,6 +2015,8 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
         ,G_CALLBACK(c_wv_hit), v);
     g_signal_connect(wv, "focus-in-event"
         ,G_CALLBACK(c_wv_focus), v);
+    g_signal_connect(wv, "script-dialog"
+        ,G_CALLBACK(c_wv_script_dialog), v);
     g_signal_connect(wv, "scroll-event"
         ,G_CALLBACK(c_wv_zoom_wheel), NULL);
     g_signal_connect(wv, "close", G_CALLBACK(c_wv_close), v);
