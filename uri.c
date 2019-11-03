@@ -24,14 +24,11 @@ static void strtcpy(char * dest, const char * src, const char token)
  */
 static char * strchrany(const char * haystack, const char * needles)
 {
-	char * r = (char *) haystack;
-	char * n = (char *) needles;
-	size_t h_st, n_st, n_max;
-	h_st = strlen(haystack);
-	n_st = n_max = strlen(needles);
-	if(!h_st || !n_st)
+	char * r = (char *) haystack, * n = (char *) needles;
+	size_t h_st = strlen(haystack), n_st = strlen(needles);
+	if(!h_st || !n_st) //Early return
 		return NULL;
-
+	size_t n_max = n_st; //strlen(needles)
 	do
 	{
 		do
@@ -42,8 +39,8 @@ static char * strchrany(const char * haystack, const char * needles)
 			n_st--;
 		} while (n_st);
 		r++;
-		n = (char *) needles;
 		h_st--;
+		n = (char *) needles;
 		n_st = n_max;
 	} while (h_st);
 	return NULL;

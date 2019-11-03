@@ -28,8 +28,7 @@ static int treeIter(void * store, int count, char **data
 		gtk_tree_store_set(store, &iter, 0
 		,data[0], 1, data[1]
 		,2, s ? s : "Unknown", -1);
-		if(s)
-			g_free(s);
+		g_free(s);
 		g_date_time_unref(d);
 	}
 	return 0;
