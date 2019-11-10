@@ -94,7 +94,7 @@ static const char * selectDomainPolicy = "SELECT * FROM `POLICY` " \
 "WHERE (INSTR(?,`FROM`) OR `FROM` IS NULL) " \
 "AND (INSTR(?,`TO`) OR `TO` IS NULL)";
 
-static const char * createPolicy = "PRAGMA synchronous=OFF;" \
+static const char * createPolicy = "PRAGMA synchronous=ON;" \
 "CREATE TABLE IF NOT EXISTS `POLICY`(`FROM` TEXT, `TO` TEXT," \
 "`ALLOW` INTERGER)";
 

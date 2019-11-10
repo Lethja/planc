@@ -1973,6 +1973,7 @@ GtkNotebook * get_web_view_notebook()
 static void c_app_init(GtkApplication * app, void * v)
 {
     G_SETTINGS = g_settings_new("priv.dis.planc");
+    InitWebContext(app);
     G_GTK_SETTINGS = gtk_settings_get_default();
 #ifdef PLANC_FEATURE_GNOME
     G_GMENU = preferGmenu();
@@ -1996,7 +1997,6 @@ static void c_app_init(GtkApplication * app, void * v)
 	g_action_map_add_action_entries (G_ACTION_MAP (G_APP), actions
 		,G_N_ELEMENTS (actions), G_APP);
 #endif
-    InitWebContext(app);
 }
 
 int main(int argc, char **argv)
