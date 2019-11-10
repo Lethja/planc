@@ -1339,18 +1339,53 @@ static void c_wk_ext_init(WebKitWebContext *context, gpointer user_data)
 }
 #endif
 
-static void InitWebContext()
+static void ErrorMsg(gchar * title, gchar * message)
 {
-    char * datadir;
-    char * cachedir;
-    char * cookiedir;
+	GtkWidget * d = gtk_message_dialog_new(NULL, 0, GTK_MESSAGE_ERROR
+		,GTK_BUTTONS_CLOSE, "");
+	gtk_message_dialog_set_markup(GTK_MESSAGE_DIALOG (d), message);
+	gtk_window_set_title(GTK_WINDOW (d), title);
+	gtk_dialog_run(GTK_DIALOG (d));
+	gtk_widget_destroy(d);
+}
 
-    datadir = g_build_filename(g_get_user_data_dir(),PACKAGE_NAME
-        ,NULL);
-    cachedir = g_build_filename(g_get_user_cache_dir(),PACKAGE_NAME
-        ,NULL);
-    cookiedir = g_build_filename(g_get_user_data_dir(),PACKAGE_NAME
-        ,"cookies",NULL);
+char wkVersionOk(guint major, guint minor, guint micro)
+{
+	guint j = webkit_get_major_version()
+		,n = webkit_get_minor_version()
+		,c = webkit_get_micro_version();
+	if(j >= major && n >= minor && c >= micro)
+		return 1;
+
+	return 0;
+}
+
+static void InitWebContext(GtkApplication * app)
+{
+	char * config = g_build_filename(g_get_user_config_dir()
+        ,PACKAGE_NAME, NULL);
+    if(!g_file_test(config, G_FILE_TEST_IS_DIR))
+    {
+        if(g_mkdir(config, S_IRWXU))
+		{
+			gchar * str = g_strconcat
+				("Unable to create configuration directory <b>'"
+				,config, "</b>'. Plan C cannot continue.", NULL);
+			g_free(config);
+			ErrorMsg("Startup Error - Plan C", str);
+			g_free(str);
+			g_application_quit(G_APPLICATION(app));
+			return;
+		}
+    }
+    g_free(config);
+
+    char * datadir = g_build_filename(g_get_user_data_dir()
+		,PACKAGE_NAME, NULL);
+    char * cachedir = g_build_filename(g_get_user_cache_dir()
+		,PACKAGE_NAME, NULL);
+    char * cookiedir = g_build_filename(g_get_user_data_dir()
+		,PACKAGE_NAME, "cookies",NULL);
     WebKitWebsiteDataManager * d = webkit_website_data_manager_new
         ("base-data-directory", cachedir, "base-cache-directory"
         ,datadir, NULL);
@@ -1363,7 +1398,8 @@ static void InitWebContext()
     g_signal_connect(G_WKC, "initialize-web-extensions"
         ,G_CALLBACK(c_wk_ext_init), NULL);
 #endif
-    if(g_settings_get_boolean(G_SETTINGS,"webkit-ppt"))
+    if(wkVersionOk(2,26,0) //Shared model deprecated above this version
+    || g_settings_get_boolean(G_SETTINGS,"webkit-ppt"))
         webkit_web_context_set_process_model(G_WKC
             ,WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
     else
@@ -1802,7 +1838,8 @@ static void c_app_act(GApplication * app, GApplicationCommandLine * cmd
 
 static void c_app_exit(GApplication * app, void * v)
 {
-    //TODO: History cleanup here
+	if(!G_SETTINGS)
+		return;
     time_t t = time(NULL);
     if(t > 31557600)
     {
@@ -1936,13 +1973,6 @@ GtkNotebook * get_web_view_notebook()
 static void c_app_init(GtkApplication * app, void * v)
 {
     G_SETTINGS = g_settings_new("priv.dis.planc");
-    char * config = g_build_filename(g_get_user_config_dir()
-        ,PACKAGE_NAME ,NULL);
-    if(!g_file_test(config, G_FILE_TEST_IS_DIR))
-    {
-        g_mkdir(config, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-    }
-    g_free(config);
     G_GTK_SETTINGS = gtk_settings_get_default();
 #ifdef PLANC_FEATURE_GNOME
     G_GMENU = preferGmenu();
@@ -1966,7 +1996,7 @@ static void c_app_init(GtkApplication * app, void * v)
 	g_action_map_add_action_entries (G_ACTION_MAP (G_APP), actions
 		,G_N_ELEMENTS (actions), G_APP);
 #endif
-    InitWebContext();
+    InitWebContext(app);
 }
 
 int main(int argc, char **argv)

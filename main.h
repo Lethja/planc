@@ -76,4 +76,6 @@ WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v);
 void c_active_window(GtkWidget * widget, void * p
     ,PlancWindow * v);
 
+extern char wkVersionOk(guint major, guint minor, guint micro);
+
 void uninhibit_now(struct call_st * c, PlancWindow * v);

@@ -607,6 +607,16 @@ static GtkWidget * InitSettingTab_general()
 	GtkWidget * pt = gtk_check_button_new_with_label
 		("Enable Process Per Tab (Requires Restart)");
 
+	//Special case
+	if(wkVersionOk(2,26,0)) //Shared model deprecated above this version
+	{
+		gtk_widget_set_sensitive(pt, FALSE);
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pt), TRUE);
+	}
+	else
+		g_settings_bind (G_SETTINGS,"webkit-ppt",pt,"active",
+			G_SETTINGS_BIND_DEFAULT);
+
 	//Bind to setting
 	g_settings_bind (G_SETTINGS,"download-domain",dd,"active",
 		 G_SETTINGS_BIND_DEFAULT);
@@ -633,8 +643,6 @@ static GtkWidget * InitSettingTab_general()
 	g_settings_bind (G_SETTINGS,"webkit-js",js,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-java",jv,"active",
-		 G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (G_SETTINGS,"webkit-ppt",pt,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-dev",dv,"active",
 		 G_SETTINGS_BIND_DEFAULT);
