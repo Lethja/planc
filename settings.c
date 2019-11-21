@@ -732,22 +732,27 @@ static GtkWidget * InitSettingTab_general()
 	return scrl;
 }
 
-GtkWindow * InitSettingsWindow(PlancWindow * v)
+void InitSettingsWindow(PlancWindow * v)
 {
-	GtkWindow * r = (GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-	gtk_window_set_default_size(r,400,400);
-	gtk_window_set_position(r,GTK_WIN_POS_CENTER);
-	gtk_window_set_icon_name(r,"preferences-system-network");
-	gtk_window_set_title(r,"Settings - Plan C");
-
-	GtkWidget * nb = gtk_notebook_new();
-	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_general()
-		,gtk_label_new("General"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_search()
-		,gtk_label_new("Search"));
-	gtk_notebook_append_page(GTK_NOTEBOOK(nb), InitSettingTab_history()
-		,gtk_label_new("History"));
-	gtk_container_add((GtkContainer *) r, nb);
-	gtk_widget_show_all((GtkWidget *) r);
-	return r;
+	if(G_WIN_SETTINGS)
+		gtk_window_present(GTK_WINDOW(G_WIN_SETTINGS));
+	else
+	{
+		G_WIN_SETTINGS =
+			(GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
+		gtk_window_set_default_size(G_WIN_SETTINGS, 400, 400);
+		gtk_window_set_position(G_WIN_SETTINGS, GTK_WIN_POS_CENTER);
+		gtk_window_set_icon_name(G_WIN_SETTINGS
+			,"preferences-system-network");
+		gtk_window_set_title(G_WIN_SETTINGS, "Settings - Plan C");
+		GtkWidget * nb = gtk_notebook_new();
+		gtk_notebook_append_page(GTK_NOTEBOOK(nb)
+			,InitSettingTab_general(), gtk_label_new("General"));
+		gtk_notebook_append_page(GTK_NOTEBOOK(nb)
+			,InitSettingTab_search(), gtk_label_new("Search"));
+		gtk_notebook_append_page(GTK_NOTEBOOK(nb)
+			,InitSettingTab_history(), gtk_label_new("History"));
+		gtk_container_add((GtkContainer *) G_WIN_SETTINGS, nb);
+		gtk_widget_show_all((GtkWidget *) G_WIN_SETTINGS);
+	}
 }

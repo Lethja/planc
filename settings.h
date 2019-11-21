@@ -1,4 +1,3 @@
 #include <gio/gio.h>
 
-extern GtkWindow * GtkWSettings;
-GtkWindow * InitSettingsWindow();
+extern void InitSettingsWindow();
