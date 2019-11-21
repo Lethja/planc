@@ -50,6 +50,13 @@
 				Enabled by default for performance.
 			</description>
 		</key>
+		<key name="webkit-encoding" type="s">
+			<default l10n="messages">"utf-8"</default>
+			<summary>Default Encoding</summary>
+			<description>
+				The type of encoding to text encoding to use when webkit has no hints from metadata
+			</description>
+		</key>
 		<key name='webkit-hw' type='i'>
 			<default>1</default>
 			<range min="0" max="2"/>

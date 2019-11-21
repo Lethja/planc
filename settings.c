@@ -550,9 +550,14 @@ static GtkWidget * InitSettingTab_general()
 	gtk_widget_set_margin_bottom(GTK_WIDGET(vbox), 2);
 	gtk_container_add((GtkContainer *)vbox, PcFrame);
 	gtk_container_add((GtkContainer *)vbox, WkFrame);
-    gtk_container_add((GtkContainer *)scrl, vbox);
+	gtk_container_add((GtkContainer *)scrl, vbox);
 
-    //Init
+	//Init
+	GtkWidget * encBox = gtk_combo_box_text_new_with_entry();
+	gtk_combo_box_text_append_text((GtkComboBoxText *)encBox
+		,"iso-8859-1");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)encBox
+		,"utf-8");
     GtkWidget * tabBox = gtk_combo_box_text_new();
 	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
 		,"Horizontal");
@@ -649,6 +654,10 @@ static GtkWidget * InitSettingTab_general()
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 
+	g_settings_bind (G_SETTINGS,"webkit-encoding"
+		,GTK_ENTRY(gtk_bin_get_child(GTK_BIN(encBox))), "text"
+		,G_SETTINGS_BIND_DEFAULT);
+
 	//Connect events
 	g_signal_connect(mcmBox, "changed"
 		,G_CALLBACK(c_settings_cm), NULL);
@@ -702,10 +711,12 @@ static GtkWidget * InitSettingTab_general()
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,4,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,5,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(pt),0,6,2,1);
+	attachLabeledWidget(GTK_GRID(WkGrid), "Default Encoding"
+		,GTK_WIDGET(encBox),7);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Memory Cache Model"
-		,GTK_WIDGET(mcmBox),7);
+		,GTK_WIDGET(mcmBox),8);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Hardware Accelleration"
-		,GTK_WIDGET(hwaBox),8);
+		,GTK_WIDGET(hwaBox),9);
 	switch(webkit_web_context_get_cache_model(G_WKC))
 	{
 		case WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER:

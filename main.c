@@ -1498,6 +1498,8 @@ static void InitWebContext(GtkApplication * app)
         break;
     }
 
+    g_settings_bind(G_SETTINGS, "webkit-encoding", G_WKC_SETTINGS
+        ,"default-charset", G_SETTINGS_BIND_GET);
     webkit_settings_set_enable_page_cache(G_WKC_SETTINGS
         ,g_settings_get_boolean(G_SETTINGS,"webkit-cache"));
     webkit_settings_set_enable_java(G_WKC_SETTINGS
@@ -1516,10 +1518,8 @@ static void InitWebContext(GtkApplication * app)
     webkit_settings_set_enable_encrypted_media(G_WKC_SETTINGS
         ,g_settings_get_boolean(G_SETTINGS,"webkit-eme"));
 #endif
-
     g_object_set (G_OBJECT(G_WKC_SETTINGS), "enable-developer-extras"
         ,g_settings_get_boolean(G_SETTINGS,"webkit-dev"), NULL);
-
     g_signal_connect(G_WKC, "download-started"
         ,G_CALLBACK(c_download_start), NULL);
 }
