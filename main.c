@@ -1891,6 +1891,34 @@ static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
     }
 }
 
+static void parse_context_menu_user_data(WebKitContextMenu * cm
+	,const char ** selected_text)
+{
+  GVariantDict dict;
+
+  g_variant_dict_init (&dict, webkit_context_menu_get_user_data (cm));
+  g_variant_dict_lookup (&dict, "SelectedText", "&s", selected_text);
+}
+
+static gboolean c_wv_context(WebKitWebView * wv, WebKitContextMenu * cm
+	,GdkEvent * e, WebKitHitTestResult * hr, PlancWindow * v)
+{
+	const gchar * text = NULL;
+	parse_context_menu_user_data(cm, &text);
+	if(text)
+	{
+		SoupURI * uri = soup_uri_new(text);
+		if(uri)
+		{
+			soup_uri_free(uri);
+			g_debug("URI = %s\n", text);
+		}
+		else
+			g_debug("Search = %s\n", text);
+	}
+	return FALSE;
+}
+
 static void c_wv_close(WebKitWebView * wv, PlancWindow * v)
 {
     struct call_st * c = planc_window_get_call(v);
@@ -2043,6 +2071,8 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
     g_signal_connect(wv, "decide-policy", G_CALLBACK(c_policy), v);
     g_signal_connect(wv, "mouse-target-changed"
         ,G_CALLBACK(c_wv_hit), v);
+    g_signal_connect(wv, "context-menu"
+        ,G_CALLBACK(c_wv_context), v);
     g_signal_connect(wv, "focus-in-event"
         ,G_CALLBACK(c_wv_focus), v);
     g_signal_connect(wv, "script-dialog"
