@@ -63,7 +63,7 @@ void uninhibit_now(struct call_st * c, PlancWindow * v)
 #ifdef GDK_WINDOWING_X11
     if (GDK_IS_X11_DISPLAY(gdk_display_get_default()))
     {
-        gchar *cmd;
+        gchar * cmd;
         gint returncode;
         cmd = g_strdup_printf("xdg-screensaver resume %i"
             ,(int)GDK_WINDOW_XID(gtk_widget_get_window
@@ -72,23 +72,26 @@ void uninhibit_now(struct call_st * c, PlancWindow * v)
         if (returncode)
             g_print("'%s' failed with error %d", cmd
                 ,returncode);
-#ifndef NDEBUG
+
         else
+        {
+#ifndef NDEBUG
             g_debug("Uninhibited: %s", cmd);
 #endif
+            c->sign->inhibit = 0;
+        }
         g_free(cmd);
     }
     else
 #endif
-    if(c->sign->inhibit)
+    if(c->sign->inhibit) //Wayland or other gtk compatible inhibitor
     {
         gtk_application_uninhibit(G_APP, c->sign->inhibit);
 #ifndef NDEBUG
         g_debug("Uninhibited: %d", c->sign->inhibit);
 #endif
+        c->sign->inhibit = 0;
     }
-
-    c->sign->inhibit = 0;
 }
 
 static gboolean uninhibit(PlancWindow * v)
