@@ -864,6 +864,32 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
     return ebox;
 }
 
+static void c_g_open(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	GtkNotebook * nb = get_web_view_notebook();
+	gchar * uri = prepAddress(g_variant_get_string (v, NULL));
+	webkit_web_view_load_uri(WK_CURRENT_TAB(nb), uri);
+	free(uri);
+}
+
+static void c_g_open_tab(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	gchar * uri = prepAddress(g_variant_get_string (v, NULL));
+	PlancWindow * w = (PlancWindow *) get_web_view();
+	new_tab_ext(uri, w, TRUE);
+	free(uri);
+}
+
+static void c_g_open_win(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	gchar * uri = prepAddress(g_variant_get_string (v, NULL));
+	gchar ** mem = malloc(sizeof(gchar *)*2);
+	mem[1] = uri;
+	InitWindow(G_APPLICATION(G_APP), mem, 2);
+	free(uri);
+	free(mem);
+}
+
 #ifdef PLANC_FEATURE_DMENU
 static void c_g_close_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
@@ -899,6 +925,18 @@ static void newTabNotify()
 	g_application_send_notification(G_APPLICATION(G_APP), "nt", boop);
 }
 #endif
+
+static const GActionEntry G_actions[] =
+{
+	{ "open", c_g_open, "s" },
+	{ "opentab", c_g_open_tab, "s" },
+	{ "openwin", c_g_open_win, "s" }
+#ifdef PLANC_FEATURE_DMENU
+	,
+	{ "switchtab", c_g_show_tab },
+	{ "closetab", c_g_close_tab }
+#endif
+};
 
 static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
 {
@@ -1911,13 +1949,41 @@ static gboolean c_wv_context(WebKitWebView * wv, WebKitContextMenu * cm
 	if(text)
 	{
 		SoupURI * uri = soup_uri_new(text);
+		GAction * open = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
+			,"open");
+		GAction * opet = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
+			,"opentab");
+		GAction * opew = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
+			,"openwin");
+		GVariant * g = g_variant_new_string(text);
+		WebKitContextMenuItem * mi =
+			webkit_context_menu_item_new_separator();
+		webkit_context_menu_prepend (cm, mi);
 		if(uri)
 		{
 			soup_uri_free(uri);
-			g_debug("URI = %s\n", text);
+			mi = webkit_context_menu_item_new_from_gaction(opew
+				,"Open Link in New Window", g);
+			webkit_context_menu_prepend (cm, mi);
+			mi = webkit_context_menu_item_new_from_gaction(opet
+				,"Open Link in New Tab", g);
+			webkit_context_menu_prepend (cm, mi);
+			mi = webkit_context_menu_item_new_from_gaction(open
+				,"Open Link", g);
+			webkit_context_menu_prepend (cm, mi);
 		}
 		else
-			g_debug("Search = %s\n", text);
+		{
+			mi = webkit_context_menu_item_new_from_gaction(opew
+				,"Search in New Window", g);
+			webkit_context_menu_prepend (cm, mi);
+			mi = webkit_context_menu_item_new_from_gaction(opet
+				,"Search in New Tab", g);
+			webkit_context_menu_prepend (cm, mi);
+			mi = webkit_context_menu_item_new_from_gaction(open
+				,"Search", g);
+			webkit_context_menu_prepend (cm, mi);
+		}
 	}
 	return FALSE;
 }
@@ -2019,15 +2085,8 @@ static void c_app_init(GtkApplication * app, void * v)
     }
     g_free(p);
 #endif
-#ifdef PLANC_FEATURE_DMENU
-	static const GActionEntry actions[] =
-	{
-		{ "switchtab", c_g_show_tab },
-		{ "closetab", c_g_close_tab }
-	};
-	g_action_map_add_action_entries (G_ACTION_MAP (G_APP), actions
-		,G_N_ELEMENTS (actions), G_APP);
-#endif
+	g_action_map_add_action_entries (G_ACTION_MAP (G_APP), G_actions
+		,G_N_ELEMENTS (G_actions), G_APP);
 }
 
 int main(int argc, char **argv)
