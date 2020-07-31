@@ -1941,8 +1941,8 @@ static void parse_context_menu_user_data(WebKitContextMenu * cm
   g_variant_dict_lookup (&dict, "SelectedText", "&s", selected_text);
 }
 
-static gboolean c_wv_context(WebKitWebView * wv, WebKitContextMenu * cm
-	,GdkEvent * e, WebKitHitTestResult * hr, PlancWindow * v)
+static void createContextSearch(WebKitWebView * wv
+	,WebKitContextMenu * cm)
 {
 	const gchar * text = NULL;
 	parse_context_menu_user_data(cm, &text);
@@ -1985,6 +1985,56 @@ static gboolean c_wv_context(WebKitWebView * wv, WebKitContextMenu * cm
 			webkit_context_menu_prepend (cm, mi);
 		}
 	}
+}
+
+static void createContextLink(WebKitWebView * wv
+	,WebKitContextMenu * cm, WebKitHitTestResult * hr)
+{
+	const gchar * text = webkit_hit_test_result_get_link_uri(hr);
+	if(text)
+	{
+		GAction * open = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
+			,"open");
+		GAction * opet = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
+			,"opentab");
+		GAction * opew = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
+			,"openwin");
+		GVariant * g = g_variant_new_string(text);
+		WebKitContextMenuItem * mi
+			= webkit_context_menu_item_new_from_stock_action_with_label
+			(WEBKIT_CONTEXT_MENU_ACTION_DOWNLOAD_LINK_TO_DISK
+			,"Save As...");
+		webkit_context_menu_prepend (cm, mi);
+		mi = webkit_context_menu_item_new_from_stock_action_with_label
+			(WEBKIT_CONTEXT_MENU_ACTION_COPY_LINK_TO_CLIPBOARD
+			,"Copy Link");
+		webkit_context_menu_prepend (cm, mi);
+		mi =
+			webkit_context_menu_item_new_separator();
+		webkit_context_menu_prepend (cm, mi);
+		mi = webkit_context_menu_item_new_from_gaction(opew
+			,"Open Link in New Window", g);
+		webkit_context_menu_prepend (cm, mi);
+		mi = webkit_context_menu_item_new_from_gaction(opet
+			,"Open Link in New Tab", g);
+		webkit_context_menu_prepend (cm, mi);
+		mi = webkit_context_menu_item_new_from_gaction(open
+			,"Open Link", g);
+		webkit_context_menu_prepend (cm, mi);
+	}
+}
+
+
+static gboolean c_wv_context(WebKitWebView * wv, WebKitContextMenu * cm
+	,GdkEvent * e, WebKitHitTestResult * hr, PlancWindow * v)
+{
+	if(webkit_hit_test_result_context_is_link(hr))
+	{
+		webkit_context_menu_remove_all(cm);
+		createContextLink(wv, cm, hr);
+	}
+	else if(webkit_hit_test_result_context_is_selection(hr))
+		createContextSearch(wv, cm);
 	return FALSE;
 }
 
