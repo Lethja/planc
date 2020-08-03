@@ -1941,7 +1941,7 @@ static void parse_context_menu_user_data(WebKitContextMenu * cm
   g_variant_dict_lookup (&dict, "SelectedText", "&s", selected_text);
 }
 
-static void createContextSearch(WebKitWebView * wv
+static void createContextSelect(WebKitWebView * wv
 	,WebKitContextMenu * cm)
 {
 	const gchar * text = NULL;
@@ -1956,12 +1956,16 @@ static void createContextSearch(WebKitWebView * wv
 		GAction * opew = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
 			,"openwin");
 		GVariant * g = g_variant_new_string(text);
-		WebKitContextMenuItem * mi =
-			webkit_context_menu_item_new_separator();
+		WebKitContextMenuItem * mi;
+		mi = webkit_context_menu_item_new_from_stock_action_with_label
+			(WEBKIT_CONTEXT_MENU_ACTION_COPY, "Copy");
+		webkit_context_menu_prepend (cm, mi);
+		mi = webkit_context_menu_item_new_separator();
 		webkit_context_menu_prepend (cm, mi);
 		if(uri)
 		{
 			soup_uri_free(uri);
+			webkit_context_menu_prepend (cm, mi);
 			mi = webkit_context_menu_item_new_from_gaction(opew
 				,"Open Link in New Window", g);
 			webkit_context_menu_prepend (cm, mi);
@@ -1984,6 +1988,8 @@ static void createContextSearch(WebKitWebView * wv
 				,"Search", g);
 			webkit_context_menu_prepend (cm, mi);
 		}
+		mi = webkit_context_menu_item_new_separator();
+		webkit_context_menu_prepend (cm, mi);
 	}
 }
 
@@ -2003,7 +2009,7 @@ static void createContextLink(WebKitWebView * wv
 		WebKitContextMenuItem * mi
 			= webkit_context_menu_item_new_from_stock_action_with_label
 			(WEBKIT_CONTEXT_MENU_ACTION_DOWNLOAD_LINK_TO_DISK
-			,"Save As...");
+			,"Save Link");
 		webkit_context_menu_prepend (cm, mi);
 		mi = webkit_context_menu_item_new_from_stock_action_with_label
 			(WEBKIT_CONTEXT_MENU_ACTION_COPY_LINK_TO_CLIPBOARD
@@ -2021,20 +2027,80 @@ static void createContextLink(WebKitWebView * wv
 		mi = webkit_context_menu_item_new_from_gaction(open
 			,"Open Link", g);
 		webkit_context_menu_prepend (cm, mi);
+		mi = webkit_context_menu_item_new_separator();
+		webkit_context_menu_prepend (cm, mi);
 	}
 }
 
+static void createContextImage(WebKitWebView * wv
+	,WebKitContextMenu * cm)
+{
+	WebKitContextMenuItem * mi
+		= webkit_context_menu_item_new_from_stock_action_with_label
+		(WEBKIT_CONTEXT_MENU_ACTION_DOWNLOAD_IMAGE_TO_DISK
+		,"Save Image");
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action_with_label
+		(WEBKIT_CONTEXT_MENU_ACTION_COPY_IMAGE_URL_TO_CLIPBOARD
+		,"Copy Image Link");
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action_with_label
+		(WEBKIT_CONTEXT_MENU_ACTION_COPY_IMAGE_TO_CLIPBOARD
+		,"Copy Image");
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action_with_label
+		(WEBKIT_CONTEXT_MENU_ACTION_OPEN_IMAGE_IN_NEW_WINDOW
+		,"View Image");
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_separator();
+	webkit_context_menu_prepend (cm, mi);
+}
+
+static void createContextMedia(WebKitWebView * wv
+	,WebKitContextMenu * cm)
+{
+	WebKitContextMenuItem * mi
+		= webkit_context_menu_item_new_from_stock_action
+		(WEBKIT_CONTEXT_MENU_ACTION_MEDIA_MUTE);
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action
+		(WEBKIT_CONTEXT_MENU_ACTION_TOGGLE_MEDIA_LOOP);
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action
+		(WEBKIT_CONTEXT_MENU_ACTION_TOGGLE_MEDIA_CONTROLS);
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_separator();
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action_with_label
+		(WEBKIT_CONTEXT_MENU_ACTION_DOWNLOAD_VIDEO_TO_DISK
+		,"Save Multimedia");
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action_with_label
+		(WEBKIT_CONTEXT_MENU_ACTION_COPY_VIDEO_LINK_TO_CLIPBOARD
+		,"Copy Multimedia Link");
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_from_stock_action_with_label
+		(WEBKIT_CONTEXT_MENU_ACTION_OPEN_VIDEO_IN_NEW_WINDOW
+		,"View Multimedia");
+	webkit_context_menu_prepend (cm, mi);
+	mi = webkit_context_menu_item_new_separator();
+	webkit_context_menu_prepend (cm, mi);
+}
 
 static gboolean c_wv_context(WebKitWebView * wv, WebKitContextMenu * cm
 	,GdkEvent * e, WebKitHitTestResult * hr, PlancWindow * v)
 {
+	if(webkit_hit_test_result_context_is_editable(hr))
+		return FALSE;
+	webkit_context_menu_remove_all(cm);
+	if(webkit_hit_test_result_context_is_image(hr))
+		createContextImage(wv, cm);
+	if(webkit_hit_test_result_context_is_media(hr))
+		createContextMedia(wv, cm);
 	if(webkit_hit_test_result_context_is_link(hr))
-	{
-		webkit_context_menu_remove_all(cm);
 		createContextLink(wv, cm, hr);
-	}
 	else if(webkit_hit_test_result_context_is_selection(hr))
-		createContextSearch(wv, cm);
+		createContextSelect(wv, cm);
 	return FALSE;
 }
 
