@@ -591,10 +591,10 @@ static gboolean c_accl_rels(GtkWidget * w, GdkEvent * e
         &&(!gtk_menu_shell_get_selected_item(
             GTK_MENU_SHELL(c->menu->menu))))
             gtk_widget_hide(c->menu->menu);
-        return FALSE;
 #endif
         }
     }
+    return FALSE;
 }
 
 void c_active_window(GtkWidget * widget, void * p
