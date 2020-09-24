@@ -83,12 +83,12 @@ static gboolean dlstrstr(GtkTreeModel * model, GtkTreeIter * iter
 	return FALSE;
 }
 
-static void openFile(const gchar * file)
+void openFile(const gchar * file)
 {
 	pid_t pid = fork();
 	if(pid == 0) //This is the child process
 	{
-		execlp("xdg-open","xdg-open",file,NULL);
+		execlp("xdg-open", "xdg-open", file, NULL);
 		exit(127); // only if execlp fails
 	}
 	else //This is the parent process

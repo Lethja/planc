@@ -776,6 +776,24 @@ static void c_loads(WebKitWebView * wv, WebKitWebResource * res
         (WK_CURRENT_TAB(call->tabs)));
 }
 
+static gboolean c_load_fail(WebKitWebView * wv, WebKitLoadEvent e
+	,gchar * furi, GError * err, void * v)
+{
+	if(e == WEBKIT_LOAD_STARTED)
+	{
+		//printf("%s\n", g_quark_to_string(err->domain));
+		if(err->domain == WEBKIT_POLICY_ERROR)
+		{
+			if (err->code == WEBKIT_POLICY_ERROR_CANNOT_SHOW_URI)
+			{
+				printf("%s\n", furi);
+				openFile(furi);
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
+}
 
 static void c_load(WebKitWebView * webv, WebKitLoadEvent evt
     ,PlancWindow * v)
@@ -2230,6 +2248,7 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
 {
     g_signal_connect(wv, "create", G_CALLBACK(c_new_tab_related), v);
     g_signal_connect(wv, "load-changed", G_CALLBACK(c_load), v);
+    g_signal_connect(wv, "load-failed", G_CALLBACK(c_load_fail), v);
     g_signal_connect(wv, "resource-load-started", G_CALLBACK(c_loads)
         ,v);
     g_signal_connect(wv, "notify::title", G_CALLBACK(c_update_title)

@@ -179,7 +179,7 @@ char * prepAddress(const char * c)
     /*Check if speed dial or search entry
      * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
     */
-    p = strstr(c,"://");
+    p = strchr(c, ':');
     if(!p)
     {
         char * r = NULL;
