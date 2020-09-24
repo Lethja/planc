@@ -781,14 +781,18 @@ static gboolean c_load_fail(WebKitWebView * wv, WebKitLoadEvent e
 {
 	if(e == WEBKIT_LOAD_STARTED)
 	{
-		//printf("%s\n", g_quark_to_string(err->domain));
 		if(err->domain == WEBKIT_POLICY_ERROR)
 		{
-			if (err->code == WEBKIT_POLICY_ERROR_CANNOT_SHOW_URI)
+			switch (err->code)
 			{
-				printf("%s\n", furi);
-				openFile(furi);
-				return TRUE;
+				case WEBKIT_POLICY_ERROR_CANNOT_SHOW_URI:
+					if(g_settings_get_boolean(G_SETTINGS
+						,"planc-forward-unknown-protocol"))
+					{
+						openFile(furi);
+						return TRUE;
+					}
+				break;
 			}
 		}
 	}

@@ -611,6 +611,8 @@ static GtkWidget * InitSettingTab_general()
 		("Enable Plugins");
 	GtkWidget * pt = gtk_check_button_new_with_label
 		("Enable Process Per Tab (Requires Restart)");
+	GtkWidget * up = gtk_check_button_new_with_label
+		("Forward unknown protocol links to the operating system");
 
 	//Special case
 	if(wkVersionOk(2,26,0)) //Shared model deprecated above this version
@@ -623,6 +625,8 @@ static GtkWidget * InitSettingTab_general()
 			G_SETTINGS_BIND_DEFAULT);
 
 	//Bind to setting
+	g_settings_bind (G_SETTINGS, "planc-forward-unknown-protocol", up
+		,"active", G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"download-domain",dd,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	#ifdef PLANC_FEATURE_GNOME
@@ -702,8 +706,9 @@ static GtkWidget * InitSettingTab_general()
 	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(dd),0,2,2,1);
 	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ii),0,3,2,1);
 	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,4,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(up),0,5,2,1);
 	attachLabeledWidget(GTK_GRID(PcGrid), "Default Tab Layout"
-		,GTK_WIDGET(tabBox),5);
+		,GTK_WIDGET(tabBox),6);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,0,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,1,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,2,2,1);
