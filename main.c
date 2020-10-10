@@ -776,6 +776,19 @@ static void c_loads(WebKitWebView * wv, WebKitWebResource * res
         (WK_CURRENT_TAB(call->tabs)));
 }
 
+static void unknownProtocolNotify(gchar * uri)
+{
+	GNotification * boop
+		= g_notification_new("Other Protocol - Plan C");
+	g_notification_set_body(boop
+		,"Plan C dosen't know how to handle this protocol.");
+	g_notification_set_icon(boop, g_icon_new_for_string("web-browser"
+		,NULL));
+	g_notification_add_button_with_target(boop
+		,"Open with operating system", "app.openfile", "s", uri);
+	g_application_send_notification(G_APPLICATION(G_APP), "up", boop);
+}
+
 static gboolean c_load_fail(WebKitWebView * wv, WebKitLoadEvent e
 	,gchar * furi, GError * err, void * v)
 {
@@ -789,7 +802,7 @@ static gboolean c_load_fail(WebKitWebView * wv, WebKitLoadEvent e
 					if(g_settings_get_boolean(G_SETTINGS
 						,"planc-forward-unknown-protocol"))
 					{
-						openFile(furi);
+						unknownProtocolNotify(furi);
 						return TRUE;
 					}
 				break;
@@ -912,6 +925,13 @@ static void c_g_open_win(GSimpleAction * a, GVariant * v, gpointer p)
 	free(mem);
 }
 
+static void c_g_open_file(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	g_application_withdraw_notification(G_APPLICATION(G_APP), "up");
+	gchar * uri = g_variant_get_string (v, NULL);
+	openFile(uri);
+}
+
 #ifdef PLANC_FEATURE_DMENU
 static void c_g_close_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
@@ -952,7 +972,8 @@ static const GActionEntry G_actions[] =
 {
 	{ "open", c_g_open, "s" },
 	{ "opentab", c_g_open_tab, "s" },
-	{ "openwin", c_g_open_win, "s" }
+	{ "openwin", c_g_open_win, "s" },
+	{ "openfile", c_g_open_file, "s"}
 #ifdef PLANC_FEATURE_DMENU
 	,
 	{ "switchtab", c_g_show_tab },
