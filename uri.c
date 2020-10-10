@@ -141,16 +141,18 @@ static char * setupSearch(const char * c)
 			strtcpy(key,c,' ');
 			sql_search_get(key, NULL, &url);
 			free(key);
-			if(!url)
-				goto setupSearch_tryImplicit;
+			if(!url && g_settings_get_boolean(G_SETTINGS
+				,"planc-search-implicit"))
+				implicitSearch(&url, &sp, c);
 			else //Explicit search. Move sp over the first space
 				sp++;
 		}
 	}
 	else //Could be a implicit search, use default search if available
 	{
-setupSearch_tryImplicit:
 		if(g_settings_get_boolean(G_SETTINGS, "planc-search-implicit"))
+		/* Since we've already determined there's no space. Don't search
+		 * if any symbols commonly used in addresses are found */
 			if(!strchrany(c, ".:/\\"))
 				implicitSearch(&url, &sp, c);
 	}
@@ -192,7 +194,7 @@ char * prepAddress(const char * c)
         if(i == strlen(c)) //This is a dial
             r = sql_speed_dial_get(atoi(c));
         else if(c[0] != '/') //This isn't an absolute directory
-			r = setupSearch(c);
+            r = setupSearch(c);
 
         if(!r) //Not a search query
             r = (char *) c;
