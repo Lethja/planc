@@ -779,13 +779,19 @@ static void c_loads(WebKitWebView * wv, WebKitWebResource * res
 static void unknownProtocolNotify(gchar * uri)
 {
 	GNotification * boop
-		= g_notification_new("Other Protocol - Plan C");
+		= g_notification_new("Unknown Protocol - Plan C");
+	gchar * body
+		= g_strdup_printf("Plan C dosen't know how to handle "
+		"this protocol:\n\n '%s' \n\nIt's possible another program on "
+		"the system does. Only 'Forward to System'"
+		" if you trust this link", uri);
 	g_notification_set_body(boop
-		,"Plan C dosen't know how to handle this protocol.");
+		,body);
+	g_free(body);
 	g_notification_set_icon(boop, g_icon_new_for_string("web-browser"
 		,NULL));
 	g_notification_add_button_with_target(boop
-		,"Open with operating system", "app.openfile", "s", uri);
+		,"Forward to System", "app.openfile", "s", uri);
 	g_application_send_notification(G_APPLICATION(G_APP), "up", boop);
 }
 
@@ -928,7 +934,7 @@ static void c_g_open_win(GSimpleAction * a, GVariant * v, gpointer p)
 static void c_g_open_file(GSimpleAction * a, GVariant * v, gpointer p)
 {
 	g_application_withdraw_notification(G_APPLICATION(G_APP), "up");
-	gchar * uri = g_variant_get_string (v, NULL);
+	const gchar * uri = g_variant_get_string (v, NULL);
 	openFile(uri);
 }
 
