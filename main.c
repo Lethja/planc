@@ -20,8 +20,6 @@ GtkWidget * lasttab = NULL;
 
 GtkApplication * G_APP          = NULL;
 GSettings * G_SETTINGS          = NULL;
-GtkWindow * G_HISTORY           = NULL;
-GtkWindow * G_DOWNLOAD          = NULL;
 WebKitSettings * G_WKC_SETTINGS = NULL;
 WebKitWebContext * G_WKC        = NULL;
 GtkSettings * G_GTK_SETTINGS    = NULL;

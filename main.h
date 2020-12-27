@@ -22,8 +22,6 @@
 
 extern GtkApplication * G_APP;
 extern GSettings * G_SETTINGS;
-extern GtkWindow * G_HISTORY;
-extern GtkWindow * G_DOWNLOAD;
 extern WebKitSettings * G_WKC_SETTINGS;
 extern WebKitWebContext * G_WKC; //Global WebKit Context
 

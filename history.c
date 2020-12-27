@@ -1,7 +1,10 @@
 #define _GNU_SOURCE
+
 #include "main.h"
 #include "history.h"
 #include "libdatabase.h"
+
+static GtkWindow * G_HISTORY = NULL;
 
 enum
 {
@@ -175,6 +178,11 @@ static void history_load_data_result (GObject * obj, GAsyncResult * res
 	store = history_load_data_finish (obj, res, NULL);
 }
 
+static void c_on_destroy(GtkWidget * w)
+{
+	G_HISTORY = NULL;
+}
+
 extern void InitHistoryWindow(void * v)
 {
 	if(G_HISTORY)
@@ -282,6 +290,7 @@ extern void InitHistoryWindow(void * v)
 		,gdk_cursor_new_from_name(gdk_display_get_default()
 		,"default"));
 
-    gtk_widget_show_all((GtkWidget *) G_HISTORY);
-    return;
+	gtk_widget_show_all((GtkWidget *) G_HISTORY);
+	g_signal_connect(G_HISTORY, "destroy"
+		,G_CALLBACK(c_on_destroy), NULL);
 }

@@ -1,14 +1,16 @@
 #define _GNU_SOURCE
-#include "main.h"
-#include "download.h"
-#include "libdatabase.h"
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <math.h>
 #include <glib.h>
 #include <glib/gstdio.h>
+
+#include "main.h"
+#include "download.h"
+#include "libdatabase.h"
 #include "libdomain.h"
 
+static GtkWindow * G_DOWNLOAD = NULL;
 static const gchar * G_search;
 static GtkTreeStore * G_store;
 
@@ -490,6 +492,11 @@ static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
 	gtk_tree_model_filter_refilter(f);
 }
 
+static void c_on_destroy(GtkWidget * w)
+{
+	G_DOWNLOAD = NULL;
+}
+
 void InitDownloadWindow()
 {
 	if(G_DOWNLOAD)
@@ -586,6 +593,7 @@ void InitDownloadWindow()
 	gtk_tree_view_column_set_resizable(column, TRUE);
 	gtk_container_add(GTK_CONTAINER (scrollWin), tree);
 	gtk_container_add(GTK_CONTAINER(G_DOWNLOAD), Vbox);
-    gtk_widget_show_all((GtkWidget *) G_DOWNLOAD);
-    return;
+	gtk_widget_show_all((GtkWidget *) G_DOWNLOAD);
+	g_signal_connect(G_DOWNLOAD, "destroy"
+		,G_CALLBACK(c_on_destroy), NULL);
 }

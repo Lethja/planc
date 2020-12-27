@@ -737,6 +737,11 @@ static GtkWidget * InitSettingTab_general()
 	return scrl;
 }
 
+static void c_on_destroy(GtkWidget * w)
+{
+	G_WIN_SETTINGS = NULL;
+}
+
 void InitSettingsWindow(PlancWindow * v)
 {
 	if(G_WIN_SETTINGS)
@@ -759,5 +764,7 @@ void InitSettingsWindow(PlancWindow * v)
 			,InitSettingTab_history(), gtk_label_new("History"));
 		gtk_container_add((GtkContainer *) G_WIN_SETTINGS, nb);
 		gtk_widget_show_all((GtkWidget *) G_WIN_SETTINGS);
+		g_signal_connect(G_WIN_SETTINGS, "destroy"
+			,G_CALLBACK(c_on_destroy), NULL);
 	}
 }
