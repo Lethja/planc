@@ -294,7 +294,6 @@ static gboolean c_policy (WebKitWebView * wv, WebKitPolicyDecision * d
 {
     switch (t) {
     case WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION:
-
         if(webkit_navigation_action_get_mouse_button
             (webkit_navigation_policy_decision_get_navigation_action
             ((WebKitNavigationPolicyDecision *)d)) == 2)
@@ -303,7 +302,6 @@ static gboolean c_policy (WebKitWebView * wv, WebKitPolicyDecision * d
                 ,webkit_navigation_policy_decision_get_navigation_action
                 ((WebKitNavigationPolicyDecision *) d),v);
 
-            g_signal_emit_by_name(nt,"ready-to-show");
             webkit_policy_decision_ignore(d);
         }
         break;
@@ -1007,7 +1005,6 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
         }
     }
 
-    connect_signals(newtab->webv,newtab->plan);
 #ifdef PLANC_FEATURE_DMENU
 	if(g_settings_get_int(G_SETTINGS, "tab-layout") == 2
 	&& (WK_CURRENT_TAB(call->tabs) != newtab->webv))
@@ -1017,6 +1014,12 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
 	}
 #endif
     free(newtab);
+}
+
+static void c_show_tab_related(WebKitWebView * wv, struct newt_st * nt)
+{
+	connect_signals(nt->webv, nt->plan);
+	c_show_tab(wv, nt);
 }
 
 extern void * new_tab_ext(char * url, PlancWindow * v, gboolean show)
@@ -1052,9 +1055,10 @@ extern void * new_tab_ext(char * url, PlancWindow * v, gboolean show)
     newtab->webv = wv;
     newtab->plan = v;
     newtab->show = show;
-    g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
-        ,newtab);
-    g_signal_emit_by_name(wv,"ready-to-show");
+
+    connect_signals(wv, v);
+    c_show_tab(wv, newtab);
+
     return wv;
 }
 
@@ -1136,9 +1140,10 @@ WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v)
     newtab->webv = nt;
     newtab->plan = v;
     newtab->show = TRUE;
-    g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
-        ,newtab);
-    g_signal_emit_by_name(nt,"ready-to-show");
+
+    connect_signals(nt, v);
+    c_show_tab(nt, newtab);
+
     return nt;
 }
 
@@ -1155,8 +1160,9 @@ static WebKitWebView * c_new_tab_url(WebKitWebView * wv
     webkit_web_view_load_request(nt
         ,webkit_navigation_action_get_request(na));
 
-    g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
-        ,newtab);
+    connect_signals(nt, v);
+    c_show_tab(nt, newtab);
+
     return nt;
 }
 
@@ -1168,13 +1174,11 @@ static WebKitWebView * c_new_tab_related(WebKitWebView * wv
     struct newt_st * newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->plan = v;
-    newtab->show = FALSE;
+    newtab->show = FALSE; //TODO: Fix me, crashes if TRUE
 
-    webkit_web_view_load_request(nt
-        ,webkit_navigation_action_get_request(na));
-
-    g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab)
+    g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab_related)
         ,newtab);
+
     return nt;
 }
 
@@ -1432,7 +1436,7 @@ static void c_wk_ext_init(WebKitWebContext *context, gpointer user_data)
 static void ErrorMsg(gchar * title, gchar * message)
 {
 	GtkWidget * d = gtk_message_dialog_new(NULL, 0, GTK_MESSAGE_ERROR
-		,GTK_BUTTONS_CLOSE, "");
+		,GTK_BUTTONS_CLOSE, NULL);
 	gtk_message_dialog_set_markup(GTK_MESSAGE_DIALOG (d), message);
 	gtk_window_set_title(GTK_WINDOW (d), title);
 	gtk_dialog_run(GTK_DIALOG (d));
@@ -2290,8 +2294,6 @@ void connect_signals (WebKitWebView * wv, PlancWindow * v)
         ,v);
     g_signal_connect(wv, "notify::is-playing-audio"
         ,G_CALLBACK(c_update_audio), v);
-    g_signal_connect(wv, "ready-to-show", G_CALLBACK(c_show_tab)
-        ,v);
     g_signal_connect(wv, "enter-fullscreen"
         ,G_CALLBACK(c_enter_fullscreen), v);
     g_signal_connect(wv, "leave-fullscreen"
