@@ -296,7 +296,7 @@ static gboolean c_policy (WebKitWebView * wv, WebKitPolicyDecision * d
             (webkit_navigation_policy_decision_get_navigation_action
             ((WebKitNavigationPolicyDecision *)d)) == 2)
         {
-            WebKitWebView * nt = c_new_tab_url(wv
+            c_new_tab_url(wv
                 ,webkit_navigation_policy_decision_get_navigation_action
                 ((WebKitNavigationPolicyDecision *) d),v);
 
@@ -695,12 +695,15 @@ static void c_switch_tab(GtkNotebook * nb, GtkWidget * page
     update_win_label((GtkWidget *) v, nb, (GtkWidget *) wv);
 
     const gchar * url = webkit_web_view_get_uri(wv);
-    gtk_entry_set_text(call->tool->addressEn, url);
+    if(url)
+    {
+        gtk_entry_set_text(call->tool->addressEn, url);
 
-    if(strcmp(url,"") == 0 || strcmp(url,"about:blank") == 0)
-        gtk_widget_grab_focus(GTK_WIDGET(call->tool->addressEn));
-    else
-        gtk_widget_grab_focus(GTK_WIDGET(wv));
+        if(url[0] == '\0' || strcmp(url,"about:blank") == 0)
+            gtk_widget_grab_focus(GTK_WIDGET(call->tool->addressEn));
+        else
+            gtk_widget_grab_focus(GTK_WIDGET(wv));
+    }
 
     addrEntryState_webView((GtkEditable *) call->tool->addressEn, wv
         ,v);
@@ -854,21 +857,7 @@ static void c_load(WebKitWebView * webv, WebKitLoadEvent evt
         }
     }
 
-    if(!webkit_web_view_get_title(webv))
-    {
-        if(webkit_web_view_get_uri(webv))
-        {
-            update_tab(call->tabs, webv);
-        }
-        else if (gtk_entry_get_text_length(call->tool->addressEn))
-        {
-            update_tab(call->tabs, webv);
-        }
-        else
-        {
-            update_tab(call->tabs, webv);
-        }
-    }
+    update_tab(call->tabs, webv);
 }
 
 GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
@@ -1978,8 +1967,9 @@ static void c_wv_hit(WebKitWebView * wv, WebKitHitTestResult * h
     }
     else
     {
-        gtk_entry_set_text(c->tool->addressEn
-            ,webkit_web_view_get_uri(wv));
+        const gchar * uri = webkit_web_view_get_uri(wv);
+        if(uri)
+            gtk_entry_set_text(c->tool->addressEn, uri);
     }
 }
 
@@ -2170,7 +2160,9 @@ static gboolean c_wv_focus(GtkWidget * wv, GdkEvent  * e
     struct call_st * call = planc_window_get_call(v);
 
     const gchar * url = webkit_web_view_get_uri((WebKitWebView *) wv);
-    if(strcmp(url,"") == 0 || strcmp(url,"about:blank") == 0)
+    if(!url)
+        return FALSE;
+    if(url[0] == '\0' || strcmp(url,"about:blank") == 0)
     {
         gtk_widget_grab_focus(GTK_WIDGET(call->tool->addressEn));
         return TRUE;
