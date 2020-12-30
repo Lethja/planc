@@ -184,11 +184,11 @@
 			</description>
 		</key>
 		<key name='planc-interface-type' type='i'>
-			<default>0</default>
-			<range min="0" max="2"/>
-			<summary>Use a compact toolbar interface</summary>
+			<default>3</default>
+			<range min="0" max="3"/>
+			<summary>What type of interface should be built?</summary>
 			<description>
-				Use a compact toolbar interface that intergrates some controls into the header
+				Decide the conditions to choose between the compact or traditional interface
 			</description>
 		</key>
 		<key name="planc-history-clean" type="i">

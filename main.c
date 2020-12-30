@@ -1691,6 +1691,15 @@ gboolean preferGmenu()
 			return FALSE;
 		case 2:
 			return TRUE;
+		case 3:
+		{
+			gchar * e = getenv("DESKTOP_SESSION");
+			if(e)
+			{
+				if (!strcmp(e, "gnome"))
+					return TRUE;
+			}
+		} //Fallthough
 		default:
 			return gtk_application_prefers_app_menu(G_APP);
 	}

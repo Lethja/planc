@@ -591,6 +591,8 @@ static GtkWidget * InitSettingTab_general()
 		,"Traditional");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)ictBox
 		,"Compact");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)ictBox
+		,"Compact Only On Gnome");
 
 	GtkWidget * tm = gtk_check_button_new_with_label
 		("Always show traditional menu bar at top of window");
