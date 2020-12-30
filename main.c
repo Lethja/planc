@@ -1177,7 +1177,7 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
     if(!G_GMENU)
     {
 #endif
-		tool->backTb = gtk_tool_button_new
+		tool->backTb = (GtkWidget *) gtk_tool_button_new
 			(gtk_image_new_from_icon_name("go-previous"
 			,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Back");
 
@@ -1186,7 +1186,7 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
 
 		gtk_widget_set_sensitive(GTK_WIDGET(tool->backTb), FALSE);
 
-		tool->forwardTb = gtk_tool_button_new
+		tool->forwardTb = (GtkWidget *) gtk_tool_button_new
 			(gtk_image_new_from_icon_name("go-next"
 			,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Forward");
 
