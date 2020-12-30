@@ -558,7 +558,7 @@ static GtkWidget * InitSettingTab_general()
 		,"iso-8859-1");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)encBox
 		,"utf-8");
-    GtkWidget * tabBox = gtk_combo_box_text_new();
+	GtkWidget * tabBox = gtk_combo_box_text_new();
 	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
 		,"Horizontal");
 	gtk_combo_box_text_append_text((GtkComboBoxText *)tabBox
@@ -584,8 +584,16 @@ static GtkWidget * InitSettingTab_general()
 		,"Always");
 
 	#ifdef PLANC_FEATURE_GNOME
+	GtkWidget * ictBox = gtk_combo_box_text_new();
+	gtk_combo_box_text_append_text((GtkComboBoxText *)ictBox
+		,"Automatic");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)ictBox
+		,"Traditional");
+	gtk_combo_box_text_append_text((GtkComboBoxText *)ictBox
+		,"Compact");
+
 	GtkWidget * tm = gtk_check_button_new_with_label
-		("Always show menu at top of window");
+		("Always show traditional menu bar at top of window");
 	#endif
 	#ifdef PLANC_FEATURE_DMENU
 	GtkWidget * th = gtk_check_button_new_with_label
@@ -627,11 +635,13 @@ static GtkWidget * InitSettingTab_general()
 	//Bind to setting
 	g_settings_bind (G_SETTINGS, "planc-forward-unknown-protocol", up
 		,"active", G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (G_SETTINGS,"download-domain",dd,"active",
-		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"download-domain",dd,"active"
+		,G_SETTINGS_BIND_DEFAULT);
 	#ifdef PLANC_FEATURE_GNOME
-	g_settings_bind (G_SETTINGS,"planc-traditional",tm,"active",
-		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"planc-traditional",tm,"active"
+		,G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"planc-interface-type",ictBox
+		,"active", G_SETTINGS_BIND_DEFAULT);
 	#endif
 	#ifdef PLANC_FEATURE_DMENU
 	g_settings_bind (G_SETTINGS,"planc-tabs-hover",th,"active",
@@ -698,17 +708,19 @@ static GtkWidget * InitSettingTab_general()
 
 	//Parent
 #ifdef PLANC_FEATURE_GNOME
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(tm),0,0,2,1);
+	attachLabeledWidget(GTK_GRID(PcGrid), "Window Interface"
+		,GTK_WIDGET(ictBox),0);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(tm),0,1,2,1);
 #endif
 #ifdef PLANC_FEATURE_DMENU
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(th),0,1,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(th),0,2,2,1);
 #endif
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(dd),0,2,2,1);
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ii),0,3,2,1);
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,4,2,1);
-	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(up),0,5,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(dd),0,3,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ii),0,4,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(ta),0,5,2,1);
+	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(up),0,6,2,1);
 	attachLabeledWidget(GTK_GRID(PcGrid), "Default Tab Layout"
-		,GTK_WIDGET(tabBox),6);
+		,GTK_WIDGET(tabBox),7);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,0,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,1,2,1);
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,2,2,1);

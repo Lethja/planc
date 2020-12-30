@@ -1221,6 +1221,7 @@ void InitHeaderBar(PlancWindow * v, struct tool_st * tool)
 {
 	GtkWidget * bar = gtk_header_bar_new();
 	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(bar), true);
+	gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(bar), false);
 
 	tool->backTb = gtk_button_new_from_icon_name("go-previous-symbolic"
 		,GTK_ICON_SIZE_LARGE_TOOLBAR);
@@ -1684,9 +1685,15 @@ void InitCallback(struct call_st * c, struct find_st * f
 #ifdef PLANC_FEATURE_GNOME
 gboolean preferGmenu()
 {
-    gboolean g = gtk_application_prefers_app_menu(G_APP)
-		|| g_settings_get_boolean(G_SETTINGS, "planc-compact-toolbar");
-    return g;
+	switch(g_settings_get_int(G_SETTINGS, "planc-interface-type"))
+	{
+		case 1:
+			return FALSE;
+		case 2:
+			return TRUE;
+		default:
+			return gtk_application_prefers_app_menu(G_APP);
+	}
 }
 
 gboolean c_key_press (GtkWidget * w, GdkEventKey * e
