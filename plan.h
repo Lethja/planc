@@ -47,8 +47,8 @@ struct menu_st
 struct tool_st
 {
     GtkWidget * top;
-    GtkToolButton * backTb;
-    GtkToolButton * forwardTb;
+    GtkWidget * backTb;
+    GtkWidget * forwardTb;
     GtkContainer * addressTi;
     GtkEntry * addressEn;
     GtkToolButton * reloadTb;

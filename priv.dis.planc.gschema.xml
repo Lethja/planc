@@ -183,6 +183,13 @@
 				Try send any uri protocol that webkit can't understand to the system automatically in the hopes that an assigned application will deal with it intelligently
 			</description>
 		</key>
+		<key name='planc-compact-toolbar' type='b'>
+			<default>false</default>
+			<summary>Use a compact toolbar interface</summary>
+			<description>
+				Use a compact toolbar interface that intergrates most controls into the header
+			</description>
+		</key>
 		<key name="planc-history-clean" type="i">
 			<default>4</default>
 			<range min="0" max="5"/>

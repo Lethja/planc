@@ -1173,23 +1173,29 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
 {
     tool->top = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR(tool->top), GTK_TOOLBAR_ICONS);
+#ifdef PLANC_FEATURE_GNOME
+    if(!G_GMENU)
+    {
+#endif
+		tool->backTb = gtk_tool_button_new
+			(gtk_image_new_from_icon_name("go-previous"
+			,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Back");
 
-    tool->backTb = (GtkToolButton *)gtk_tool_button_new
-        (gtk_image_new_from_icon_name("go-previous"
-        ,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Back");
+		gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
+			,(GtkToolItem *) tool->backTb, -1);
 
-    gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
-        ,(GtkToolItem *) tool->backTb, -1);
+		gtk_widget_set_sensitive(GTK_WIDGET(tool->backTb), FALSE);
 
-    gtk_widget_set_sensitive(GTK_WIDGET(tool->backTb), FALSE);
+		tool->forwardTb = gtk_tool_button_new
+			(gtk_image_new_from_icon_name("go-next"
+			,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Forward");
 
-    tool->forwardTb = (GtkToolButton *)gtk_tool_button_new
-        (gtk_image_new_from_icon_name("go-next"
-        ,GTK_ICON_SIZE_SMALL_TOOLBAR), "_Forward");
-
-    gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
-        ,(GtkToolItem *) tool->forwardTb, -1);
-    gtk_widget_set_sensitive(GTK_WIDGET(tool->forwardTb), FALSE);
+		gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
+			,(GtkToolItem *) tool->forwardTb, -1);
+		gtk_widget_set_sensitive(GTK_WIDGET(tool->forwardTb), FALSE);
+#ifdef PLANC_FEATURE_GNOME
+	}
+#endif
     tool->addressTi = (GtkContainer *) gtk_tool_item_new();
     tool->addressEn = (GtkEntry *) gtk_entry_new();
     gtk_widget_set_focus_on_click ((GtkWidget *) tool->addressEn, TRUE);
@@ -1209,6 +1215,28 @@ void InitToolbar(struct tool_st * tool, GtkAccelGroup * accel_group)
     gtk_toolbar_insert(GTK_TOOLBAR(tool->top)
         ,(GtkToolItem *) tool->reloadTb, -1);
 }
+
+#ifdef PLANC_FEATURE_GNOME
+void InitHeaderBar(PlancWindow * v, struct tool_st * tool)
+{
+	GtkWidget * bar = gtk_header_bar_new();
+	gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(bar), true);
+
+	tool->backTb = gtk_button_new_from_icon_name("go-previous-symbolic"
+		,GTK_ICON_SIZE_LARGE_TOOLBAR);
+
+	tool->forwardTb = gtk_button_new_from_icon_name("go-next-symbolic"
+		,GTK_ICON_SIZE_LARGE_TOOLBAR);
+
+	gtk_widget_set_sensitive(GTK_WIDGET(tool->backTb), FALSE);
+	gtk_widget_set_sensitive(GTK_WIDGET(tool->forwardTb), FALSE);
+
+	gtk_header_bar_pack_start(GTK_HEADER_BAR(bar), tool->backTb);
+	gtk_header_bar_pack_start(GTK_HEADER_BAR(bar), tool->forwardTb);
+
+	gtk_window_set_titlebar(GTK_WINDOW(v), bar);
+}
+#endif
 
 void InitMenubar(struct menu_st * menu, PlancWindow * v
     ,GtkAccelGroup * accel_group)
@@ -1656,59 +1684,8 @@ void InitCallback(struct call_st * c, struct find_st * f
 #ifdef PLANC_FEATURE_GNOME
 gboolean preferGmenu()
 {
-    gboolean g = gtk_application_prefers_app_menu(G_APP);
-    if(!g)
-    {
-#ifdef GDK_WINDOWING_X11
-        GdkDisplay * d = gdk_display_get_default();
-        if (GDK_IS_X11_DISPLAY(d))
-        {
-            const gchar * w = gdk_x11_screen_get_window_manager_name
-                (gdk_display_get_default_screen(d));
-            //Only MutterWM is known to support appmenu properly
-            if(w)
-            {
-                if(strcmp(w, "muttur"))
-                    return g;
-            }
-            GtkSettings * gtksettings = gtk_settings_get_default();
-            if(gtksettings)
-            {
-                gchar * dec;
-                g_object_get(gtksettings, "gtk-decoration-layout"
-                    ,&dec, NULL);
-                gchar * m = strstr(dec, "menu");
-                if(m)
-                {
-                    if(m > dec)
-                    {
-                        gchar * rm = m-1;
-                        if(rm[0] != ':' && rm[0] != ',')
-                            goto preferGmenu_end;
-                            //Return false but free dec
-                    }
-                    switch(m[4])
-                    {
-                        case ':':
-                        case ',':
-                        case '\0':
-                            g = TRUE;
-                    }
-                }
-preferGmenu_end:
-                g_free(dec);
-            }
-        } else //Check for Wayland Gnome3
-#endif
-        {
-            gchar * e = getenv("DESKTOP_SESSION");
-            if(e)
-            {
-                if (!strcmp(e, "gnome"))
-                    g = TRUE;
-            }
-        }
-    }
+    gboolean g = gtk_application_prefers_app_menu(G_APP)
+		|| g_settings_get_boolean(G_SETTINGS, "planc-compact-toolbar");
     return g;
 }
 
@@ -1811,6 +1788,17 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
         ,TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), find->top, FALSE, FALSE, 0);
 
+#ifdef PLANC_FEATURE_GNOME
+    if(G_GMENU)
+    {
+		InitHeaderBar(window, tool);
+        g_signal_connect(window, "key-press-event"
+            ,G_CALLBACK(c_key_press), window);
+        g_signal_connect(menu->menu, "deactivate"
+            ,G_CALLBACK(c_tmenu_deactivate), window);
+    }
+#endif
+
     g_signal_connect(window, "destroy"
         ,G_CALLBACK(c_destroy_window), NULL);
     g_signal_connect(window, "delete-event"
@@ -1839,15 +1827,6 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
         ,G_CALLBACK(c_addr_del), window);
     g_signal_connect(tool->addressEn, "changed"
         ,G_CALLBACK(c_addr_changed), window);
-#ifdef PLANC_FEATURE_GNOME
-    if(G_GMENU)
-    {
-        g_signal_connect(window, "key-press-event"
-            ,G_CALLBACK(c_key_press), window);
-        g_signal_connect(menu->menu, "deactivate"
-            ,G_CALLBACK(c_tmenu_deactivate), window);
-    }
-#endif
     g_signal_connect(window, "key-release-event"
         ,G_CALLBACK(c_accl_rels), window);
     g_signal_connect(G_OBJECT(call->menu->tabV), "activate"
