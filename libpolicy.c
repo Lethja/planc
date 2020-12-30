@@ -94,6 +94,6 @@ web_page_created_callback (WebKitWebExtension *extension,
 G_MODULE_EXPORT void
 webkit_web_extension_initialize (WebKitWebExtension *extension)
 {
-    g_signal_connect (extension, "page-created"
+	g_signal_connect (extension, "page-created"
 		,G_CALLBACK (web_page_created_callback), NULL);
 }

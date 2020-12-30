@@ -9,60 +9,60 @@
 
 struct menu_st
 {
-    GtkWidget * menu;
-    GtkWidget * fileMenu;
-    GtkWidget * editMenu;
-    GtkWidget * viewMenu;
-    GtkWidget * viewTabMenu;
-    GtkWidget * viewZoomMenu;
-    GtkWidget * helpMenu;
-    GtkWidget * fileMh;
-    GtkWidget * editMh;
-    GtkWidget * viewMh;
-    GtkWidget * helpMh;
-    GtkWidget * viewTabMh;
-    GtkWidget * tabH;
-    GtkWidget * tabV;
-    GtkWidget * viewZoomMh;
-    GtkWidget * znorm;
-    GtkWidget * zin;
-    GtkWidget * zout;
-    GtkWidget * findMi;
-    GtkWidget * setwMi;
-    GtkWidget * cTabMi;
-    GtkWidget * nTabMi;
-    GtkWidget * nWinMi;
-    GtkWidget * quitMi;
-    GtkWidget * histMi;
-    GtkWidget * downMi;
+	GtkWidget * menu;
+	GtkWidget * fileMenu;
+	GtkWidget * editMenu;
+	GtkWidget * viewMenu;
+	GtkWidget * viewTabMenu;
+	GtkWidget * viewZoomMenu;
+	GtkWidget * helpMenu;
+	GtkWidget * fileMh;
+	GtkWidget * editMh;
+	GtkWidget * viewMh;
+	GtkWidget * helpMh;
+	GtkWidget * viewTabMh;
+	GtkWidget * tabH;
+	GtkWidget * tabV;
+	GtkWidget * viewZoomMh;
+	GtkWidget * znorm;
+	GtkWidget * zin;
+	GtkWidget * zout;
+	GtkWidget * findMi;
+	GtkWidget * setwMi;
+	GtkWidget * cTabMi;
+	GtkWidget * nTabMi;
+	GtkWidget * nWinMi;
+	GtkWidget * quitMi;
+	GtkWidget * histMi;
+	GtkWidget * downMi;
 #ifdef PLANC_FEATURE_DMENU
-    GtkWidget * tabsMenu;
-    GtkWidget * gotoMenu;
-    GtkWidget * tabsMh;
-    GtkWidget * gotoMh;
-    GtkWidget * tabM;
+	GtkWidget * tabsMenu;
+	GtkWidget * gotoMenu;
+	GtkWidget * tabsMh;
+	GtkWidget * gotoMh;
+	GtkWidget * tabM;
 #endif
 };
 
 struct tool_st
 {
-    GtkWidget * top;
-    GtkWidget * backTb;
-    GtkWidget * forwardTb;
-    GtkContainer * addressTi;
-    GtkEntry * addressEn;
-    GtkToolButton * reloadTb;
-    GtkImage * reloadIo;
-    gboolean usrmod; //Has the user modified the address bar?
+	GtkWidget * top;
+	GtkWidget * backTb;
+	GtkWidget * forwardTb;
+	GtkContainer * addressTi;
+	GtkEntry * addressEn;
+	GtkToolButton * reloadTb;
+	GtkImage * reloadIo;
+	gboolean usrmod; //Has the user modified the address bar?
 };
 
 struct find_st
 {
-    GtkWidget * top;
-    GtkSearchEntry * findSb;
-    GtkToolButton * backTb;
-    GtkToolButton * forwardTb;
-    GtkToolButton * closeTb;
+	GtkWidget * top;
+	GtkSearchEntry * findSb;
+	GtkToolButton * backTb;
+	GtkToolButton * forwardTb;
+	GtkToolButton * closeTb;
 };
 
 struct sign_st
@@ -74,11 +74,11 @@ struct sign_st
 
 struct call_st
 {
-    struct menu_st 	* menu;
-    struct tool_st 	* tool;
-    struct find_st 	* find;
-    struct sign_st 	* sign;
-    GtkNotebook 	* tabs;
+	struct menu_st 	* menu;
+	struct tool_st 	* tool;
+	struct find_st 	* find;
+	struct sign_st 	* sign;
+	GtkNotebook 	* tabs;
 };
 
 #define PLANC_TYPE_WINDOW \
@@ -102,13 +102,13 @@ typedef struct _PlancWindowClass	PlancWindowClass;
 
 struct _PlancWindow
 {
-    GtkApplicationWindow parent_instance;
-    struct call_st * call;
+	GtkApplicationWindow parent_instance;
+	struct call_st * call;
 };
 
 struct _PlancWindowClass
 {
-    GtkApplicationWindowClass parent_class;
+	GtkApplicationWindowClass parent_class;
 };
 
 GType planc_window_get_type(void);

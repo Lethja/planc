@@ -12,11 +12,11 @@
 
 #define WK_CURRENT_TAB(notebook) \
 (WebKitWebView *) gtk_notebook_get_nth_page(notebook \
-    ,gtk_notebook_get_current_page(notebook))
+	,gtk_notebook_get_current_page(notebook))
 
 #define WK_CURRENT_TAB_WIDGET(notebook) \
 (GtkWidget *) gtk_notebook_get_nth_page(notebook \
-    ,gtk_notebook_get_current_page(notebook))
+	,gtk_notebook_get_current_page(notebook))
 
 #define WK_TAB_CHAR_LEN 40
 
@@ -33,7 +33,7 @@ struct dpco_st //Dual Pointer (Call and Other)
 
 struct newt_st
 {
-    WebKitWebView * webv;
+	WebKitWebView * webv;
 	PlancWindow * plan;
 	gboolean show;
 };
@@ -72,7 +72,7 @@ GtkNotebook * get_web_view_notebook();
 WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v);
 
 void c_active_window(GtkWidget * widget, void * p
-    ,PlancWindow * v);
+	,PlancWindow * v);
 
 extern char wkVersionOk(guint major, guint minor, guint micro);
 

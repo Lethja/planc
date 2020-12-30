@@ -8,13 +8,13 @@
  */
 static void strtcpy(char * dest, const char * src, const char token)
 {
-    size_t it = 0;
-    while(src[it] != token)
-    {
-        dest[it] = src[it];
-        it++;
-    }
-    dest[it] = '\0';
+	size_t it = 0;
+	while(src[it] != token)
+	{
+		dest[it] = src[it];
+		it++;
+	}
+	dest[it] = '\0';
 }
 
 /**
@@ -171,57 +171,57 @@ static char * setupSearch(const char * c)
 **/
 char * prepAddress(const char * c)
 {
-    char * p;
-    if(strcmp(c,"") == 0 || strstr(c,"about:") == c)
-    {
-        p = malloc(strlen("about:blank")+1);
-        strncpy(p,"about:blank",strlen("about:blank")+1);
-        return p;
-    }
-    /*Check if speed dial or search entry
-     * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
-    */
-    p = strchr(c, ':');
-    if(!p)
-    {
-        char * r = NULL;
-        size_t i = 0;
-        for(; i < strlen(c); i++)
-        {
-            if(!isdigit(c[i]))
-                break;
-        }
-        if(i == strlen(c)) //This is a dial
-            r = sql_speed_dial_get(atoi(c));
-        else if(c[0] != '/') //This isn't an absolute directory
-            r = setupSearch(c);
+	char * p;
+	if(strcmp(c,"") == 0 || strstr(c,"about:") == c)
+	{
+		p = malloc(strlen("about:blank")+1);
+		strncpy(p,"about:blank",strlen("about:blank")+1);
+		return p;
+	}
+	/*Check if speed dial or search entry
+	 * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
+	*/
+	p = strchr(c, ':');
+	if(!p)
+	{
+		char * r = NULL;
+		size_t i = 0;
+		for(; i < strlen(c); i++)
+		{
+			if(!isdigit(c[i]))
+				break;
+		}
+		if(i == strlen(c)) //This is a dial
+			r = sql_speed_dial_get(atoi(c));
+		else if(c[0] != '/') //This isn't an absolute directory
+			r = setupSearch(c);
 
-        if(!r) //Not a search query
-            r = (char *) c;
-        //Check if protocol portion of the url exists or add it
-        p = strstr(r,"://");
-        if(!p)
-        {
-            size_t s = strlen("http://")+strlen(r)+1;
-            p = malloc(s);
-            //Find out if this should be a file:// or http://
-            if(r[0] == '/') //This is an absolute local path
-                snprintf(p,s,"file://%s",r);
-            else
-                snprintf(p,s,"http://%s",r);
-        }
-        else
-        {
-            p = malloc(strlen(r)+1);
-            memcpy(p,r,strlen(r)+1);
-        }
-        if(r != c)
-            free(r);
-    }
-    else
-    {
-        p = malloc(strlen(c)+1);
-        memcpy(p,c,strlen(c)+1);
-    }
-    return p;
+		if(!r) //Not a search query
+			r = (char *) c;
+		//Check if protocol portion of the url exists or add it
+		p = strstr(r,"://");
+		if(!p)
+		{
+			size_t s = strlen("http://")+strlen(r)+1;
+			p = malloc(s);
+			//Find out if this should be a file:// or http://
+			if(r[0] == '/') //This is an absolute local path
+				snprintf(p,s,"file://%s",r);
+			else
+				snprintf(p,s,"http://%s",r);
+		}
+		else
+		{
+			p = malloc(strlen(r)+1);
+			memcpy(p,r,strlen(r)+1);
+		}
+		if(r != c)
+			free(r);
+	}
+	else
+	{
+		p = malloc(strlen(c)+1);
+		memcpy(p,c,strlen(c)+1);
+	}
+	return p;
 }

@@ -185,7 +185,7 @@ static void c_download_destination_created(WebKitDownload * d
 	g_signal_connect(d,"received-data"
 		,G_CALLBACK(c_download_progress),t);
 	g_signal_connect(d, "finished"
-        ,G_CALLBACK(c_download_finished),t);
+		,G_CALLBACK(c_download_finished),t);
 }
 
 gchar * getFileNameFromPath(const gchar * path)
@@ -245,20 +245,20 @@ static gchar * getDisposition(WebKitURIResponse * u)
 static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
 	,gchar * fp)
 {
-    GtkWidget *dialog;
-    GtkFileChooser *chooser;
-    gint res;
-    GtkWindow * w = gtk_application_get_active_window(G_APP);
-    dialog = gtk_file_chooser_dialog_new ("Save File"
+	GtkWidget *dialog;
+	GtkFileChooser *chooser;
+	gint res;
+	GtkWindow * w = gtk_application_get_active_window(G_APP);
+	dialog = gtk_file_chooser_dialog_new ("Save File"
 		,(GtkWindow *) w,GTK_FILE_CHOOSER_ACTION_SAVE ,("_Cancel")
-        ,GTK_RESPONSE_CANCEL ,("_Save") ,GTK_RESPONSE_ACCEPT,NULL);
+		,GTK_RESPONSE_CANCEL ,("_Save") ,GTK_RESPONSE_ACCEPT,NULL);
 
-    chooser = GTK_FILE_CHOOSER (dialog);
+	chooser = GTK_FILE_CHOOSER (dialog);
 
-    gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
+	gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
 
-    if (fn == NULL || strcmp(fn,"") == 0)
-    {
+	if (fn == NULL || strcmp(fn,"") == 0)
+	{
 		gchar * f = getDisposition(webkit_download_get_response(d));
 		if(f)
 		{
@@ -282,20 +282,20 @@ static gboolean c_download_save_as(WebKitDownload * d, gchar * fn
 		gtk_file_chooser_set_current_folder(chooser
 			,g_get_user_special_dir(G_USER_DIRECTORY_DOWNLOAD));
 
-    res = gtk_dialog_run (GTK_DIALOG (dialog));
-    if (res == GTK_RESPONSE_ACCEPT)
-    {
-        webkit_download_set_destination(d
-            ,gtk_file_chooser_get_uri(chooser));
-        gtk_widget_destroy (dialog);
-        return TRUE;
-    }
-    else
-    {
-        webkit_download_cancel(d);
-    }
-    gtk_widget_destroy (dialog);
-    return FALSE;
+	res = gtk_dialog_run (GTK_DIALOG (dialog));
+	if (res == GTK_RESPONSE_ACCEPT)
+	{
+		webkit_download_set_destination(d
+			,gtk_file_chooser_get_uri(chooser));
+		gtk_widget_destroy (dialog);
+		return TRUE;
+	}
+	else
+	{
+		webkit_download_cancel(d);
+	}
+	gtk_widget_destroy (dialog);
+	return FALSE;
 }
 
 static void progress_cell_data_func(GtkTreeViewColumn * c
@@ -319,7 +319,7 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 	gchar * t = NULL;
 	gchar * f = NULL;
 	if (fn == NULL || strcmp(fn,"") == 0)
-    {
+	{
 		f = getDisposition(webkit_download_get_response(d));
 		if(f)
 			t = g_strconcat("Download request '", f, "' - Plan C"
@@ -327,7 +327,7 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 		else
 			t = g_strconcat("Download request - Plan C", NULL);
 	}
-    else
+	else
 	{
 		t = g_strconcat("Download request '", fn, "' - Plan C", NULL);
 		f = fn;
@@ -420,8 +420,8 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 
 	gint res = gtk_dialog_run(GTK_DIALOG(DownloadPrompt));
 	gboolean r = FALSE;
-    switch(res)
-    {
+	switch(res)
+	{
 		case GTK_RESPONSE_OK:
 		{
 			gchar * uri = g_filename_to_uri(absdir, NULL, NULL);
@@ -435,34 +435,34 @@ static gboolean c_download_prompt(WebKitDownload * d, gchar * fn
 		}
 		break;
 
-        case GTK_RESPONSE_APPLY:
-        gtk_widget_destroy(DownloadPrompt);
-        r = c_download_save_as(d, f, abspth);
-        break;
+		case GTK_RESPONSE_APPLY:
+		gtk_widget_destroy(DownloadPrompt);
+		r = c_download_save_as(d, f, abspth);
+		break;
 
-        default:
-        webkit_download_cancel(d);
-        gtk_widget_destroy(DownloadPrompt);
-        r = FALSE;
-        break;
-    }
-    if(abspth)
+		default:
+		webkit_download_cancel(d);
+		gtk_widget_destroy(DownloadPrompt);
+		r = FALSE;
+		break;
+	}
+	if(abspth)
 		g_free(abspth);
-    if(absdir)
+	if(absdir)
 		g_free(absdir);
-    if(f && f != fn)
+	if(f && f != fn)
 		g_free(f);
-    return r;
+	return r;
 }
 
 void c_download_start(WebKitWebContext * wv
-    ,WebKitDownload * dl, void * v)
+	,WebKitDownload * dl, void * v)
 {
 	webkit_download_set_allow_overwrite(dl,TRUE);
-    g_signal_connect(dl, "decide-destination"
-        ,G_CALLBACK(c_download_prompt), NULL);
+	g_signal_connect(dl, "decide-destination"
+		,G_CALLBACK(c_download_prompt), NULL);
 	g_signal_connect(dl, "created-destination"
-        ,G_CALLBACK(c_download_destination_created), NULL);
+		,G_CALLBACK(c_download_destination_created), NULL);
 }
 
 void c_download_dir(GtkTreeView * tree_view, GtkTreePath * path
@@ -505,10 +505,10 @@ void InitDownloadWindow()
 		return;
 	}
 	G_search = NULL;
-    G_DOWNLOAD =
+	G_DOWNLOAD =
 		(GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(G_DOWNLOAD,600,400);
-    gtk_window_set_position(G_DOWNLOAD,GTK_WIN_POS_CENTER);
+	gtk_window_set_default_size(G_DOWNLOAD,600,400);
+	gtk_window_set_position(G_DOWNLOAD,GTK_WIN_POS_CENTER);
 	gtk_window_set_icon_name(G_DOWNLOAD,"document-save");
 	gtk_window_set_title(G_DOWNLOAD,"Downloads - Plan C");
 	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
@@ -554,7 +554,7 @@ void InitDownloadWindow()
 	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (sortable));
 
 	/* The view now holds a reference.  We can get rid of our own
-    * reference */
+	* reference */
 	g_object_unref (G_OBJECT (G_store));
 
 	renderer = gtk_cell_renderer_text_new ();
@@ -584,9 +584,9 @@ void InitDownloadWindow()
 		,progress_cell_data_func, NULL, NULL);
 
 	g_signal_connect(G_DOWNLOAD, "destroy"
-        ,G_CALLBACK(c_destroy_window), NULL);
+		,G_CALLBACK(c_destroy_window), NULL);
 	g_signal_connect_after(searchEntry, "search-changed"
-        ,G_CALLBACK(search_entry_change), filtered);
+		,G_CALLBACK(search_entry_change), filtered);
 	g_signal_connect(tree,"row-activated"
 		,G_CALLBACK(c_download_dir), NULL);
 

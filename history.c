@@ -8,10 +8,10 @@ static GtkWindow * G_HISTORY = NULL;
 
 enum
 {
-   ADDRESS_COLUMN,
-   TITLE_COLUMN,
-   VISITED_COLUMN,
-   N_COLUMNS
+	ADDRESS_COLUMN,
+	TITLE_COLUMN,
+	VISITED_COLUMN,
+	N_COLUMNS
 };
 
 static const gchar * G_search;
@@ -58,7 +58,7 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton * event
 	,void * v)
 {
 	if(event->type == GDK_BUTTON_RELEASE)
-    {
+	{
 		if(event->button == 2) //Middle click
 		{
 			gchar *str_data;
@@ -81,7 +81,7 @@ gboolean c_history_url_tab(GtkTreeView * tree, GdkEventButton * event
 			}
 		}
 	}
-    return false;
+	return false;
 }
 
 static void search_entry_change(GtkWidget * e, GtkTreeModelFilter * f)
@@ -130,9 +130,9 @@ static void c_destroy_window(GtkWindow * w, void * v)
 
 /* The function to use as a parameter of g_task_run_in_thread */
 static void load_data_thread (GTask         *task,
-                  gpointer       source_object,
-                  gpointer       store,
-                  GCancellable  *cancellable)
+				  gpointer       source_object,
+				  gpointer       store,
+				  GCancellable  *cancellable)
 {
 	/* Actual function here*/
 	sql_history_read_to_tree(store, &treeIter);
@@ -192,10 +192,10 @@ extern void InitHistoryWindow(void * v)
 	}
 	store = NULL;
 	G_search = NULL;
-    G_HISTORY =
+	G_HISTORY =
 		(GtkWindow *) gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_default_size(G_HISTORY,600,400);
-    gtk_window_set_position(G_HISTORY,GTK_WIN_POS_CENTER);
+	gtk_window_set_default_size(G_HISTORY,600,400);
+	gtk_window_set_position(G_HISTORY,GTK_WIN_POS_CENTER);
 	gtk_window_set_icon_name(G_HISTORY,"accessories-text-editor");
 	gtk_window_set_title(G_HISTORY,"History - Plan C");
 	GtkWidget * Vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
@@ -239,7 +239,7 @@ extern void InitHistoryWindow(void * v)
 
 	gtk_container_add(GTK_CONTAINER (G_scrollWin), tree);
 	gtk_container_add(GTK_CONTAINER(G_HISTORY), Vbox);
-    gtk_widget_show_all((GtkWidget *) G_HISTORY);
+	gtk_widget_show_all((GtkWidget *) G_HISTORY);
 
 	gdk_window_set_cursor(gtk_widget_get_window(GTK_WIDGET(G_HISTORY))
 		,gdk_cursor_new_from_name(gdk_display_get_default(), "wait"));
@@ -273,9 +273,9 @@ extern void InitHistoryWindow(void * v)
 	g_object_unref(G_OBJECT (sort));
 
 	g_signal_connect(G_HISTORY, "destroy"
-        ,G_CALLBACK(c_destroy_window), NULL);
+		,G_CALLBACK(c_destroy_window), NULL);
 	g_signal_connect(searchEntry, "activate"
-        ,G_CALLBACK(search_entry_change), filtered);
+		,G_CALLBACK(search_entry_change), filtered);
 	g_signal_connect(tree,"row-activated"
 		,G_CALLBACK(c_history_url), v);
 	g_signal_connect(tree,"button-release-event"

@@ -166,21 +166,21 @@ void c_settings_hw(GtkComboBox * w, void * v)
 {
 	switch(gtk_combo_box_get_active(w))
 	{
-        case 1:
-            webkit_settings_set_hardware_acceleration_policy
+		case 1:
+			webkit_settings_set_hardware_acceleration_policy
 				(G_WKC_SETTINGS
 				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ON_DEMAND);
-        break;
-        default:
-            webkit_settings_set_hardware_acceleration_policy
+		break;
+		default:
+			webkit_settings_set_hardware_acceleration_policy
 				(G_WKC_SETTINGS
 				,WEBKIT_HARDWARE_ACCELERATION_POLICY_NEVER);
-        break;
-        case 2:
-            webkit_settings_set_hardware_acceleration_policy
+		break;
+		case 2:
+			webkit_settings_set_hardware_acceleration_policy
 				(G_WKC_SETTINGS
 				,WEBKIT_HARDWARE_ACCELERATION_POLICY_ALWAYS);
-        break;
+		break;
 	}
 }
 
@@ -220,7 +220,7 @@ static GtkWidget * InitSettingTab_search_tree()
 	tree = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
 
 	/* The view now holds a reference.  We can get rid of our own
-    * reference */
+	* reference */
 	g_object_unref (G_OBJECT (store));
 
 	renderer = gtk_cell_renderer_text_new();
@@ -290,8 +290,8 @@ static GtkDialog * SettingTab_search_ae(GtkTreeSelection * s
 	attachLabeledWidget(GTK_GRID(grid),"Key",ek,1);
 	attachLabeledWidget(GTK_GRID(grid),"URL",eu,2);
 
-    gtk_box_pack_start(GTK_BOX(dbox),grid,0,1,0);
-    gtk_widget_show_all(dbox);
+	gtk_box_pack_start(GTK_BOX(dbox),grid,0,1,0);
+	gtk_widget_show_all(dbox);
 	int result = gtk_dialog_run(dialog);
 	if(result == GTK_RESPONSE_ACCEPT)
 	{
@@ -605,9 +605,9 @@ static GtkWidget * InitSettingTab_general()
 		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
 		("Enable Developer Options");
-    GtkWidget * ch = gtk_check_button_new_with_label
+	GtkWidget * ch = gtk_check_button_new_with_label
 		("Enable Page Cache");
-    GtkWidget * ta = gtk_check_button_new_with_label
+	GtkWidget * ta = gtk_check_button_new_with_label
 		("Autohide tab bar in single tab windows");
 	GtkWidget * ii = gtk_check_button_new_with_label
 		("Inhibit system idel actions when audio is playing");
