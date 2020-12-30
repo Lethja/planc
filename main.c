@@ -46,6 +46,14 @@ void update_win_label(GtkWidget * win, GtkNotebook * nb, GtkWidget * e)
 {
     GtkWidget * l = gtk_bin_get_child(GTK_BIN
         (gtk_notebook_get_tab_label(nb,e)));
+#ifdef PLANC_FEATURE_GNOME
+	if(G_GMENU)
+	{
+		gtk_window_set_title((GtkWindow *) win
+			,gtk_label_get_text((GtkLabel *)l));
+		return;
+	}
+#endif
     gchar * str = g_strconcat(gtk_label_get_text((GtkLabel *)l)
         ," - Plan C", NULL);
     gtk_window_set_title((GtkWindow *) win, str);
