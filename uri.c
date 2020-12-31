@@ -207,8 +207,13 @@ static char * SetupSearch(const char * c)
 
 static char * SetupAddressPath(const char * c)
 {
+	//Check if this uri starts with 'about:'
+	char * p = strstr(c, "about:");
+	if(p == c)
+		return strdup(c);
+
 	//Check if protocol portion of the url exists or add it
-	char * p = strstr(c,"://");
+	p = strstr(c, "://");
 	if(!p)
 	{
 		size_t s = strlen("http://")+strlen(c)+1;
