@@ -409,11 +409,21 @@ static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
 	}
 	else
 	{
-		gtk_image_set_from_icon_name(c->tool->reloadIo
-			,"go-last",GTK_ICON_SIZE_SMALL_TOOLBAR);
-		gtk_entry_set_progress_fraction(c->tool->addressEn, 0);
-		c->tool->usrmod = TRUE;
-		return 2;
+		switch(DetermineAddressType(entry))
+		{
+			default:
+				gtk_image_set_from_icon_name(c->tool->reloadIo
+					,"go-last",GTK_ICON_SIZE_SMALL_TOOLBAR);
+				gtk_entry_set_progress_fraction(c->tool->addressEn, 0);
+				c->tool->usrmod = TRUE;
+				return 2;
+			case Search:
+				gtk_image_set_from_icon_name(c->tool->reloadIo
+					,"edit-find",GTK_ICON_SIZE_SMALL_TOOLBAR);
+				gtk_entry_set_progress_fraction(c->tool->addressEn, 0);
+				c->tool->usrmod = TRUE;
+				return 2;
+		}
 	}
 }
 
