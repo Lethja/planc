@@ -397,8 +397,9 @@ static char addrEntryState_webView(GtkEditable * e, WebKitWebView * wv
 		c->tool->usrmod = FALSE;
 		return 0;
 	}
-	if(strcmp(gtk_entry_get_text((GtkEntry *) e)
-		,webkit_web_view_get_uri(wv)) == 0)
+	const gchar * entry = gtk_entry_get_text((GtkEntry *) e)
+		, * uri = webkit_web_view_get_uri(wv);
+	if(uri && entry && !strcmp(uri, entry))
 	{
 		gtk_image_set_from_icon_name(c->tool->reloadIo
 			,"view-refresh",GTK_ICON_SIZE_SMALL_TOOLBAR);

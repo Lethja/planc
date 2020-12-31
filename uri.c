@@ -125,6 +125,46 @@ static char * formatQuery(char * url, char ** q)
 	return r;
 }
 
+enum AddressType DetermineAddressType(const char * uri)
+{
+	const char * it = uri;
+	size_t digits = 0;
+	if(*it == '\0')
+		return Empty;
+
+	do
+	{
+		switch(*it)
+		{
+			case ' ':
+				return Search;
+			case ':':
+			case '.':
+				return Address;
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+				digits++;
+			break;
+		}
+		it++;
+	} while(*it != '\0');
+
+	if(strlen(uri) == digits)
+		return SpeedDial;
+
+	if(g_settings_get_boolean(G_SETTINGS, "planc-search-implicit"))
+		return Search;
+	return Unknown;
+}
+
 /** Prepare to attempt to find a search key in 'c'
  * or use implicit searching if enabled
  */
@@ -165,63 +205,40 @@ static char * setupSearch(const char * c)
 	return r;
 }
 
+static char * SetupAddressPath(const char * c)
+{
+	//Check if protocol portion of the url exists or add it
+	char * p = strstr(c,"://");
+	if(!p)
+	{
+		size_t s = strlen("http://")+strlen(c)+1;
+		p = malloc(s);
+		//Find out if this should be a file:// or http://
+		if(c[0] == '/') //This is an absolute local path
+			snprintf(p, s, "file://%s", c);
+		else
+			snprintf(p, s, "http://%s", c);
+	}
+	else
+		p = strdup(c);
+	return p;
+}
+
 /** Sanitize the address for webkit
  * Returned value never null and always must be freed after use
  * Will convert numbers to speed dial addresses if avaliable
 **/
 char * prepAddress(const char * c)
 {
-	char * p;
-	if(strcmp(c,"") == 0 || strstr(c,"about:") == c)
+	switch(DetermineAddressType(c))
 	{
-		p = malloc(strlen("about:blank")+1);
-		strncpy(p,"about:blank",strlen("about:blank")+1);
-		return p;
+		case Address:
+			return SetupAddressPath(c);
+		case SpeedDial:
+			return sql_speed_dial_get(atoi(c));
+		case Search:
+			return setupSearch(c);
+		default:
+			return strdup("about:blank");
 	}
-	/*Check if speed dial or search entry
-	 * isdigit() means it's impossible to confuse with ipv4 (127.0.0.1)
-	*/
-	p = strchr(c, ':');
-	if(!p)
-	{
-		char * r = NULL;
-		size_t i = 0;
-		for(; i < strlen(c); i++)
-		{
-			if(!isdigit(c[i]))
-				break;
-		}
-		if(i == strlen(c)) //This is a dial
-			r = sql_speed_dial_get(atoi(c));
-		else if(c[0] != '/') //This isn't an absolute directory
-			r = setupSearch(c);
-
-		if(!r) //Not a search query
-			r = (char *) c;
-		//Check if protocol portion of the url exists or add it
-		p = strstr(r,"://");
-		if(!p)
-		{
-			size_t s = strlen("http://")+strlen(r)+1;
-			p = malloc(s);
-			//Find out if this should be a file:// or http://
-			if(r[0] == '/') //This is an absolute local path
-				snprintf(p,s,"file://%s",r);
-			else
-				snprintf(p,s,"http://%s",r);
-		}
-		else
-		{
-			p = malloc(strlen(r)+1);
-			memcpy(p,r,strlen(r)+1);
-		}
-		if(r != c)
-			free(r);
-	}
-	else
-	{
-		p = malloc(strlen(c)+1);
-		memcpy(p,c,strlen(c)+1);
-	}
-	return p;
 }

@@ -3,3 +3,11 @@
  * Will convert numbers to speed dial addresses if avaliable
 **/
 char * prepAddress(const char * c);
+
+enum AddressType
+{
+	Search, Address, SpeedDial, Unknown, Empty
+};
+
+/** Determine the type of input of this string */
+enum AddressType DetermineAddressType(const char * uri);
