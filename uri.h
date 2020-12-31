@@ -2,7 +2,7 @@
  * Returned value never null and must always be freed after use
  * Will convert numbers to speed dial addresses if avaliable
 **/
-char * prepAddress(const char * c);
+char * PrepAddress(const char * c);
 
 enum AddressType
 {

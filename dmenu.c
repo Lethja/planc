@@ -9,7 +9,7 @@ static void c_goto_dial(GtkMenuItem * mi, GdkEventButton * e, void * v)
 		(gtk_menu_item_get_label(mi));
 	if(!url)
 		return;
-	char * purl = prepAddress(url);
+	char * purl = PrepAddress(url);
 	free(url);
 	if (e->button == 2)
 		new_tab_ext(purl, (PlancWindow *) get_web_view(), TRUE);

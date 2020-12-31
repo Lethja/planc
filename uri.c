@@ -49,7 +49,7 @@ static char * strchrany(const char * haystack, const char * needles)
 /**
  * Get the key for an implicit search
  */
-static void implicitSearch(char ** uri, char ** searchPtr
+static void ImplicitSearch(char ** uri, char ** searchPtr
 	,const char * addr)
 {
 	char * key = g_settings_get_string(G_SETTINGS, "planc-search");
@@ -71,7 +71,7 @@ static void implicitSearch(char ** uri, char ** searchPtr
  * Remove the character at 'position' and replace it with 'ins'
  * Make sure 'str' is big enough to fit the result
  */
-static void escapeChar(char ** str, char * position, const char * ins)
+static void EscapeChar(char ** str, char * position, const char * ins)
 {
 	char * tmpcat = malloc(strlen(ins)+strlen(position)+1);
 	strcpy(tmpcat, ins);
@@ -85,7 +85,7 @@ static void escapeChar(char ** str, char * position, const char * ins)
  * allows you to allocate enough space on the heap once rather then
  * constantly calling realloc()
  */
-static size_t countEscapeChar(const char * str)
+static size_t CountEscapeChar(const char * str)
 {
 	size_t r = 0;
 	char * i = (char *) str;
@@ -102,10 +102,10 @@ static size_t countEscapeChar(const char * str)
  * characters. This function is only used for detection, call escapeChar
  * to actually insert into the string
  */
-static char * formatQuery(char * url, char ** q)
+static char * FormatQuery(char * url, char ** q)
 {
 	size_t s = strlen(url)+strlen(*q), i = strlen(url);
-	size_t padding = countEscapeChar(*q);
+	size_t padding = CountEscapeChar(*q);
 	char * r = malloc(s+padding+1);
 	strcpy(r,url);
 	strcat(r,*q);
@@ -117,7 +117,7 @@ static char * formatQuery(char * url, char ** q)
 				r[i] = '+';
 			break;
 			case ':':
-				escapeChar(&r, r+i, "%3A");
+				EscapeChar(&r, r+i, "%3A");
 			break;
 		}
 		i++;
@@ -168,7 +168,7 @@ enum AddressType DetermineAddressType(const char * uri)
 /** Prepare to attempt to find a search key in 'c'
  * or use implicit searching if enabled
  */
-static char * setupSearch(const char * c)
+static char * SetupSearch(const char * c)
 {
 	char * r = NULL, * url = NULL, * sp = NULL;
 
@@ -183,7 +183,7 @@ static char * setupSearch(const char * c)
 			free(key);
 			if(!url && g_settings_get_boolean(G_SETTINGS
 				,"planc-search-implicit"))
-				implicitSearch(&url, &sp, c);
+				ImplicitSearch(&url, &sp, c);
 			else //Explicit search. Move sp over the first space
 				sp++;
 		}
@@ -194,12 +194,12 @@ static char * setupSearch(const char * c)
 		/* Since we've already determined there's no space. Don't search
 		 * if any symbols commonly used in addresses are found */
 			if(!strchrany(c, ".:/\\"))
-				implicitSearch(&url, &sp, c);
+				ImplicitSearch(&url, &sp, c);
 	}
 
 	if(url)
 	{
-		r = formatQuery(url, &sp);
+		r = FormatQuery(url, &sp);
 		free(url);
 	}
 	return r;
@@ -228,7 +228,7 @@ static char * SetupAddressPath(const char * c)
  * Returned value never null and always must be freed after use
  * Will convert numbers to speed dial addresses if avaliable
 **/
-char * prepAddress(const char * c)
+char * PrepAddress(const char * c)
 {
 	switch(DetermineAddressType(c))
 	{
@@ -237,7 +237,7 @@ char * prepAddress(const char * c)
 		case SpeedDial:
 			return sql_speed_dial_get(atoi(c));
 		case Search:
-			return setupSearch(c);
+			return SetupSearch(c);
 		default:
 			return strdup("about:blank");
 	}

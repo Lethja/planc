@@ -38,7 +38,7 @@ struct newt_st
 	gboolean show;
 };
 
-char * prepAddress(const gchar * c);
+char * PrepAddress(const gchar * c);
 
 void c_notebook_close_current(GtkWidget * w, PlancWindow * v);
 

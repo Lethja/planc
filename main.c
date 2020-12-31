@@ -640,7 +640,7 @@ static void c_act(GtkWidget * widget, PlancWindow * v)
 		break;
 
 		case 2: //Go
-			curi = prepAddress(gtk_entry_get_text
+			curi = PrepAddress(gtk_entry_get_text
 				(GTK_ENTRY(call->tool->addressEn)));
 			webkit_web_view_load_uri(WK_CURRENT_TAB(call->tabs)
 				,curi);
@@ -912,14 +912,14 @@ GtkWidget * InitTabLabel(WebKitWebView * wv, gchar * str
 static void c_g_open(GSimpleAction * a, GVariant * v, gpointer p)
 {
 	GtkNotebook * nb = get_web_view_notebook();
-	gchar * uri = prepAddress(g_variant_get_string (v, NULL));
+	gchar * uri = PrepAddress(g_variant_get_string (v, NULL));
 	webkit_web_view_load_uri(WK_CURRENT_TAB(nb), uri);
 	free(uri);
 }
 
 static void c_g_open_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
-	gchar * uri = prepAddress(g_variant_get_string (v, NULL));
+	gchar * uri = PrepAddress(g_variant_get_string (v, NULL));
 	PlancWindow * w = (PlancWindow *) get_web_view();
 	new_tab_ext(uri, w, TRUE);
 	free(uri);
@@ -927,7 +927,7 @@ static void c_g_open_tab(GSimpleAction * a, GVariant * v, gpointer p)
 
 static void c_g_open_win(GSimpleAction * a, GVariant * v, gpointer p)
 {
-	gchar * uri = prepAddress(g_variant_get_string (v, NULL));
+	gchar * uri = PrepAddress(g_variant_get_string (v, NULL));
 	gchar ** mem = malloc(sizeof(gchar *)*2);
 	mem[1] = uri;
 	InitWindow(G_APPLICATION(G_APP), mem, 2);
@@ -1040,7 +1040,7 @@ extern void * new_tab_ext(char * url, PlancWindow * v, gboolean show)
 	else //Blank page, use this page instead of new tab
 	{
 		wv = WK_CURRENT_TAB(c->tabs);
-		gchar * u = prepAddress(url);
+		gchar * u = PrepAddress(url);
 		if(u)
 		{
 			webkit_web_view_load_uri(wv,u);
@@ -1048,7 +1048,7 @@ extern void * new_tab_ext(char * url, PlancWindow * v, gboolean show)
 			return wv;
 		}
 	}
-	gchar * u = prepAddress(url);
+	gchar * u = PrepAddress(url);
 	if(u)
 	{
 		webkit_web_view_load_uri(wv,u);
@@ -1133,7 +1133,7 @@ WebKitWebView * c_new_tab(GtkWidget * gw, PlancWindow * v)
 {
 	WebKitWebView * nt
 		= (WebKitWebView *) webkit_web_view_new_with_context(G_WKC);
-	gchar * u = prepAddress(g_settings_get_string
+	gchar * u = PrepAddress(g_settings_get_string
 		(G_SETTINGS,"tab-newpage"));
 	if(u)
 	{
@@ -1874,7 +1874,7 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
 #endif
 	if(argc > 1 && argv)
 	{
-		gchar * uri = prepAddress((const gchar *) argv[1]);
+		gchar * uri = PrepAddress((const gchar *) argv[1]);
 		if(uri)
 		{
 			webkit_web_view_load_uri(WK_CURRENT_TAB(call->tabs), uri);
@@ -1893,7 +1893,7 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
 	}
 	else
 	{
-		gchar * uri = prepAddress(g_settings_get_string
+		gchar * uri = PrepAddress(g_settings_get_string
 			(G_SETTINGS,"planc-startpage"));
 		if(uri)
 		{
