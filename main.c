@@ -454,13 +454,6 @@ static void c_addr_del(GtkEditable* e, gint sp, gint ep
 	addrEntryState(e,v);
 }
 
-static void c_addr_changed(GtkEditable* e, PlancWindow * v)
-{
-	const char * uri = gtk_entry_get_text((GtkEntry *) e);
-	if(!strcmp(uri, "about:blank"))
-		gtk_entry_set_text((GtkEntry *) e, "");
-}
-
 static void c_refresh(GtkWidget * widget, PlancWindow * v)
 {
 	struct call_st * c = planc_window_get_call(v);
@@ -1004,8 +997,8 @@ static void c_show_tab(WebKitWebView * wv, struct newt_st * newtab)
 			((GtkNotebook *) call->tabs
 			,gtk_notebook_page_num
 			(call->tabs,(GtkWidget *) newtab->webv));
-		if(g_strcmp0
-			(webkit_web_view_get_uri(newtab->webv), "about:blank"))
+		if(g_strcmp0(webkit_web_view_get_uri(newtab->webv)
+			,"about:blank"))
 		{
 			gtk_widget_grab_focus((GtkWidget *) newtab->webv);
 		}
@@ -1860,8 +1853,6 @@ GtkWidget * InitWindow(GApplication * app, gchar ** argv, int argc)
 		,G_CALLBACK(c_addr_ins), window);
 	g_signal_connect_after(tool->addressEn, "delete-text"
 		,G_CALLBACK(c_addr_del), window);
-	g_signal_connect(tool->addressEn, "changed"
-		,G_CALLBACK(c_addr_changed), window);
 	g_signal_connect(window, "key-release-event"
 		,G_CALLBACK(c_accl_rels), window);
 	g_signal_connect(G_OBJECT(call->menu->tabV), "activate"
