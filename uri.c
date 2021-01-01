@@ -140,6 +140,7 @@ enum AddressType DetermineAddressType(const char * uri)
 				return Search;
 			case ':':
 			case '.':
+			case '/':
 				return Address;
 			case '0':
 			case '1':
