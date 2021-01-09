@@ -137,6 +137,9 @@ enum AddressType DetermineAddressType(const char * uri)
 		switch(*it)
 		{
 			case ' ':
+			case '\r':
+			case '\n':
+			case '\t':
 				return Search;
 			case ':':
 			case '.':
