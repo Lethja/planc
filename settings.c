@@ -601,6 +601,10 @@ static GtkWidget * InitSettingTab_general()
 	GtkWidget * th = gtk_check_button_new_with_label
 		("Switch tab when hovering in tab menu");
 	#endif
+#ifdef PLANC_FEATURE_BWRAP
+	GtkWidget * bs = gtk_check_button_new_with_label
+		("Enable Bubblewrap Sandboxing (Requires Restart)");
+#endif
 	GtkWidget * dd = gtk_check_button_new_with_label
 		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
@@ -648,6 +652,10 @@ static GtkWidget * InitSettingTab_general()
 	#ifdef PLANC_FEATURE_DMENU
 	g_settings_bind (G_SETTINGS,"planc-tabs-hover",th,"active",
 		 G_SETTINGS_BIND_DEFAULT);
+	#endif
+	#ifdef PLANC_FEATURE_BWRAP
+	g_settings_bind (G_SETTINGS, "webkit-bubblewrap",bs,"active"
+		,G_SETTINGS_BIND_DEFAULT);
 	#endif
 	g_settings_bind (G_SETTINGS,"webkit-cache",ch,"active",
 		 G_SETTINGS_BIND_DEFAULT);
@@ -723,19 +731,22 @@ static GtkWidget * InitSettingTab_general()
 	gtk_grid_attach(GTK_GRID(PcGrid),GTK_WIDGET(up),0,6,2,1);
 	attachLabeledWidget(GTK_GRID(PcGrid), "Default Tab Layout"
 		,GTK_WIDGET(tabBox),7);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,0,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,1,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,2,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(in),0,3,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,4,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,5,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(pt),0,6,2,1);
+#ifdef PLANC_FEATURE_BWRAP
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(bs),0,0,2,1);
+#endif
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,1,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,2,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,3,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(in),0,4,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,5,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,6,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(pt),0,7,2,1);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Default Encoding"
-		,GTK_WIDGET(encBox),7);
+		,GTK_WIDGET(encBox),8);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Memory Cache Model"
-		,GTK_WIDGET(mcmBox),8);
+		,GTK_WIDGET(mcmBox),9);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Hardware Accelleration"
-		,GTK_WIDGET(hwaBox),9);
+		,GTK_WIDGET(hwaBox),10);
 	switch(webkit_web_context_get_cache_model(G_WKC))
 	{
 		case WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER:

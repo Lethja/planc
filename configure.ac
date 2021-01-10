@@ -59,12 +59,12 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([floor round inet_ntoa memmove strchr strrchr strstr strtol strtoul])
 
 # Conditionals
-AC_ARG_ENABLE([gnome],
-	AS_HELP_STRING([--enable-gnome], [Build Gnome3 features (GMenu)]))
-AM_CONDITIONAL([GNOME], [test "x$enable_gnome" = "xyes"])
-AS_IF([test "x$enable_gnome" = "xyes"],
+AC_ARG_ENABLE([bwrap],
+	AS_HELP_STRING([--disable-bwrap], [Disable bubblewrap sandboxing]))
+AM_CONDITIONAL([BWRAP], [test "x$enable_bwrap" = "xyes"])
+AS_IF([test "x$enable_bwrap" != "xno"],
 [
-	AC_DEFINE([PLANC_FEATURE_GNOME], [1], [Build with Gnome3 oriented features like Gmenu])
+	AC_DEFINE([PLANC_FEATURE_BWRAP], [1], [Build with bubblewrap sandboxing])
 ])
 AC_ARG_ENABLE([dmenu],
 	AS_HELP_STRING([--enable-dmenu], [Enable dynamic traditional menus]))
@@ -79,5 +79,12 @@ AM_CONDITIONAL([DPOLC], [test "x$enable_dpolc" != "xno"])
 AS_IF([test "x$enable_dpolc" != "xno"],
 [
 	AC_DEFINE([PLANC_FEATURE_DPOLC], [1], [Build with domain policy support])
+])
+AC_ARG_ENABLE([gnome],
+	AS_HELP_STRING([--enable-gnome], [Build Gnome3 features (GMenu)]))
+AM_CONDITIONAL([GNOME], [test "x$enable_gnome" = "xyes"])
+AS_IF([test "x$enable_gnome" = "xyes"],
+[
+	AC_DEFINE([PLANC_FEATURE_GNOME], [1], [Build with Gnome3 oriented features like Gmenu])
 ])
 AC_OUTPUT

@@ -1500,7 +1500,6 @@ static void InitWebContext(GtkApplication * app)
 			return;
 		}
 	}
-	g_free(config);
 
 	char * datadir = g_build_filename(g_get_user_data_dir()
 		,PACKAGE_NAME, NULL);
@@ -1512,10 +1511,24 @@ static void InitWebContext(GtkApplication * app)
 		("base-data-directory", cachedir, "base-cache-directory"
 		,datadir, NULL);
 
+	G_WKC = webkit_web_context_new_with_website_data_manager(d);
+
+#ifdef PLANC_FEATURE_BWRAP
+	gboolean bwrap = g_settings_get_boolean(G_SETTINGS
+		,"webkit-bubblewrap");
+	webkit_web_context_set_sandbox_enabled(G_WKC, bwrap);
+	if(bwrap)
+	{
+		webkit_web_context_add_path_to_sandbox(G_WKC, config, FALSE);
+		webkit_web_context_add_path_to_sandbox(G_WKC, datadir, FALSE);
+		webkit_web_context_add_path_to_sandbox(G_WKC, cachedir, FALSE);
+	}
+#endif
+
+	g_free(config);
 	g_free(datadir);
 	g_free(cachedir);
 
-	G_WKC = webkit_web_context_new_with_website_data_manager(d);
 #ifdef PLANC_FEATURE_DPOLC
 	g_signal_connect(G_WKC, "initialize-web-extensions"
 		,G_CALLBACK(c_wk_ext_init), NULL);

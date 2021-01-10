@@ -162,6 +162,13 @@
 				Force Plan C to use the traditional full menu even if the desktop enviroment handles a Gmenu
 			</description>
 		</key>
+		<key name='webkit-bubblewrap' type='b'>
+			<default>true</default>
+			<summary>Enable Bubblewrap Sandboxing</summary>
+			<description>
+				Enable sandboxing via the bwrap utility on Linux
+			</description>
+		</key>
 		<key name='planc-search-implicit' type='b'>
 			<default>false</default>
 			<summary>Allow Implicit Searching</summary>
