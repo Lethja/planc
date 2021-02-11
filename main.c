@@ -1236,16 +1236,22 @@ void InitHeaderBar(PlancWindow * v, struct tool_st * tool)
 	gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR(bar), false);
 
 	tool->backTb = gtk_button_new_from_icon_name("go-previous-symbolic"
-		,GTK_ICON_SIZE_LARGE_TOOLBAR);
+		,GTK_ICON_SIZE_SMALL_TOOLBAR);
 
 	tool->forwardTb = gtk_button_new_from_icon_name("go-next-symbolic"
-		,GTK_ICON_SIZE_LARGE_TOOLBAR);
+		,GTK_ICON_SIZE_SMALL_TOOLBAR);
 
+	GtkWidget * box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	GtkStyleContext * style = gtk_widget_get_style_context(box);
+	gtk_style_context_add_class(style, "navigation-box");
+	gtk_style_context_add_class(style, "linked");
 	gtk_widget_set_sensitive(GTK_WIDGET(tool->backTb), FALSE);
 	gtk_widget_set_sensitive(GTK_WIDGET(tool->forwardTb), FALSE);
 
-	gtk_header_bar_pack_start(GTK_HEADER_BAR(bar), tool->backTb);
-	gtk_header_bar_pack_start(GTK_HEADER_BAR(bar), tool->forwardTb);
+	gtk_box_pack_start((GtkBox *)box, tool->backTb, TRUE, FALSE, 0);
+	gtk_box_pack_start((GtkBox *)box, tool->forwardTb, TRUE, FALSE, 0);
+
+	gtk_header_bar_pack_start(GTK_HEADER_BAR(bar), box);
 
 	gtk_window_set_titlebar(GTK_WINDOW(v), bar);
 }
