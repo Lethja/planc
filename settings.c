@@ -124,8 +124,10 @@ void c_settings_mse(GtkToggleButton * w, void * v)
 
 void c_settings_in(GtkToggleButton * w, void * v)
 {
+#if WEBKIT_CHECK_VERSION(3,32,0)
 	webkit_settings_set_enable_plugins(G_WKC_SETTINGS
 		,gtk_toggle_button_get_active(w));
+#endif
 }
 
 void c_settings_ch(GtkToggleButton * w, void * v)
@@ -635,7 +637,16 @@ static GtkWidget * InitSettingTab_general()
 		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pt), TRUE);
 	}
 	else
-		g_settings_bind (G_SETTINGS,"webkit-ppt",pt,"active",
+		g_settings_bind (G_SETTINGS, "webkit-ppt", pt, "active",
+			G_SETTINGS_BIND_DEFAULT);
+
+	if(wkVersionOk(3,32,0)) //Webkit plugins disabled above this version
+	{
+		gtk_widget_set_sensitive(in, FALSE);
+		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(in), FALSE);
+	}
+	else
+		g_settings_bind (G_SETTINGS, "webkit-plugins", in, "active",
 			G_SETTINGS_BIND_DEFAULT);
 
 	//Bind to setting
@@ -664,8 +675,6 @@ static GtkWidget * InitSettingTab_general()
 	g_settings_bind (G_SETTINGS,"planc-inhibit",ii,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-mse",ms,"active",
-		 G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (G_SETTINGS,"webkit-plugins",in,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-hw",hwaBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);

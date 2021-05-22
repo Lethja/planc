@@ -18,13 +18,13 @@ static gboolean c_webpage_send_request(WebKitWebPage * wp
 	if(pdom && rdom)
 	{
 		gboolean r;
-		if(strcmp(pdom,rdom) == 0)
+		if(strcmp(pdom, rdom) == 0)
 		{
 			r = FALSE;
 		}
 		else
 		{
-			if(sql_domain_policy_read(pdom,rdom))
+			if(sql_domain_policy_read(pdom, rdom))
 			{
 #ifndef NDEBUG
 				g_debug("PASS: '%s' > '%s'", pdom, rdom);

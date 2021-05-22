@@ -1606,8 +1606,10 @@ static void InitWebContext(GtkApplication * app)
 		,g_settings_get_boolean(G_SETTINGS,"webkit-java"));
 	webkit_settings_set_enable_javascript(G_WKC_SETTINGS
 		,g_settings_get_boolean(G_SETTINGS,"webkit-js"));
+#if WEBKIT_CHECK_VERSION(3,32,0)
 	webkit_settings_set_enable_plugins(G_WKC_SETTINGS
 		,g_settings_get_boolean(G_SETTINGS,"webkit-plugins"));
+#endif
 	webkit_settings_set_enable_webaudio(G_WKC_SETTINGS
 		,g_settings_get_boolean(G_SETTINGS,"webkit-webaudio"));
 	webkit_settings_set_enable_media_stream(G_WKC_SETTINGS
