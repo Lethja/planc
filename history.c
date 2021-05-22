@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 
+#include <webkit2/webkit2.h>
 #include "main.h"
 #include "history.h"
 #include "libdatabase.h"

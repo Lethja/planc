@@ -1,3 +1,9 @@
+#include <gio/gio.h>
+#include <glib.h>
+#include <glib/gi18n.h>
+#include <gtk/gtk.h>
+#include <webkit2/webkit2.h>
+
 #include "main.h"
 #include "settings.h"
 #include "plan.h"

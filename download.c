@@ -1,9 +1,11 @@
 #define _GNU_SOURCE
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <math.h>
 #include <glib.h>
+#include <glib/gi18n.h>
 #include <glib/gstdio.h>
+#include <math.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <webkit2/webkit2.h>
 
 #include "main.h"
 #include "download.h"

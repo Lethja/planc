@@ -1,13 +1,5 @@
 #include "config.h"
-#include <stdlib.h>
-#include <gtk/gtk.h>
 #include <webkit2/webkit2.h>
-#include <string.h>
-#include <glib.h>
-#include <glib/gi18n.h>
-#include <glib/gstdio.h>
-#include <gmodule.h>
-#include <ctype.h>
 #include "plan.h"
 
 #define WK_CURRENT_TAB(notebook) \

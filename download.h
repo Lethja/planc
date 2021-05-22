@@ -1,3 +1,5 @@
+#include <gtk/gtk.h>
+#include <webkit2/webkit2.h>
 extern GtkWindow * InitDownloadPrompt(gchar * fn);
 
 extern void c_download_start(WebKitWebContext * wv
