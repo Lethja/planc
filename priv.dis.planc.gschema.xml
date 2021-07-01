@@ -155,6 +155,13 @@
 				Enable Webkit Inspector
 			</description>
 		</key>
+		<key name='webkit-dns' type='b'>
+			<default>true</default>
+			<summary>Webkit DNS Pre-fetching</summary>
+			<description>
+				Enable Webkits DNS prefetching
+			</description>
+		</key>
 		<key name='planc-traditional' type='b'>
 			<default>false</default>
 			<summary>Force Traditional Menu</summary>

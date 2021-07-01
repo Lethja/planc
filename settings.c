@@ -617,6 +617,8 @@ static GtkWidget * InitSettingTab_general()
 		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
 		("Enable Developer Options");
+	GtkWidget * dn = gtk_check_button_new_with_label
+		("Enable DNS Pre-Fetching");
 	GtkWidget * ch = gtk_check_button_new_with_label
 		("Enable Page Cache");
 	GtkWidget * ta = gtk_check_button_new_with_label
@@ -688,7 +690,9 @@ static GtkWidget * InitSettingTab_general()
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-java",jv,"active",
 		 G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (G_SETTINGS,"webkit-dev",dv,"active",
+g_settings_bind (G_SETTINGS,"webkit-dev",dn,"active",
+		 G_SETTINGS_BIND_DEFAULT);
+	g_settings_bind (G_SETTINGS,"webkit-dns",dv,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
@@ -750,18 +754,19 @@ static GtkWidget * InitSettingTab_general()
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(bs),0,0,2,1);
 #endif
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,1,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,2,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,3,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(in),0,4,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,5,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,6,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(pt),0,7,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dn),0,2,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,3,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,4,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(in),0,5,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,6,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,7,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(pt),0,8,2,1);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Default Encoding"
-		,GTK_WIDGET(encBox),8);
+		,GTK_WIDGET(encBox),9);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Memory Cache Model"
-		,GTK_WIDGET(mcmBox),9);
+		,GTK_WIDGET(mcmBox),10);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Hardware Accelleration"
-		,GTK_WIDGET(hwaBox),10);
+		,GTK_WIDGET(hwaBox),11);
 	switch(webkit_web_context_get_cache_model(G_WKC))
 	{
 		case WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER:

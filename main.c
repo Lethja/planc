@@ -1633,6 +1633,8 @@ static void InitWebContext(GtkApplication * app)
 #endif
 	g_object_set (G_OBJECT(G_WKC_SETTINGS), "enable-developer-extras"
 		,g_settings_get_boolean(G_SETTINGS,"webkit-dev"), NULL);
+	webkit_settings_set_enable_dns_prefetching(G_WKC_SETTINGS
+		,g_settings_get_boolean(G_SETTINGS,"webkit-dns"));
 	g_signal_connect(G_WKC, "download-started"
 		,G_CALLBACK(c_download_start), NULL);
 }
