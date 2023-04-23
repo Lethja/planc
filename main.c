@@ -812,8 +812,16 @@ static void unknownProtocolNotify(gchar * uri)
 	g_free(body);
 	g_notification_set_icon(boop, g_icon_new_for_string("web-browser"
 		,NULL));
+	if(g_settings_get_boolean(G_SETTINGS
+		,"planc-forward-unknown-protocol"))
+	{
+		g_notification_add_button_with_target(boop
+			,"Forward to System", "app.openfile", "s", uri);
+	}
+
 	g_notification_add_button_with_target(boop
-		,"Forward to System", "app.openfile", "s", uri);
+		,"Copy protocol URL to Clipboard", "app.copypath", "s", uri);
+
 	g_application_send_notification(G_APPLICATION(G_APP), "up", boop);
 }
 
@@ -827,13 +835,8 @@ static gboolean c_load_fail(WebKitWebView * wv, WebKitLoadEvent e
 			switch (err->code)
 			{
 				case WEBKIT_POLICY_ERROR_CANNOT_SHOW_URI:
-					if(g_settings_get_boolean(G_SETTINGS
-						,"planc-forward-unknown-protocol"))
-					{
-						unknownProtocolNotify(furi);
-						return TRUE;
-					}
-				break;
+					unknownProtocolNotify(furi);
+					return TRUE;
 			}
 		}
 	}
@@ -946,6 +949,14 @@ static void c_g_open_file(GSimpleAction * a, GVariant * v, gpointer p)
 	openFile(uri);
 }
 
+static void c_g_copy_path(GSimpleAction * a, GVariant * v, gpointer p)
+{
+	g_application_withdraw_notification(G_APPLICATION(G_APP), "up");
+	const gchar * uri = g_variant_get_string (v, NULL);
+	gtk_clipboard_set_text(gtk_clipboard_get_default(
+		gdk_display_get_default()), uri, -1);
+}
+
 #ifdef PLANC_FEATURE_DMENU
 static void c_g_close_tab(GSimpleAction * a, GVariant * v, gpointer p)
 {
@@ -987,7 +998,8 @@ static const GActionEntry G_actions[] =
 	{ "open", c_g_open, "s" },
 	{ "opentab", c_g_open_tab, "s" },
 	{ "openwin", c_g_open_win, "s" },
-	{ "openfile", c_g_open_file, "s"}
+	{ "openfile", c_g_open_file, "s"},
+	{ "copypath", c_g_copy_path, "s"}
 #ifdef PLANC_FEATURE_DMENU
 	,
 	{ "switchtab", c_g_show_tab },
