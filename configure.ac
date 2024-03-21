@@ -39,8 +39,13 @@ AC_FUNC_REALLOC
 AC_CHECK_FUNCS([memmove memcpy strchr strrchr strstr strtol strtoul strcasestr])
 
 PKG_CHECK_MODULES(GTK3, gtk+-3.0 >= 3.20)
-PKG_CHECK_MODULES(WK4, webkit2gtk-4.0 >= 2.18)
 PKG_CHECK_MODULES(SQ3, sqlite3 >= 3.00)
+PKG_CHECK_MODULES(WK4, webkit2gtk-4.0 >= 2.18, [], 
+	[PKG_CHECK_MODULES(WK4, webkit2gtk-4.1 >= 2.18, [], 
+		[PKG_CHECK_MODULES(WK4, webkitgtk-6.0 >= 2.18)])
+	]
+)
+
 AC_CHECK_LIB([webkit2gtk-4.0], [webkit_settings_set_enable_encrypted_media], [AC_DEFINE([WK_MEDIA_ENCRYPT], [1], [WebKitGtk has encrypted_media setting])],[])
 
 GLIB_GSETTINGS
