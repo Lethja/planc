@@ -110,11 +110,6 @@ void c_traditional_menu_hide(GtkToggleButton * cbmi
 	}
 }
 #endif
-void c_settings_jv(GtkToggleButton * w, void * v)
-{
-	webkit_settings_set_enable_java(G_WKC_SETTINGS
-		,gtk_toggle_button_get_active(w));
-}
 
 void c_settings_js(GtkToggleButton * w, void * v)
 {
@@ -617,8 +612,6 @@ static GtkWidget * InitSettingTab_general()
 		("Download files into a domain folder");
 	GtkWidget * dv = gtk_check_button_new_with_label
 		("Enable Developer Options");
-	GtkWidget * dn = gtk_check_button_new_with_label
-		("Enable DNS Pre-Fetching");
 	GtkWidget * ch = gtk_check_button_new_with_label
 		("Enable Page Cache");
 	GtkWidget * ta = gtk_check_button_new_with_label
@@ -627,27 +620,14 @@ static GtkWidget * InitSettingTab_general()
 		("Inhibit system idel actions when audio is playing");
 	GtkWidget * js = gtk_check_button_new_with_label
 		("Enable JavaScript");
-	GtkWidget * jv = gtk_check_button_new_with_label
-		("Enable Java");
 	GtkWidget * ms = gtk_check_button_new_with_label
 		("Enable Media Source Extensions");
 	GtkWidget * in = gtk_check_button_new_with_label
 		("Enable Plugins");
-	GtkWidget * pt = gtk_check_button_new_with_label
-		("Enable Process Per Tab (Requires Restart)");
 	GtkWidget * up = gtk_check_button_new_with_label
 		("Forward unknown protocol links to the operating system");
 
 	//Special case
-	if(wkVersionOk(2,26,0)) //Shared model deprecated above this version
-	{
-		gtk_widget_set_sensitive(pt, FALSE);
-		gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(pt), TRUE);
-	}
-	else
-		g_settings_bind (G_SETTINGS, "webkit-ppt", pt, "active",
-			G_SETTINGS_BIND_DEFAULT);
-
 	if(wkVersionOk(3,32,0)) //Webkit plugins disabled above this version
 	{
 		gtk_widget_set_sensitive(in, FALSE);
@@ -688,11 +668,7 @@ static GtkWidget * InitSettingTab_general()
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"webkit-js",js,"active",
 		 G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (G_SETTINGS,"webkit-java",jv,"active",
-		 G_SETTINGS_BIND_DEFAULT);
-g_settings_bind (G_SETTINGS,"webkit-dev",dn,"active",
-		 G_SETTINGS_BIND_DEFAULT);
-	g_settings_bind (G_SETTINGS,"webkit-dns",dv,"active",
+	g_settings_bind (G_SETTINGS,"webkit-dev",dv,"active",
 		 G_SETTINGS_BIND_DEFAULT);
 	g_settings_bind (G_SETTINGS,"tab-layout",tabBox,"active",
 		 G_SETTINGS_BIND_DEFAULT);
@@ -706,7 +682,7 @@ g_settings_bind (G_SETTINGS,"webkit-dev",dn,"active",
 		,G_CALLBACK(c_settings_cm), NULL);
 
 	g_signal_connect(hwaBox, "changed"
-		,G_CALLBACK(c_settings_cm), NULL);
+		,G_CALLBACK(c_settings_hw), NULL);
 
 	g_signal_connect(ta, "toggled"
 		,G_CALLBACK(c_notebook_tabs_autohide), NULL);
@@ -719,9 +695,6 @@ g_settings_bind (G_SETTINGS,"webkit-dev",dn,"active",
 	#endif
 	g_signal_connect(ms, "toggled"
 		,G_CALLBACK(c_settings_mse), NULL);
-
-	g_signal_connect(jv, "toggled"
-		,G_CALLBACK(c_settings_jv), NULL);
 
 	g_signal_connect(js, "toggled"
 		,G_CALLBACK(c_settings_js), NULL);
@@ -754,19 +727,16 @@ g_settings_bind (G_SETTINGS,"webkit-dev",dn,"active",
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(bs),0,0,2,1);
 #endif
 	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dv),0,1,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(dn),0,2,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(jv),0,3,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,4,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(in),0,5,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,6,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,7,2,1);
-	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(pt),0,8,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(js),0,2,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(in),0,3,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ms),0,4,2,1);
+	gtk_grid_attach(GTK_GRID(WkGrid),GTK_WIDGET(ch),0,5,2,1);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Default Encoding"
-		,GTK_WIDGET(encBox),9);
+		,GTK_WIDGET(encBox),6);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Memory Cache Model"
-		,GTK_WIDGET(mcmBox),10);
+		,GTK_WIDGET(mcmBox),7);
 	attachLabeledWidget(GTK_GRID(WkGrid), "Hardware Accelleration"
-		,GTK_WIDGET(hwaBox),11);
+		,GTK_WIDGET(hwaBox),8);
 	switch(webkit_web_context_get_cache_model(G_WKC))
 	{
 		case WEBKIT_CACHE_MODEL_DOCUMENT_VIEWER:

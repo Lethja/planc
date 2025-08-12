@@ -1562,13 +1562,6 @@ static void InitWebContext(GtkApplication * app)
 	g_signal_connect(G_WKC, "initialize-web-extensions"
 		,G_CALLBACK(c_wk_ext_init), NULL);
 #endif
-	if(wkVersionOk(2,26,0) //Shared model deprecated above this version
-	|| g_settings_get_boolean(G_SETTINGS,"webkit-ppt"))
-		webkit_web_context_set_process_model(G_WKC
-			,WEBKIT_PROCESS_MODEL_MULTIPLE_SECONDARY_PROCESSES);
-	else
-		webkit_web_context_set_process_model(G_WKC
-			,WEBKIT_PROCESS_MODEL_SHARED_SECONDARY_PROCESS);
 
 	switch(g_settings_get_int(G_SETTINGS,"webkit-mcm"))
 	{
@@ -1625,8 +1618,6 @@ static void InitWebContext(GtkApplication * app)
 		,"default-charset", G_SETTINGS_BIND_GET);
 	webkit_settings_set_enable_page_cache(G_WKC_SETTINGS
 		,g_settings_get_boolean(G_SETTINGS,"webkit-cache"));
-	webkit_settings_set_enable_java(G_WKC_SETTINGS
-		,g_settings_get_boolean(G_SETTINGS,"webkit-java"));
 	webkit_settings_set_enable_javascript(G_WKC_SETTINGS
 		,g_settings_get_boolean(G_SETTINGS,"webkit-js"));
 #if WEBKIT_CHECK_VERSION(3,32,0)
@@ -1645,8 +1636,6 @@ static void InitWebContext(GtkApplication * app)
 #endif
 	g_object_set (G_OBJECT(G_WKC_SETTINGS), "enable-developer-extras"
 		,g_settings_get_boolean(G_SETTINGS,"webkit-dev"), NULL);
-	webkit_settings_set_enable_dns_prefetching(G_WKC_SETTINGS
-		,g_settings_get_boolean(G_SETTINGS,"webkit-dns"));
 	g_signal_connect(G_WKC, "download-started"
 		,G_CALLBACK(c_download_start), NULL);
 }
