@@ -803,7 +803,7 @@ static void unknownProtocolNotify(gchar * uri)
 	GNotification * boop
 		= g_notification_new("Unknown Protocol - Plan C");
 	gchar * body
-		= g_strdup_printf("Plan C dosen't know how to handle "
+		= g_strdup_printf("Plan C doesn't know how to handle "
 		"this protocol:\n\n '%s' \n\nIt's possible another program on "
 		"the system does. Only 'Forward to System'"
 		" if you trust this link", uri);
@@ -2040,7 +2040,8 @@ static void createContextSelect(WebKitWebView * wv
 	parse_context_menu_user_data(cm, &text);
 	if(text)
 	{
-		SoupURI * uri = soup_uri_new(text);
+		GError *error = NULL;
+		GUri *uri = g_uri_parse(text, G_URI_FLAGS_NONE, &error);
 		GAction * open = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
 			,"open");
 		GAction * opet = g_action_map_lookup_action (G_ACTION_MAP(G_APP)
@@ -2056,7 +2057,7 @@ static void createContextSelect(WebKitWebView * wv
 		webkit_context_menu_prepend (cm, mi);
 		if(uri)
 		{
-			soup_uri_free(uri);
+			g_uri_unref(uri);
 			webkit_context_menu_prepend (cm, mi);
 			mi = webkit_context_menu_item_new_from_gaction(opew
 				,"Open Link in New Window", g);
