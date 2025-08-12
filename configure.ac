@@ -3,9 +3,9 @@
 
 AC_PREREQ([2.68])
 AC_INIT([planc], [0.05])
-AM_INIT_AUTOMAKE([-Wall foreign])
-AC_CONFIG_SRCDIR([main.c])
-AC_CONFIG_HEADERS([config.h])
+AM_INIT_AUTOMAKE([-Wall foreign subdir-objects])
+AC_CONFIG_SRCDIR([src/main.c])
+AC_CONFIG_HEADERS([src/config.h])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
