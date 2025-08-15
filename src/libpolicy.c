@@ -50,8 +50,14 @@ static gboolean c_webpage_context(WebKitWebPage *wp, WebKitContextMenu *cm, WebK
     g_autoptr(JSCValue)
     js_value = NULL;
 
-    frame = webkit_web_page_get_main_frame(wp);
-    js_context = webkit_frame_get_js_context(frame);
+    /* https://gitlab.gnome.org/GNOME/epiphany/issues/442 */
+    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+    if (!(frame = webkit_web_page_get_main_frame(wp)))
+        return FALSE;
+    G_GNUC_END_IGNORE_DEPRECATIONS
+
+    if (!(js_context = webkit_frame_get_js_context(frame)))
+        return FALSE;
 
     js_value = jsc_context_evaluate(js_context, "window.getSelection().toString();", -1);
     if (!jsc_value_is_null(js_value) && !jsc_value_is_undefined(js_value))
