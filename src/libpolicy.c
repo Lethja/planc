@@ -7,14 +7,18 @@
 
 static gboolean
 c_webpage_send_request(WebKitWebPage *wp, WebKitURIRequest *req, WebKitURIResponse *res, gpointer user_data) {
+    const gchar *purl, *rurl;
+    gchar *pdom, *rdom;
+
     if (res)
         return FALSE;
-    const gchar *purl = webkit_web_page_get_uri(wp);
-    const gchar *rurl = webkit_uri_request_get_uri(req);
-    gchar *pdom = getDomainName(purl);
-    gchar *rdom = getDomainName(rurl);
+
+    purl = webkit_web_page_get_uri(wp), rurl = webkit_uri_request_get_uri(req);
+    pdom = getDomainName(purl), rdom = getDomainName(rurl);
+
     if (pdom && rdom) {
         gboolean r;
+
         if (strcmp(pdom, rdom) == 0)
             r = FALSE;
         else {
@@ -30,25 +34,24 @@ c_webpage_send_request(WebKitWebPage *wp, WebKitURIRequest *req, WebKitURIRespon
                 r = TRUE;
             }
         }
-        free(pdom);
-        free(rdom);
+        free(pdom), free(rdom);
         return r;
     }
+
     if (pdom)
         free(pdom);
     if (rdom)
         free(rdom);
+
     return FALSE;
 }
 
 static gboolean c_webpage_context(WebKitWebPage *wp, WebKitContextMenu *cm, WebKitWebHitTestResult *hr, void *v) {
-    g_autofree char *string = NULL;
     GVariantBuilder builder;
     WebKitFrame *frame;
-    g_autoptr(JSCContext)
-    js_context = NULL;
-    g_autoptr(JSCValue)
-    js_value = NULL;
+    g_autofree char *string = NULL;
+    g_autoptr(JSCContext) js_context = NULL;
+    g_autoptr(JSCValue) js_value = NULL;
 
     /* https://gitlab.gnome.org/GNOME/epiphany/issues/442 */
     G_GNUC_BEGIN_IGNORE_DEPRECATIONS
