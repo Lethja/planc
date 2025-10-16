@@ -930,7 +930,7 @@ static WebKitWebView *c_new_tab_related(WebKitWebView *wv, WebKitNavigationActio
     struct newt_st *newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->plan = v;
-    newtab->show = FALSE; //TODO: Fix me, crashes if TRUE
+    newtab->show = TRUE;
 
     /*
      * TODO: Maybe useful, maybe not?
