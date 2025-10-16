@@ -927,18 +927,19 @@ static WebKitWebView *c_new_tab_url(WebKitWebView *wv, WebKitNavigationAction *n
 static WebKitWebView *c_new_tab_related(WebKitWebView *wv, WebKitNavigationAction *na, PlancWindow *v) {
     WebKitWebView *nt = (WebKitWebView *) webkit_web_view_new_with_related_view(wv);
 
-    /*
-     * TODO: broken code, fix.
-     * Crash at https://github.com/WebKit/WebKit/blob/8f7f470b41951ad4b90a633338aa57ddaa768c92/Source/WebKit/UIProcess/WebPageProxy.cpp#L8503
-     * Working solution at https://github.com/GNOME/epiphany/blob/2bcfab21ef1cee3db866ae22134ec1531db205d3/src/ephy-shell.c#L1145
-     */
-
     struct newt_st *newtab = malloc(sizeof(struct newt_st));
     newtab->webv = nt;
     newtab->plan = v;
     newtab->show = FALSE; //TODO: Fix me, crashes if TRUE
 
+    /*
+     * TODO: Maybe useful, maybe not?
     g_signal_connect(nt, "ready-to-show", G_CALLBACK(c_show_tab_related), newtab);
+    */
+    webkit_web_view_load_request(nt, webkit_navigation_action_get_request(na));
+
+    connect_signals(nt, v);
+    c_show_tab(nt, newtab);
 
     return nt;
 }
