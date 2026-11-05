@@ -14,7 +14,7 @@ c_webpage_send_request(WebKitWebPage *wp, WebKitURIRequest *req, WebKitURIRespon
         return FALSE;
 
     purl = webkit_web_page_get_uri(wp), rurl = webkit_uri_request_get_uri(req);
-    pdom = getDomainName(purl), rdom = getDomainName(rurl);
+    pdom = getDomainName((char *) purl), rdom = getDomainName((char *) rurl);
 
     if (pdom && rdom) {
         gboolean r;

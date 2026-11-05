@@ -1,1 +1,2 @@
-extern void InitSettingsWindow();
+#include "plan.h"
+extern void InitSettingsWindow(PlancWindow *v);

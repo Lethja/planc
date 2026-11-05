@@ -72,7 +72,7 @@ static const char *selectSearchKey = "SELECT * FROM `SEARCH`" \
                                      " WHERE `KEY` is ?";
 
 static const char *selectSpeedDialName = "SELECT * FROM `DIAL`" \
-        " WHERE `URL` is ? OR `NAME` is ?";
+    " WHERE `URL` is ? OR `NAME` is ?";
 
 static const char *deleteSearch = "DELETE FROM `SEARCH` WHERE `KEY` is ?";
 
@@ -98,12 +98,12 @@ static const char *createPolicy = "PRAGMA synchronous=ON;" \
                                   "`ALLOW` INTERGER)";
 
 static const char *policyDefaultWhitelist = \
-        "INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`)" \
-        "VALUES (null, null, 1)";
+    "INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`)" \
+    "VALUES (null, null, 1)";
 
 static const char *policyDefaultBlacklist = \
-        "INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`)" \
-        "VALUES (null, null, 0)";
+    "INSERT INTO `POLICY` (`FROM`, `TO`, `ALLOW`)" \
+    "VALUES (null, null, 0)";
 
 enum policyflag { //Policy byteflag
     POLIC = (1 << 0), //Allow or Deny

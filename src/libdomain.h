@@ -1,1 +1,1 @@
-extern char *getDomainName(const char *url);
+extern char *getDomainName(char *url);

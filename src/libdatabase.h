@@ -50,6 +50,6 @@ extern char sql_search_get(char *key, char **name, char **uri);
 
 extern gboolean sql_domain_policy_read(gchar *from, gchar *to);
 
-extern void createPolicyDatabase();
+extern void createPolicyDatabase(int t);
 
 #endif

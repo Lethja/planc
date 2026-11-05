@@ -155,10 +155,9 @@ enum AddressType DetermineAddressType(const char *uri) {
 /** Prepare to attempt to find a search key in 'c'
  * or use implicit searching if enabled
  */
-static char *SetupSearch(const char *c) {
-    char *r = NULL, *url = NULL, *sp = NULL;
+static char *SetupSearch(char *c) {
+    char *r = NULL, *url = NULL, *sp = strchr(c, ' ');
 
-    sp = strchr(c, ' ');
     if (sp) { //The first word could the a search provider key
         gchar *key = malloc(strlen(c) - strlen(sp) + 1);
         if (key) {
@@ -185,7 +184,7 @@ static char *SetupSearch(const char *c) {
     return r;
 }
 
-static char *SetupAddressPath(const char *c) {
+static char *SetupAddressPath(char *c) {
     //Check if this uri starts with 'about:'
     char *p = strstr(c, "about:");
     if (p == c)
@@ -210,7 +209,7 @@ static char *SetupAddressPath(const char *c) {
  * Returned value never null and always must be freed after use
  * Will convert numbers to speed dial addresses if avaliable
 **/
-char *PrepAddress(const char *c) {
+char *PrepAddress(char *c) {
     switch (DetermineAddressType(c)) {
         case Address:
             return SetupAddressPath(c);

@@ -26,8 +26,6 @@ struct newt_st {
     gboolean show;
 };
 
-char *PrepAddress(const gchar *c);
-
 void c_notebook_close_current(GtkWidget *w, PlancWindow *v);
 
 void c_toggleSearch(GtkWidget *w, PlancWindow *v);

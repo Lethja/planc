@@ -7,8 +7,8 @@ extern void c_download_start(WebKitWebContext *wv, WebKitDownload *dl, void *v);
 
 extern void InitDownloadWindow();
 
-extern gchar *getFileNameFromPath(const gchar *path);
+extern gchar *getFileNameFromPath(gchar *path);
 
-extern gchar *getPathFromFileName(const gchar *path);
+extern gchar *getPathFromFileName(gchar *path);
 
 extern void openFile(const gchar *file);

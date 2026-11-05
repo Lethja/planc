@@ -14,7 +14,7 @@ static char *removeWWW(char *dom) {
         return dom;
 }
 
-extern char *getDomainName(const char *url) {
+extern char *getDomainName(char *url) {
     char *st = strstr(url, "://");
     if (st)
         st += 3;

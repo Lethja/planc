@@ -78,7 +78,7 @@ void uninhibit_now(struct call_st *c, PlancWindow *v) {
         gint returncode;
         cmd = g_strdup_printf("xdg-screensaver resume %i"
                               , (int)GDK_WINDOW_XID(gtk_widget_get_window
-                                      (GTK_WIDGET(v))));
+                                  (GTK_WIDGET(v))));
         returncode = system(cmd);
         if (returncode)
             g_print("'%s' failed with error %d", cmd
@@ -123,7 +123,7 @@ static void update_screensaver_inhibitor(gboolean inhibit, PlancWindow *v) {
                 gint returncode;
                 cmd = g_strdup_printf("xdg-screensaver suspend %i"
                                       , (int)GDK_WINDOW_XID(gtk_widget_get_window
-                                              (GTK_WIDGET(v))));
+                                          (GTK_WIDGET(v))));
                 returncode = system(cmd);
                 if (returncode)
                     g_print("'%s' failed with error %d", cmd
@@ -514,7 +514,7 @@ static void c_act(GtkWidget *widget, PlancWindow *v) {
             break;
 
         case 2: //Go
-            curi = PrepAddress(gtk_entry_get_text(GTK_ENTRY(call->tool->addressEn)));
+            curi = PrepAddress((char *)gtk_entry_get_text(GTK_ENTRY(call->tool->addressEn)));
             webkit_web_view_load_uri(WK_CURRENT_TAB(call->tabs), curi);
             if (curi)
                 free(curi);
@@ -711,20 +711,20 @@ GtkWidget *InitTabLabel(WebKitWebView *wv, gchar *str, PlancWindow *v) {
 
 static void c_g_open(GSimpleAction *a, GVariant *v, gpointer p) {
     GtkNotebook *nb = get_web_view_notebook();
-    gchar *uri = PrepAddress(g_variant_get_string(v, NULL));
+    gchar *uri = PrepAddress((char *) g_variant_get_string(v, NULL));
     webkit_web_view_load_uri(WK_CURRENT_TAB(nb), uri);
     free(uri);
 }
 
 static void c_g_open_tab(GSimpleAction *a, GVariant *v, gpointer p) {
-    gchar *uri = PrepAddress(g_variant_get_string(v, NULL));
+    gchar *uri = PrepAddress((char *) g_variant_get_string(v, NULL));
     PlancWindow *w = (PlancWindow *) get_web_view();
     new_tab_ext(uri, w, TRUE);
     free(uri);
 }
 
 static void c_g_open_win(GSimpleAction *a, GVariant *v, gpointer p) {
-    gchar *uri = PrepAddress(g_variant_get_string(v, NULL));
+    gchar *uri = PrepAddress((char *) g_variant_get_string(v, NULL));
     gchar **mem = malloc(sizeof(gchar * ) * 2);
     mem[1] = uri;
     InitWindow(G_APPLICATION(G_APP), mem, 2);
@@ -1487,7 +1487,7 @@ GtkWidget *InitWindow(GApplication *app, gchar **argv, int argc) {
     g_signal_connect(G_OBJECT(call->menu->tabM), "activate", G_CALLBACK(c_update_tabs_layout), window);
 #endif
     if (argc > 1 && argv) {
-        gchar *uri = PrepAddress((const gchar *) argv[1]);
+        gchar *uri = PrepAddress((gchar *) argv[1]);
         if (uri) {
             webkit_web_view_load_uri(WK_CURRENT_TAB(call->tabs), uri);
             free(uri);
@@ -1651,10 +1651,10 @@ static void createContextImage(WebKitWebView *wv, WebKitContextMenu *cm) {
          WEBKIT_CONTEXT_MENU_ACTION_COPY_IMAGE_URL_TO_CLIPBOARD, "Copy Image Link");
     webkit_context_menu_prepend(cm, mi);
     mi = webkit_context_menu_item_new_from_stock_action_with_label(WEBKIT_CONTEXT_MENU_ACTION_COPY_IMAGE_TO_CLIPBOARD,
-            "Copy Image");
+         "Copy Image");
     webkit_context_menu_prepend(cm, mi);
     mi = webkit_context_menu_item_new_from_stock_action_with_label(WEBKIT_CONTEXT_MENU_ACTION_OPEN_IMAGE_IN_NEW_WINDOW,
-            "View Image");
+         "View Image");
     webkit_context_menu_prepend(cm, mi);
     mi = webkit_context_menu_item_new_separator();
     webkit_context_menu_prepend(cm, mi);
@@ -1670,13 +1670,13 @@ static void createContextMedia(WebKitWebView *wv, WebKitContextMenu *cm) {
     mi = webkit_context_menu_item_new_separator();
     webkit_context_menu_prepend(cm, mi);
     mi = webkit_context_menu_item_new_from_stock_action_with_label(WEBKIT_CONTEXT_MENU_ACTION_DOWNLOAD_VIDEO_TO_DISK,
-            "Save Multimedia");
+         "Save Multimedia");
     webkit_context_menu_prepend(cm, mi);
     mi = webkit_context_menu_item_new_from_stock_action_with_label(
          WEBKIT_CONTEXT_MENU_ACTION_COPY_VIDEO_LINK_TO_CLIPBOARD, "Copy Multimedia Link");
     webkit_context_menu_prepend(cm, mi);
     mi = webkit_context_menu_item_new_from_stock_action_with_label(WEBKIT_CONTEXT_MENU_ACTION_OPEN_VIDEO_IN_NEW_WINDOW,
-            "View Multimedia");
+         "View Multimedia");
     webkit_context_menu_prepend(cm, mi);
     mi = webkit_context_menu_item_new_separator();
     webkit_context_menu_prepend(cm, mi);

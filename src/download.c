@@ -101,7 +101,7 @@ static void c_download_finished(WebKitDownload *d, GtkTreeIter *iter) {
     if (len) {
         l = g_strdup_printf("Downloaded: %"
                             G_GUINT64_FORMAT
-                            "/%"
+        "/%"
                             G_GUINT64_FORMAT, webkit_download_get_received_data_length(d), len);
     } else {
         l = g_strdup_printf("Downloaded: %"
@@ -118,7 +118,7 @@ static void c_download_progress(WebKitDownload *d, guint pro, GtkTreeIter *iter)
     if (len) {
         l = g_strdup_printf("Downloading: %"
                             G_GUINT64_FORMAT
-                            "/%"
+        "/%"
                             G_GUINT64_FORMAT, webkit_download_get_received_data_length(d), len);
     } else {
         l = g_strdup_printf("Downloading: %"
@@ -151,7 +151,7 @@ static void c_download_destination_created(WebKitDownload *d, gchar *u, void *v)
     g_signal_connect(d, "finished", G_CALLBACK(c_download_finished), t);
 }
 
-gchar *getFileNameFromPath(const gchar *path) {
+gchar *getFileNameFromPath(gchar *path) {
     char *a = strrchr(path, '.');
     char *b = strrchr(path, '/');
     if (a > b + 1)
@@ -159,7 +159,7 @@ gchar *getFileNameFromPath(const gchar *path) {
     return NULL;
 }
 
-gchar *getPathFromFileName(const gchar *path) {
+gchar *getPathFromFileName(gchar *path) {
     char *a = strrchr(path, '/');
     if (a) {
         size_t s = strlen(path) - strlen(a);
@@ -290,7 +290,7 @@ static gboolean c_download_prompt(WebKitDownload *d, gchar *fn, PlancWindow *v) 
     gchar *abspth = NULL;
     switch (g_settings_get_boolean(G_SETTINGS, "download-domain")) {
         default:
-            abspth = g_build_filename(fdlp, getDomainName(getDownloadPageUrl(d)), NULL);
+            abspth = g_build_filename(fdlp, getDomainName((char *) getDownloadPageUrl(d)), NULL);
 
             if (g_file_test(abspth, G_FILE_TEST_IS_DIR) || g_mkdir(abspth, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) == 0)
                 absdir = g_build_filename(abspth, f, NULL);
